@@ -7,14 +7,15 @@ historical artist's name and produces a structured studio-prep study package: ba
 web-source grading, important-works inventory, high-res image discovery, human curation,
 deep visual analysis, and study notes. Full vision: `raw/00-artist-study-kit-seed.md`.
 
-**Stage: planning / research.** Current work = curate research into `raw/`, make decisions,
-then design the skill.
+**Stage: Phase 1 research complete → synthesis & skill design.** The `raw/` corpus is
+populated (8 topics; see `raw/09-phase-1-research-session.md`). Next = stand up `wiki/`
+synthesis and/or draft the skill spec.
 
 ## Working method (LLM-Wiki, raw layer only)
 
 This repo follows Karpathy's LLM-Wiki pattern: immutable **raw sources** → an LLM-maintained
-**wiki** → a **schema** (this file). Only the raw layer is active now; `wiki/` is deferred
-until `raw/` is populated.
+**wiki** → a **schema** (this file). The raw layer is populated (Phase 1); the `wiki/`
+synthesis layer is the next phase and is not stood up yet.
 
 - `raw/`     — immutable, numbered corpus: research reports, decision docs, brainstorms.
 - `scripts/` — Python tooling (uv) for scraping, image discovery, etc. (added as needed).
@@ -110,5 +111,9 @@ vault-friendly — but scope effort by layer:
 - Keep kebab-case filenames (Obsidian-safe); avoid `:` `/` `#` `^` `|` `[` `]` in names.
 
 ## Current focus
-See `TODO.md`. Research backlog → numbered `raw/` docs:
-01 web scraping tooling · 02 source-quality grading · 03 museum/image APIs · 04 style-analysis frameworks.
+See `TODO.md`. **Phase 1 research is complete** — 8 topics in `raw/`:
+- Domain/tooling: `01` web scraping · `02` source-quality grading · `03` museum/image APIs · `04` style-analysis frameworks.
+- Pedagogy/learning-science: `05` master-study pedagogy · `06` productive-friction · `07` study aids/scaffolding · `08` spaced-repetition retention.
+
+Phase 1 handoff: `raw/09-phase-1-research-session.md`. Phase 2 options: stand up `wiki/`
+synthesis · draft the skill design/spec · build first `scripts/` (Firecrawl + IIIF image discovery).
