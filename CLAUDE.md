@@ -50,15 +50,26 @@ raw/
   the raw `notebooklm-mcp` into this repo. The skill owns the MCP connection (configured globally
   in `~/.claude/settings.json`) and is the single control point we extend as needs arise.
 - Keep each research **prompt under 300 words**.
-- Workflow per research doc, run from the repo root:
+- **One notebook per topic.** Validated end-to-end pipeline (run from the repo root, `nlm` on PATH at
+  `~/.local/bin`); the report is a NotebookLM **studio "report" artifact**, fetched with
+  `nlm download report` — *not* the source-scanning `ntlm get report`, which only finds
+  `generated_text` sources and misses these:
   1. Save the prompt as `raw/NN-<slug>-prompt.md`.
-  2. `ntlm research <notebook-id> "<topic>"` — start deep research (or run it in the NotebookLM UI).
-  3. `ntlm get report <notebook-id>` — extracts the report, synthesizes a short slug, and saves to
-     `./raw/<slug>.md` (creates `raw/` if missing).
-  4. Rename the report to its child number → `raw/NN.1-<slug>.md`.
-- **Known gap / skill enhancement:** `ntlm get report` does not yet emit the `NN.M-` tree prefix.
-  For now, rename after extraction. When this bites, extend the skill (e.g. a `--number/--next`
-  option) rather than scripting around it here — see `TODO.md`.
+  2. Discover sources (~5 min): `nlm research start "<concise query>" --mode deep --title "artist-study-kit: NN <topic>"`.
+     Note the returned **notebook id** and **task id**. (Keep the query short — overly long queries can yield zero sources.)
+  3. Import once complete: `nlm research import <notebook-id> <task-id> --timeout 300`
+     (poll `nlm get notebook <id>` for `source_count`; a re-run of `research start` reports
+     "sources available: N — not yet imported" if import raced ahead).
+  4. Generate the report: `nlm report create <notebook-id> --format "Create Your Own" --confirm --prompt "<the research prompt>"`.
+     Returns an **artifact id**.
+  5. Wait: poll `nlm studio status <notebook-id>` until the report artifact is `completed`.
+  6. Download to the tree path:
+     `nlm download report <notebook-id> --id <artifact-id> -o "raw/NN.1-<slug>.md"`.
+- **Skill gap / enhancement (see `TODO.md`):** teach `notebooklm-jayers` to (a) fetch studio
+  `report` artifacts, not just `generated_text` sources, and (b) emit the `NN.M-` tree prefix —
+  so this whole flow collapses back to a couple of `ntlm` verbs.
+- **Topic → notebook map:**
+  - `01` web scraping tooling → `72ddf4cf-41dc-4c65-8b93-c43e01936219`
 
 ### Python / scripting
 - **Python** managed with **uv**, in-project `.venv/`. Use `uv run` / `uv add`;
