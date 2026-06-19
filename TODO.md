@@ -12,7 +12,7 @@
 
 ## Research backlog (each → numbered raw/ doc via NotebookLM deep research)
 - [x] 01 — Web scraping tooling → `raw/01.1-web-scraping-tooling.md`. **Recommendation: Firecrawl (primary), Crawl4AI (fallback), Scrapy for large image jobs.**
-- [ ] 02 — Source quality grading rubric (anti-slop; institutional authority; ad density; market vs. learning).
+- [x] 02 — Source quality grading rubric → `raw/02.1-source-quality-grading.md`. **Weighted rubric + tiers + machine-detectable signals + high-trust shortlist (Smarthistory, Met, CAA).**
 - [ ] 03 — Museum / image APIs: IIIF, open-access museum APIs, high-res discovery.
 - [ ] 04 — Style-analysis frameworks: art & design principles taxonomy for visual-analysis output.
 

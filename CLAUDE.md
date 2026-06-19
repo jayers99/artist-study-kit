@@ -70,6 +70,7 @@ raw/
   so this whole flow collapses back to a couple of `ntlm` verbs.
 - **Topic → notebook map:**
   - `01` web scraping tooling → `72ddf4cf-41dc-4c65-8b93-c43e01936219`
+  - `02` source quality grading → `fe59cf3e-bbcb-4e2b-9bcb-6ead3f3d2d1a`
 
 ### Python / scripting
 - **Python** managed with **uv**. Use `uv run` / `uv add`; dependencies live in `pyproject.toml`.
