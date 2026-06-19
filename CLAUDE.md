@@ -22,10 +22,28 @@ until `raw/` is populated.
 
 ## Conventions
 
-### raw/ numbering
-- Every `raw/` doc gets a **two-digit zero-padded sequential prefix**: `NN-short-slug.md`.
-- Next number = highest existing + 1. `00` is the seed.
+### raw/ numbering (topic-tree convention)
+Each **topic** is a root with a two-digit zero-padded prefix (`NN`); its prompt and results
+live next to each other and tree off that root with dotted decimals.
+
+- **Root:** two-digit zero-padded (`NN`) — we expect more than ten roots, so always pad.
+- **Prompt:** `NN-<slug>-prompt.md` — the trailing `-prompt` marks it as the research input.
+- **Children:** single-digit, max nine per parent (`1`–`9`). The deep-research report is typically `NN.1`.
+- **Depth:** up to three levels total — `NN`, `NN.M`, `NN.M.K`. Only add a decimal level when a
+  document actually has children; don't carry a placeholder `.0` or `.1` on a leaf that doesn't need it.
+- Next root number = highest existing root + 1. `00` is the seed (a root with no children).
 - `raw/` is append-only sources of truth — don't rewrite history; add a new numbered doc.
+
+Example:
+```
+raw/
+  00-artist-study-kit-seed.md          # seed (root, no children)
+  01-web-scraping-tooling-prompt.md    # research prompt
+  01.1-web-scraping-tooling.md         # deep-research report (child)
+  01.2-web-scraping-decision.md        # follow-on decision doc (child)
+  04.1.1-composition-deep-dive.md      # grandchild (level 3) under 04.1
+  04.1.2-color-theory-deep-dive.md     # grandchild (level 3) under 04.1
+```
 
 ### Deep research (NotebookLM)
 - **All** NotebookLM access goes through the **`notebooklm-jayers` skill** (`/ntlm`) — never wire
@@ -33,12 +51,13 @@ until `raw/` is populated.
   in `~/.claude/settings.json`) and is the single control point we extend as needs arise.
 - Keep each research **prompt under 300 words**.
 - Workflow per research doc, run from the repo root:
-  1. `ntlm research <notebook-id> "<topic>"` — start deep research (or run it in the NotebookLM UI).
-  2. `ntlm get report <notebook-id>` — extracts the report, synthesizes a short slug, and saves to
+  1. Save the prompt as `raw/NN-<slug>-prompt.md`.
+  2. `ntlm research <notebook-id> "<topic>"` — start deep research (or run it in the NotebookLM UI).
+  3. `ntlm get report <notebook-id>` — extracts the report, synthesizes a short slug, and saves to
      `./raw/<slug>.md` (creates `raw/` if missing).
-  3. Apply the `NN-` two-digit prefix → `raw/NN-<slug>.md`.
-- **Known gap / first skill enhancement:** `ntlm get report` does not yet emit the `NN-` prefix.
-  For now, rename after extraction. When this bites, extend the skill (e.g. an `--number/--next`
+  4. Rename the report to its child number → `raw/NN.1-<slug>.md`.
+- **Known gap / skill enhancement:** `ntlm get report` does not yet emit the `NN.M-` tree prefix.
+  For now, rename after extraction. When this bites, extend the skill (e.g. a `--number/--next`
   option) rather than scripting around it here — see `TODO.md`.
 
 ### Python / scripting
@@ -46,7 +65,7 @@ until `raw/` is populated.
   dependencies live in `pyproject.toml`.
 
 ### Web scraping
-- Core activity. **Standardize on one tool** (decision pending — `raw/01-web-scraping-tooling.md`).
+- Core activity. **Standardize on one tool** (decision pending — `raw/01.1-web-scraping-tooling.md`).
   Until decided, don't scatter ad-hoc scraping approaches.
 
 ### Paths

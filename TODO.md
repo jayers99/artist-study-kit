@@ -6,7 +6,7 @@
 - [x] Add `CLAUDE.md` and this `TODO.md`.
 
 ## notebooklm-jayers skill — build up as we go
-- [ ] Add `NN-` two-digit prefix support to `ntlm get report` (e.g. `--next` to auto-number into `raw/`). Until then, rename manually after extraction.
+- [ ] Add topic-tree numbering to `ntlm get report` (e.g. `--number NN.1` / `--next` to emit `raw/NN.M-<slug>.md`). Until then, rename manually after extraction.
 - [ ] Have `ntlm get report` emit YAML frontmatter (tags, source, date) so raw/ docs are Obsidian graph-navigable.
 
 ## Research backlog (each → numbered raw/ doc via NotebookLM deep research)
