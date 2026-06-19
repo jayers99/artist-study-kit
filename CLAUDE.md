@@ -11,13 +11,14 @@ deep visual analysis, and study notes. Full vision: `raw/00-artist-study-kit-see
 populated (8 topics; see `raw/09-phase-1-research-session.md`). Next = stand up `wiki/`
 synthesis and/or draft the skill spec.
 
-## Working method (LLM-Wiki, raw layer only)
+## Working method (LLM-Wiki)
 
 This repo follows Karpathy's LLM-Wiki pattern: immutable **raw sources** → an LLM-maintained
-**wiki** → a **schema** (this file). The raw layer is populated (Phase 1); the `wiki/`
-synthesis layer is the next phase and is not stood up yet.
+**wiki** → a **schema** (this file). The raw layer (Phase 1) and the `wiki/` synthesis layer
+(Phase 2) are both populated.
 
 - `raw/`     — immutable, numbered corpus: research reports, decision docs, brainstorms.
+- `wiki/`    — LLM-maintained synthesis: interlinked stage + concept notes (see below).
 - `scripts/` — Python tooling (uv) for scraping, image discovery, etc. (added as needed).
 - `CLAUDE.md` — this file: project conventions and workflow schema.
 
@@ -45,6 +46,21 @@ raw/
   04.1.1-composition-deep-dive.md      # grandchild (level 3) under 04.1
   04.1.2-color-theory-deep-dive.md     # grandchild (level 3) under 04.1
 ```
+
+### wiki/ structure (synthesis layer)
+The `wiki/` is the LLM-maintained synthesis of `raw/`, organized around the **skill
+pipeline**. Design rationale: `raw/10-wiki-synthesis-design.md`. Three note types:
+
+- **Index** — `00-index.md` (MOC): pipeline order + concept clusters + source→stage map.
+- **Stage notes** — `stage-<slug>.md`, one per skill-pipeline step. Body =
+  `## What the research says` · `## Open questions / tensions` · `## Skill design implications`.
+  Frontmatter `sources:` lists the backing `raw/` reports (empty = research gap).
+- **Concept notes** — `concept-<slug>.md`: atomic, cross-cutting ideas referenced by 2+
+  stages (promotion rule: only create one when a 3rd stage needs it). Frontmatter `used-by:`.
+
+Conventions: kebab-case filenames; `type: wiki/stage|wiki/concept|wiki/index`; link back to
+raw via `[[NN.1-slug]]` and between wiki notes via `[[stage-*]]`/`[[concept-*]]`. The wiki is
+the only layer carrying inter-note `[[wikilinks]]`; `raw/` is never edited to add them.
 
 ### Deep research (NotebookLM)
 - **All** NotebookLM access goes through the **`notebooklm-jayers` skill** (`/ntlm`) — never wire
@@ -105,7 +121,7 @@ vault-friendly — but scope effort by layer:
 
 - **`raw/`** — immutable NotebookLM reports; do not edit to add links. (Skill may emit
   YAML frontmatter so they're still graph-navigable.)
-- **`wiki/`** (deferred) and **skill study-package outputs** — fully Obsidian-native:
+- **`wiki/`** (synthesis layer) and **skill study-package outputs** — fully Obsidian-native:
   - `[[wikilinks]]` between related notes (artist ↔ works ↔ movements ↔ techniques);
     use `[[NN-slug|Readable Title]]` when the filename is ugly.
   - YAML frontmatter: `tags`, `aliases`, `type`, and domain keys (`artist`, `movement`).
@@ -114,11 +130,12 @@ vault-friendly — but scope effort by layer:
 - Keep kebab-case filenames (Obsidian-safe); avoid `:` `/` `#` `^` `|` `[` `]` in names.
 
 ## Current focus
-See `TODO.md`. **Phase 2 (wiki synthesis) in progress.** Research corpus = 11 topics in `raw/`:
+See `TODO.md`. **Phase 2 (wiki synthesis) complete.** Research corpus = 11 topics in `raw/`:
 - Domain/tooling: `01` web scraping · `02` source-quality grading · `03` museum/image APIs · `04` style-analysis frameworks.
 - Pedagogy/learning-science: `05` master-study pedagogy · `06` productive-friction · `07` study aids/scaffolding · `08` spaced-repetition retention.
 - Pipeline-stage gaps (added during wiki design): `11` artist background research · `12` works inventory method · `13` human curation UX.
 
-Wiki design: `raw/10-wiki-synthesis-design.md` (pipeline-oriented hybrid: 8 stage notes + 6
-concept notes + index). Phase 1 handoff: `raw/09-phase-1-research-session.md`. Next: build
-the `wiki/` notes, then draft the skill spec, then first `scripts/` (Firecrawl + IIIF).
+`wiki/` is stood up (15 notes: 8 stage + 6 concept + index; design `raw/10-wiki-synthesis-design.md`,
+entry point `wiki/00-index.md`). Phase 1 handoff: `raw/09-phase-1-research-session.md`.
+**Next: draft the skill spec** from the stage notes' "Skill design implications", then build
+first `scripts/` (Firecrawl + IIIF image discovery).

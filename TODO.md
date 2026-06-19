@@ -28,8 +28,8 @@
 
 ## Phase 2 — wiki synthesis
 - [x] Wiki design spec → `raw/10-wiki-synthesis-design.md` (pipeline-oriented hybrid; 8 stage + 6 concept + index).
-- [ ] Build the `wiki/` notes per the design (writing-plans → implementation).
+- [x] Build the `wiki/` notes per the design — 15 notes (8 stage + 6 concept + `00-index`); link/coverage verified. Entry point: `wiki/00-index.md`.
 
 ## Later
-- [ ] Draft the skill design/spec from the synthesized wiki.
+- [ ] Draft the skill design/spec from the synthesized wiki (stage notes' "Skill design implications").
 - [ ] Build scraping + image-discovery scripts in `scripts/`.
