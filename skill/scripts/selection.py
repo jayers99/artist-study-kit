@@ -58,12 +58,12 @@ def validate_selection(sel: Selection) -> list[str]:
         label = r.work_id or r.iiif_token or "<unknown>"
         if not (0 <= r.rating <= 5):
             errors.append(f"{label}: rating {r.rating} out of range 0-5")
-        if not r.work_id:
-            errors.append(f"{label}: missing work_id")
-        if r.rating >= LIKED_THRESHOLD:
+        elif r.rating >= LIKED_THRESHOLD:
             for gate in _GATE_FIELDS:
                 if not getattr(r, gate).strip():
                     errors.append(f"{label}: liked (>={LIKED_THRESHOLD}*) but {gate} is empty")
+        if not r.work_id:
+            errors.append(f"{label}: missing work_id")
     return errors
 
 
@@ -91,10 +91,10 @@ def apply_selection(
     selected_dir.mkdir(parents=True, exist_ok=True)
     out: list[Path] = []
     for r in liked(sel, threshold):
-        src = candidates_dir / r.work_id / f"{r.iiif_token}.jpg"
+        src = candidates_dir / r.work_id / Path(r.image_rel).name
         if not src.is_file():
             continue
-        dst = selected_dir / f"{r.work_id}-{r.iiif_token}.jpg"
+        dst = selected_dir / f"{r.work_id}-{Path(r.image_rel).name}"
         if not dst.is_file():
             shutil.copy2(src, dst)
         out.append(dst)

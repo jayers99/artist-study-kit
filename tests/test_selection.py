@@ -56,6 +56,7 @@ def test_validate_requires_gate_fields_when_liked():
     sel = parse_selection(_data(rating=4, thesis="", anchor_trait="", handoff_note=""))
     errs = validate_selection(sel)
     assert any("thesis" in e for e in errs)
+    assert sum(1 for e in errs if any(g in e for g in ("thesis", "anchor_trait", "handoff_note"))) == 3
 
 
 def test_liked_filters_by_threshold():
