@@ -1,0 +1,29 @@
+{
+  "@context": "http://iiif.io/api/presentation/2/context.json",
+  "@type": "sc:Manifest",
+  "label": "Wheat Field with Cypresses",
+  "metadata": [
+    {"label": "Rights", "value": "Public Domain"}
+  ],
+  "sequences": [
+    {
+      "canvases": [
+        {
+          "label": "recto",
+          "images": [
+            {
+              "resource": {
+                "service": {
+                  "@id": "https://images.metmuseum.org/iiif/12345",
+                  "@context": "http://iiif.io/api/image/2/context.json"
+                },
+                "width": 4000,
+                "height": 3000
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

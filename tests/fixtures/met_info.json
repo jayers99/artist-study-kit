@@ -1,0 +1,6 @@
+{
+  "@context": "http://iiif.io/api/image/2/context.json",
+  "@id": "https://images.metmuseum.org/iiif/12345",
+  "width": 4000,
+  "height": 3000
+}
