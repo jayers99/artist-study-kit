@@ -72,12 +72,18 @@ raw/
   - `01` web scraping tooling → `72ddf4cf-41dc-4c65-8b93-c43e01936219`
 
 ### Python / scripting
-- **Python** managed with **uv**, in-project `.venv/`. Use `uv run` / `uv add`;
-  dependencies live in `pyproject.toml`.
+- **Python** managed with **uv**. Use `uv run` / `uv add`; dependencies live in `pyproject.toml`.
+- **Venv lives OUTSIDE iCloud.** This repo is in iCloud Drive, which would sync a normal
+  in-project `.venv/` (thousands of files). The venv is at `~/.venvs/artist-study-kit`:
+  - Canonical: `export UV_PROJECT_ENVIRONMENT="$HOME/.venvs/artist-study-kit"` before `uv` commands.
+  - Convenience: `.venv` in the repo is a **symlink** → `~/.venvs/artist-study-kit`, so plain
+    `uv run`/`uv sync` also stay out of iCloud. (The symlink is tiny; iCloud doesn't traverse it.)
+  - To recreate on a fresh machine: `UV_PROJECT_ENVIRONMENT="$HOME/.venvs/artist-study-kit" uv sync`
+    then `ln -s "$HOME/.venvs/artist-study-kit" .venv`.
 
 ### Web scraping
-- Core activity. **Standardize on one tool** (decision pending — `raw/01.1-web-scraping-tooling.md`).
-  Until decided, don't scatter ad-hoc scraping approaches.
+- **Standardized on Firecrawl** via the **`firecrawl-py`** package (decision: `raw/01.1-web-scraping-tooling.md`).
+  Fallback is Crawl4AI; use Scrapy for large image-download jobs. Don't scatter ad-hoc scraping approaches.
 
 ### Paths
 - Use logical `~/iCloud/...` paths, never physical `~/Library/Mobile Documents/...`. Quote paths.
