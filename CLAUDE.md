@@ -7,9 +7,9 @@ historical artist's name and produces a structured studio-prep study package: ba
 web-source grading, important-works inventory, high-res image discovery, human curation,
 deep visual analysis, and study notes. Full vision: `raw/00-artist-study-kit-seed.md`.
 
-**Stage: Phase 1 research complete → synthesis & skill design.** The `raw/` corpus is
-populated (8 topics; see `raw/09-phase-1-research-session.md`). Next = stand up `wiki/`
-synthesis and/or draft the skill spec.
+**Stage: Phase 2 (wiki synthesis) complete → skill design.** Both `raw/` (11 research
+topics) and the `wiki/` synthesis layer are populated. Next = draft the skill spec from the
+wiki, then build. Latest session handoff: `raw/14-phase-2-wiki-session.md`.
 
 ## Working method (LLM-Wiki)
 
@@ -128,6 +128,28 @@ vault-friendly — but scope effort by layer:
   - Tag taxonomy: `#artist/<name>`, `#movement/<x>`, `#technique/<x>`, `#source-grade/<a-f>`.
   - Callouts for study notes: `> [!tip]`, `> [!warning]` (traps to avoid), `> [!example]`.
 - Keep kebab-case filenames (Obsidian-safe); avoid `:` `/` `#` `^` `|` `[` `]` in names.
+
+## Building the skill (Phase 3)
+
+When designing or implementing the skill, **start from the synthesis**: read
+`wiki/00-index.md`, then the stage notes. Each stage note's **"Skill design implications"**
+section is the spec input; the `raw/` reports are the evidence behind it.
+
+- **Research stays in `raw/`** (numbered NotebookLM reports, decision docs, session
+  handoffs). **Skill specs & plans go to the superpowers default location**
+  (`docs/superpowers/specs/` and its plans dir) — let the brainstorming / writing-plans
+  skills write there; don't force specs into `raw/`. (Exception: the pre-existing
+  `raw/10-wiki-synthesis-design.md` predates this rule and stays put.)
+- **Output contract.** The skill emits a per-artist study package; the canonical structure
+  is defined in `raw/00-artist-study-kit-seed.md` (§5 directory layout + "Expected Outputs"):
+  `studies/<artist>/` → `report.md`, `sources/` (`sources.json`, `source-grades.md`),
+  `works.md`, `images/{candidates,selected}/`, `analysis.md`, `study-notes.md`, `prompts/`.
+  Treat that as the contract the skill must produce.
+- **Packaging.** Deliverable is a Claude skill = `SKILL.md` + `scripts/`. Develop in-repo
+  under `skill/` (installable/symlinkable to `~/.claude/skills/` later); confirm the exact
+  layout in the skill spec.
+- **TDD.** Skill scripts follow the global stack — **outside-in TDD with pytest-bdd**, uv.
+  Write the Gherkin / acceptance specs before implementation.
 
 ## Current focus
 See `TODO.md`. **Phase 2 (wiki synthesis) complete.** Research corpus = 11 topics in `raw/`:
