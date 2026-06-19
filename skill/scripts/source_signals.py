@@ -88,7 +88,7 @@ def scan_source(page: FetchedPage) -> SignalScan:
     else:
         band = "borderline"
 
-    # Only borderline pages (and high-value-but-unconfirmed) need LLM rubric scoring.
+    # Only borderline pages need LLM rubric scoring; high/low bands are graded by signal alone.
     needs_llm_review = band == "borderline"
 
     return SignalScan(

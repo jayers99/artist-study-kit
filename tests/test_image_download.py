@@ -91,3 +91,26 @@ def test_download_candidates_throttles_between_requests(tmp_path):
     assert [r.status for r in results] == ["downloaded", "downloaded", "downloaded"]
     # Sleeps between the 3 downloads (not before the first).
     assert calls.count(0.5) == 2
+
+
+def test_download_candidates_skip_does_not_trip_throttle(tmp_path):
+    """A leading skipped candidate must not cause an extra sleep before the next real download."""
+    calls = []
+    first = _candidate(iiif_id="https://images.metmuseum.org/iiif/10")
+    second = _candidate(iiif_id="https://images.metmuseum.org/iiif/11")
+    third = _candidate(iiif_id="https://images.metmuseum.org/iiif/12")
+
+    # Pre-download the first candidate so it will be skipped.
+    download_candidate(first, tmp_path, fetch=_ok_fetch, sleep=lambda s: None)
+
+    results = download_candidates(
+        [first, second, third], tmp_path,
+        fetch=_ok_fetch, sleep=lambda s: calls.append(s), min_interval=0.5,
+    )
+
+    statuses = [r.status for r in results]
+    assert statuses[0] == "skipped"
+    assert statuses[1] == "downloaded"
+    assert statuses[2] == "downloaded"
+    # Exactly one sleep between the two real downloads; the skip adds none.
+    assert calls.count(0.5) == 1

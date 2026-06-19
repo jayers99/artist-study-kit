@@ -91,3 +91,10 @@ def test_validate_candidate_flags_restricted_and_lowres():
     assert passed is False
     assert any("rights" in r for r in reasons)
     assert any("resolution" in r for r in reasons)
+
+
+def test_validate_candidate_allows_unknown_rights():
+    c = ImageCandidate("w", "met", "l", "id", "u", 4000, 3000, "All rights reserved", "unknown")
+    passed, reasons = validate_candidate(c)
+    assert passed is True
+    assert reasons == []
