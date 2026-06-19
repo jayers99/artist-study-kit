@@ -51,26 +51,27 @@ raw/
   in `~/.claude/settings.json`) and is the single control point we extend as needs arise.
 - Keep each research **prompt under 300 words**.
 - **One notebook per topic.** Validated end-to-end pipeline (run from the repo root, `nlm` on PATH at
-  `~/.local/bin`); the report is a NotebookLM **studio "report" artifact**, fetched with
-  `nlm download report` — *not* the source-scanning `ntlm get report`, which only finds
-  `generated_text` sources and misses these:
+  `~/.local/bin`). The report is a NotebookLM **studio "report" artifact**; the upgraded skill
+  detects it, numbers the file, and writes Obsidian frontmatter:
   1. Save the prompt as `raw/NN-<slug>-prompt.md`.
   2. Discover sources (~5 min): `nlm research start "<concise query>" --mode deep --title "artist-study-kit: NN <topic>"`.
      Note the returned **notebook id** and **task id**. (Keep the query short — overly long queries can yield zero sources.)
-  3. Import once complete: `nlm research import <notebook-id> <task-id> --timeout 300`
-     (poll `nlm get notebook <id>` for `source_count`; a re-run of `research start` reports
-     "sources available: N — not yet imported" if import raced ahead).
+  3. Import once complete: `nlm research import <notebook-id> <task-id> --timeout 300`.
+     Discovery can run past the 5-min estimate with `source_count` stuck at 0, then land all at once;
+     a premature import prints "No sources were found" — re-probe with `nlm research start "probe" -n <nb> --mode fast`
+     (answer `n`), which reports "sources available: N" when ready, then import.
   4. Generate the report: `nlm report create <notebook-id> --format "Create Your Own" --confirm --prompt "<the research prompt>"`.
      Returns an **artifact id**.
   5. Wait: poll `nlm studio status <notebook-id>` until the report artifact is `completed`.
-  6. Download to the tree path:
-     `nlm download report <notebook-id> --id <artifact-id> -o "raw/NN.1-<slug>.md"`.
-- **Skill gap / enhancement (see `TODO.md`):** teach `notebooklm-jayers` to (a) fetch studio
-  `report` artifacts, not just `generated_text` sources, and (b) emit the `NN.M-` tree prefix —
-  so this whole flow collapses back to a couple of `ntlm` verbs.
+  6. Extract to the tree path via the skill:
+     `uv run --no-project ~/.claude/skills/notebooklm-jayers/get_deep_research_report.py <notebook-id> --number NN.1`
+     → writes `raw/NN.1-<auto-slug>.md` with YAML frontmatter.
+     The auto-slug comes from the report **title**, so rename to the topic slug to match the prompt
+     (`raw/NN.1-<topic-slug>.md`) until the skill supports a `--slug` override (see `TODO.md`).
 - **Topic → notebook map:**
   - `01` web scraping tooling → `72ddf4cf-41dc-4c65-8b93-c43e01936219`
   - `02` source quality grading → `fe59cf3e-bbcb-4e2b-9bcb-6ead3f3d2d1a`
+  - `03` museum image apis → `f89f6f2f-84c1-42e8-9e90-e420aa7aeb9a`
 
 ### Python / scripting
 - **Python** managed with **uv**. Use `uv run` / `uv add`; dependencies live in `pyproject.toml`.
