@@ -64,3 +64,31 @@ def test_load_missing_file_returns_fresh_state(tmp_path):
     loaded = PipelineState.load(tmp_path / "absent.json", artist="x")
     assert loaded.completed == []
     assert loaded.next_stage == "background"
+
+
+def test_is_complete_tracks_marked_stages():
+    st = PipelineState(artist="x", completed=[])
+    assert st.is_complete("background") is False
+    st.mark_complete("background")
+    assert st.is_complete("background") is True
+
+
+def test_from_dict_dedupes_completed_preserving_order():
+    st = PipelineState.from_dict(
+        {"artist": "x", "completed": ["background", "background", "source_grading"]}
+    )
+    assert st.completed == ["background", "source_grading"]
+
+
+def test_load_rejects_artist_mismatch(tmp_path):
+    p = tmp_path / "state.json"
+    PipelineState(artist="Vincent van Gogh", completed=["background"]).save(p)
+    with pytest.raises(ValueError):
+        PipelineState.load(p, artist="Claude Monet")
+
+
+def test_load_allows_matching_artist(tmp_path):
+    p = tmp_path / "state.json"
+    PipelineState(artist="Vincent van Gogh", completed=[]).save(p)
+    loaded = PipelineState.load(p, artist="Vincent van Gogh")
+    assert loaded.artist == "Vincent van Gogh"

@@ -1,3 +1,4 @@
+import dataclasses
 from pathlib import Path
 
 import pytest
@@ -54,5 +55,15 @@ def test_scaffold_creates_tree_and_is_idempotent(tmp_path):
 
 def test_studypaths_is_frozen():
     sp = study_paths("studies", "x")
-    with pytest.raises(Exception):
+    with pytest.raises(dataclasses.FrozenInstanceError):
         sp.root = Path("other")  # type: ignore[misc]
+
+
+@pytest.mark.parametrize("name", ["", "   ", "!!!", "...", "@#$"])
+def test_slugify_guards_empty_and_symbol_only(name):
+    assert slugify(name) == "untitled"
+
+
+def test_study_paths_root_never_equals_base_for_blank_name():
+    sp = study_paths("studies", "   ")
+    assert sp.root == Path("studies/untitled")

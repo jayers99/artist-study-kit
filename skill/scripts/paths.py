@@ -15,7 +15,7 @@ def slugify(name: str) -> str:
     s = re.sub(r"[^\w\s-]", "", s)
     s = re.sub(r"[\s_]+", "-", s)
     s = re.sub(r"-+", "-", s)
-    return s.strip("-")
+    return s.strip("-") or "untitled"
 
 
 @dataclass(frozen=True)
