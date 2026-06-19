@@ -64,14 +64,14 @@ raw/
      Returns an **artifact id**.
   5. Wait: poll `nlm studio status <notebook-id>` until the report artifact is `completed`.
   6. Extract to the tree path via the skill:
-     `uv run --no-project ~/.claude/skills/notebooklm-jayers/get_deep_research_report.py <notebook-id> --number NN.1`
-     → writes `raw/NN.1-<auto-slug>.md` with YAML frontmatter.
-     The auto-slug comes from the report **title**, so rename to the topic slug to match the prompt
-     (`raw/NN.1-<topic-slug>.md`) until the skill supports a `--slug` override (see `TODO.md`).
+     `uv run --no-project ~/.claude/skills/notebooklm-jayers/get_deep_research_report.py <notebook-id> --number NN.1 --slug <topic-slug>`
+     → writes `raw/NN.1-<topic-slug>.md` with YAML frontmatter. Use `--slug` to match the prompt's
+     topic slug (without it, the filename auto-derives from the report title).
 - **Topic → notebook map:**
   - `01` web scraping tooling → `72ddf4cf-41dc-4c65-8b93-c43e01936219`
   - `02` source quality grading → `fe59cf3e-bbcb-4e2b-9bcb-6ead3f3d2d1a`
   - `03` museum image apis → `f89f6f2f-84c1-42e8-9e90-e420aa7aeb9a`
+  - `04` style analysis frameworks → `2792f9bf-2ebc-44b5-bb0f-2ca993d8cd57`
 
 ### Python / scripting
 - **Python** managed with **uv**. Use `uv run` / `uv add`; dependencies live in `pyproject.toml`.
