@@ -72,6 +72,10 @@ raw/
   - `02` source quality grading → `fe59cf3e-bbcb-4e2b-9bcb-6ead3f3d2d1a`
   - `03` museum image apis → `f89f6f2f-84c1-42e8-9e90-e420aa7aeb9a`
   - `04` style analysis frameworks → `2792f9bf-2ebc-44b5-bb0f-2ca993d8cd57`
+  - `05` master study pedagogy → `0daad4a4-2862-4528-9d80-fcb3bbed10d0`
+  - `06` productive friction learning → `a0c8d5f2-bf87-4d31-8405-529582aacff2`
+  - `07` study aids scaffolding → `459f962b-15a8-428e-aa67-fa74484c1ee9`
+  - `08` spaced repetition retention → `3c7c8d72-84a1-4ebc-8ec8-3d38d99b5806`
 
 ### Python / scripting
 - **Python** managed with **uv**. Use `uv run` / `uv add`; dependencies live in `pyproject.toml`.

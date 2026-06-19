@@ -15,6 +15,12 @@
 - [x] 03 — Museum / image APIs → `raw/03.1-museum-image-apis.md`. **IIIF guide + per-source assessment; priority Met → Rijksmuseum → AIC → Harvard/Europeana → Wikimedia.**
 - [x] 04 — Style-analysis frameworks → `raw/04.1-style-analysis-frameworks.md`. **Layered taxonomy + 5-stage LLM analysis workflow + study drills + reusable template.**
 
+## Research backlog — pedagogy / learning-science cluster (roots 05–08)
+- [x] 05 — Master-study pedagogy → `raw/05.1-master-study-pedagogy.md`. **Atelier/Bargue/copyist traditions, critique practices, staged self-learner workflow.**
+- [x] 06 — Productive-friction framework → `raw/06.1-productive-friction-learning.md`. **Desirable difficulties + Socratic AI (Khanmigo) + interaction patterns + anti-patterns.**
+- [x] 07 — Study aids & scaffolding → `raw/07.1-study-aids-scaffolding.md`. **Job aid vs learning aid, worked-example fading, crutch problem, art-study templates.**
+- [x] 08 — Spaced repetition & retention → `raw/08.1-spaced-repetition-retention.md`. **SRS/interleaving/perceptual+procedural practice, review system, SRS limits.**
+
 ## Later
 - [ ] Stand up the `wiki/` synthesis layer once raw/ has enough reports.
 - [ ] Draft the skill design/spec from synthesized research.
