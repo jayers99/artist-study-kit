@@ -1,0 +1,123 @@
+"""Stage-5 IO: robots-aware, throttled, idempotent image download with metadata.
+
+The byte-fetch boundary is injected (`fetch(url) -> (status, content_type, bytes)`)
+so tests run against canned responses, never live museum endpoints. A default
+httpx-backed fetcher is provided for real runs.
+"""
+
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from urllib.parse import urlsplit
+
+from scripts.iiif import ImageCandidate, validate_candidate
+
+
+def robots_allows(robots_txt: str, path: str, user_agent: str = "*") -> bool:
+    """Minimal robots.txt check for the `*` (or named) user-agent group."""
+    if not robots_txt.strip():
+        return True
+    groups: dict[str, list[str]] = {}
+    current: list[str] = []
+    for raw in robots_txt.splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        key, _, value = line.partition(":")
+        key, value = key.strip().lower(), value.strip()
+        if key == "user-agent":
+            current = groups.setdefault(value, [])
+        elif key == "disallow" and value:
+            current.append(value)
+    rules = groups.get(user_agent, groups.get("*", []))
+    return not any(path.startswith(rule) for rule in rules)
+
+
+@dataclass(frozen=True)
+class DownloadResult:
+    candidate: ImageCandidate
+    image_path: Path | None
+    meta_path: Path | None
+    status: str
+    note: str = ""
+
+
+def _iiif_token(iiif_id: str) -> str:
+    return iiif_id.rstrip("/").rsplit("/", 1)[-1]
+
+
+def default_fetch(url: str) -> tuple[int, str, bytes]:
+    """Real fetcher (httpx). Not exercised in tests."""
+    import httpx
+
+    resp = httpx.get(url, follow_redirects=True, timeout=60.0)
+    return resp.status_code, resp.headers.get("content-type", ""), resp.content
+
+
+def download_candidate(
+    candidate: ImageCandidate,
+    candidates_dir: Path | str,
+    *,
+    fetch=default_fetch,
+    robots_txt: str = "",
+    sleep=time.sleep,
+    min_interval: float = 1.0,
+) -> DownloadResult:
+    """Validate, robots-check, and download one candidate; idempotent."""
+    passed, reasons = validate_candidate(candidate)
+    if not passed:
+        return DownloadResult(candidate, None, None, "invalid", "; ".join(reasons))
+
+    work_dir = Path(candidates_dir) / candidate.work_id
+    token = _iiif_token(candidate.iiif_id)
+    image_path = work_dir / f"{token}.jpg"
+    meta_path = work_dir / f"{token}.json"
+
+    if image_path.is_file():
+        return DownloadResult(candidate, image_path, meta_path, "skipped")
+
+    if not robots_allows(robots_txt, urlsplit(candidate.image_url).path):
+        return DownloadResult(candidate, None, None, "blocked", candidate.image_url)
+
+    status_code, content_type, content = fetch(candidate.image_url)
+    if status_code != 200 or not content_type.startswith("image/") or not content:
+        return DownloadResult(
+            candidate, None, None, "error", f"status={status_code} type={content_type}"
+        )
+
+    work_dir.mkdir(parents=True, exist_ok=True)
+    image_path.write_bytes(content)
+    meta_path.write_text(json.dumps(asdict(candidate), indent=2) + "\n", encoding="utf-8")
+    return DownloadResult(candidate, image_path, meta_path, "downloaded")
+
+
+def download_candidates(
+    candidates: list[ImageCandidate],
+    candidates_dir: Path | str,
+    *,
+    fetch=default_fetch,
+    robots_txt: str = "",
+    sleep=time.sleep,
+    min_interval: float = 1.0,
+) -> list[DownloadResult]:
+    """Download a list of candidates, throttling between actual fetches."""
+    results: list[DownloadResult] = []
+    fetched = False
+    for candidate in candidates:
+        if fetched:
+            sleep(min_interval)
+        result = download_candidate(
+            candidate,
+            candidates_dir,
+            fetch=fetch,
+            robots_txt=robots_txt,
+            sleep=sleep,
+            min_interval=min_interval,
+        )
+        results.append(result)
+        if result.status == "downloaded":
+            fetched = True
+    return results

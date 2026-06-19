@@ -53,7 +53,9 @@ class PipelineState:
 
     @classmethod
     def from_dict(cls, d: dict) -> "PipelineState":
-        return cls(artist=d["artist"], completed=list(d.get("completed", [])))
+        seen: set[str] = set()
+        deduped = [s for s in d.get("completed", []) if not (s in seen or seen.add(s))]
+        return cls(artist=d["artist"], completed=deduped)
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -63,4 +65,9 @@ class PipelineState:
     def load(cls, path: Path, artist: str) -> "PipelineState":
         if not path.exists():
             return cls(artist=artist, completed=[])
-        return cls.from_dict(json.loads(path.read_text(encoding="utf-8")))
+        state = cls.from_dict(json.loads(path.read_text(encoding="utf-8")))
+        if state.artist != artist:
+            raise ValueError(
+                f"state.json artist {state.artist!r} != requested {artist!r}"
+            )
+        return state
