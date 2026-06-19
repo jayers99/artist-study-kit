@@ -15,3 +15,11 @@ def test_skill_md_has_required_frontmatter():
     assert fm.get("description")
     # description must encode trigger guidance (skills load by description match).
     assert len(str(fm["description"])) >= 40
+
+
+def test_skill_md_lists_every_pipeline_stage():
+    from scripts.state import STAGES
+
+    text = SKILL_MD.read_text(encoding="utf-8")
+    for stage in STAGES:
+        assert stage in text, f"stage id {stage!r} missing from SKILL.md"

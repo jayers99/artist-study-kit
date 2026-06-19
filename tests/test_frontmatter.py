@@ -14,3 +14,7 @@ def test_returns_empty_dict_when_no_frontmatter():
 
 def test_returns_empty_dict_on_unterminated_fence():
     assert parse_frontmatter("---\nname: foo\n# no closing fence\n") == {}
+
+
+def test_returns_empty_dict_on_non_mapping_yaml():
+    assert parse_frontmatter("---\n- item1\n- item2\n---\n") == {}
