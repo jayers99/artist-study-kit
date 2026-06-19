@@ -71,9 +71,9 @@ Unresolved trade-offs the skill design must decide (e.g. auction pages: provenan
   heuristics, and human-in-the-loop touchpoints for this stage.
 ```
 
-A stage note with `sources: []` is an honest **research gap** — it rests on the seed alone,
-and its "Skill design implications" section flags what future research (a new `raw/` root)
-would strengthen it.
+A stage note with `sources: []` would be an honest **research gap** — resting on the seed
+alone. The three stages that started as gaps (background, works, curation) were researched
+into roots `11`–`13` before building, so every stage now has backing.
 
 ## Concept note template
 
@@ -102,14 +102,17 @@ raw report(s) it came from and the stages that consume it.
 
 | Note | Skill stage (seed) | `sources:` |
 |------|--------------------|-----------|
-| `stage-background-research.md` | 1. Artist background | `[]` gap — seed only |
+| `stage-background-research.md` | 1. Artist background | `11.1` |
 | `stage-source-grading.md` | 2. Source discovery & grading | `02.1`, `01.1` |
 | `stage-style-definition.md` | 3. Style definition (grammar up front) | `04.1` |
-| `stage-works-inventory.md` | 4. Important works | `03.1` (metadata); seed |
+| `stage-works-inventory.md` | 4. Important works | `12.1`, `03.1` (metadata) |
 | `stage-image-discovery.md` | 5. Image discovery & collection | `01.1`, `03.1` |
-| `stage-curation.md` | 6. Human curation | `06.1`; seed |
+| `stage-curation.md` | 6. Human curation | `13.1`, `06.1` |
 | `stage-visual-analysis.md` | 7. Deep visual analysis of selected works | `04.1` |
 | `stage-study-retention.md` | cross-cutting: study notes, drills, schedule | `05.1`, `06.1`, `07.1`, `08.1` |
+
+All eight stages are now research-backed (the three pipeline-stage gaps were filled with
+roots `11`–`13` before building the wiki).
 
 `04.1` feeds two stages: **style-definition** (recognizing the artist's visual grammar
 before studying) and **visual-analysis** (deep-reading the curated shortlist). Distinct
@@ -167,11 +170,11 @@ This is knowledge work, not code — verification is link/coverage integrity:
 A lightweight check: `grep` for `[[...]]` targets and confirm each resolves to a file in
 `wiki/` or `raw/` (or is a known gap stub). No test framework needed.
 
-## Surfaced research gaps (output of this layer)
+## Research gaps — filled
 
-The three `sources: []` / thin stages name where the skill currently rests on the seed
-alone — candidates for future `raw/` research roots:
+This design originally surfaced three pipeline stages that rested on the seed alone. They
+were researched into new `raw/` roots before building the wiki:
 
-- Artist background research method (biographical synthesis, art-historical placement).
-- Important-works inventory method (canon selection, catalogue raisonné use).
-- Human-curation UX (how to present a candidate gallery; selection heuristics).
+- [[11.1-artist-background-research]] — biographical synthesis + art-historical placement.
+- [[12.1-works-inventory-method]] — canon selection, ranking, per-work metadata schema.
+- [[13.1-human-curation-ux]] — candidate-gallery presentation + shortlist selection.

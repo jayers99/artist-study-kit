@@ -21,7 +21,15 @@
 - [x] 07 — Study aids & scaffolding → `raw/07.1-study-aids-scaffolding.md`. **Job aid vs learning aid, worked-example fading, crutch problem, art-study templates.**
 - [x] 08 — Spaced repetition & retention → `raw/08.1-spaced-repetition-retention.md`. **SRS/interleaving/perceptual+procedural practice, review system, SRS limits.**
 
+## Research backlog — pipeline-stage gaps (roots 11–13, surfaced by wiki design)
+- [x] 11 — Artist background research method → `raw/11.1-artist-background-research.md`. **Biographical synthesis + art-historical placement; report template + source priority + biography→style bridge.**
+- [x] 12 — Important-works inventory method → `raw/12.1-works-inventory-method.md`. **Canon-selection rubric, important-vs-studyable, ranking/clustering, per-work metadata schema.**
+- [x] 13 — Human-curation UX → `raw/13.1-human-curation-ux.md`. **Cull/rate/compare triage, choice architecture, what-to-show-per-candidate, study selection heuristics.**
+
+## Phase 2 — wiki synthesis
+- [x] Wiki design spec → `raw/10-wiki-synthesis-design.md` (pipeline-oriented hybrid; 8 stage + 6 concept + index).
+- [ ] Build the `wiki/` notes per the design (writing-plans → implementation).
+
 ## Later
-- [ ] Stand up the `wiki/` synthesis layer once raw/ has enough reports.
-- [ ] Draft the skill design/spec from synthesized research.
+- [ ] Draft the skill design/spec from the synthesized wiki.
 - [ ] Build scraping + image-discovery scripts in `scripts/`.

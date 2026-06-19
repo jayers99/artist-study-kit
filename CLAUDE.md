@@ -77,6 +77,9 @@ raw/
   - `06` productive friction learning → `a0c8d5f2-bf87-4d31-8405-529582aacff2`
   - `07` study aids scaffolding → `459f962b-15a8-428e-aa67-fa74484c1ee9`
   - `08` spaced repetition retention → `3c7c8d72-84a1-4ebc-8ec8-3d38d99b5806`
+  - `11` artist background research → `d2c20815-2f7f-4165-8314-88a318e0d2e7`
+  - `12` works inventory method → `2cf4ccd2-0a0f-406a-91fd-a1c3ec4fe2f1`
+  - `13` human curation ux → `c7723fe4-2a83-47de-9a2f-dd29e5c2a038`
 
 ### Python / scripting
 - **Python** managed with **uv**. Use `uv run` / `uv add`; dependencies live in `pyproject.toml`.
@@ -111,9 +114,11 @@ vault-friendly — but scope effort by layer:
 - Keep kebab-case filenames (Obsidian-safe); avoid `:` `/` `#` `^` `|` `[` `]` in names.
 
 ## Current focus
-See `TODO.md`. **Phase 1 research is complete** — 8 topics in `raw/`:
+See `TODO.md`. **Phase 2 (wiki synthesis) in progress.** Research corpus = 11 topics in `raw/`:
 - Domain/tooling: `01` web scraping · `02` source-quality grading · `03` museum/image APIs · `04` style-analysis frameworks.
 - Pedagogy/learning-science: `05` master-study pedagogy · `06` productive-friction · `07` study aids/scaffolding · `08` spaced-repetition retention.
+- Pipeline-stage gaps (added during wiki design): `11` artist background research · `12` works inventory method · `13` human curation UX.
 
-Phase 1 handoff: `raw/09-phase-1-research-session.md`. Phase 2 options: stand up `wiki/`
-synthesis · draft the skill design/spec · build first `scripts/` (Firecrawl + IIIF image discovery).
+Wiki design: `raw/10-wiki-synthesis-design.md` (pipeline-oriented hybrid: 8 stage notes + 6
+concept notes + index). Phase 1 handoff: `raw/09-phase-1-research-session.md`. Next: build
+the `wiki/` notes, then draft the skill spec, then first `scripts/` (Firecrawl + IIIF).
