@@ -11,6 +11,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from urllib.parse import quote, unquote
 
+from scripts.museum_search import ThumbnailCandidate
+from scripts.paths import slugify
+
 COMMONS_FILEPATH = "https://commons.wikimedia.org/wiki/Special:FilePath"
 WDQS = "https://query.wikidata.org/sparql"
 USER_AGENT = "artist-study-kit/1.0 (studio-prep research; +https://github.com/jayers99/artist-study-kit)"
@@ -141,5 +144,30 @@ def parse_works(payload: dict) -> list[WikidataWork]:
             date=_binding(row, "inception")[:4],
             aic_id=aic if aic.isdigit() else "",
             met_id=_binding(row, "met") if _binding(row, "met").isdigit() else "",
+        ))
+    return out
+
+
+def to_thumbnail_candidates(works: list[WikidataWork], *, thumb_width: int = 400) -> list[ThumbnailCandidate]:
+    """Board entries for works that have a Commons image (rights resolved later)."""
+    out: list[ThumbnailCandidate] = []
+    for w in works:
+        if not w.image_file:
+            continue
+        inst: list[tuple[str, str]] = [("commons_file", w.image_file)]
+        if w.aic_id:
+            inst.append(("aic", w.aic_id))
+        if w.met_id:
+            inst.append(("met", w.met_id))
+        out.append(ThumbnailCandidate(
+            work_id=slugify(w.title) or w.qid.lower(),
+            title=w.title or "Untitled",
+            museum=w.collection or "wikidata",
+            thumbnail_url=commons_filepath(w.image_file, width=thumb_width),
+            source_url=f"https://www.wikidata.org/wiki/{w.qid}",
+            date=w.date,
+            rights="unknown",
+            qid=w.qid,
+            inst_ids=tuple(inst),
         ))
     return out

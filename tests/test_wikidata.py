@@ -1,3 +1,4 @@
+from scripts.museum_search import ThumbnailCandidate
 from scripts.wikidata import (
     ArtistEntity,
     WikidataWork,
@@ -5,6 +6,7 @@ from scripts.wikidata import (
     parse_qid_candidates,
     parse_works,
     resolve_qid,
+    to_thumbnail_candidates,
 )
 
 
@@ -97,3 +99,23 @@ def test_parse_works_keeps_aic_id_and_imageless_work():
     works = parse_works(WORKS)
     assert works[1].aic_id == "16569"
     assert works[2].image_file == "" and works[2].title == "Lost Work"
+
+
+def test_to_thumbnail_candidates_builds_board_entries():
+    works = parse_works(WORKS)
+    cands = to_thumbnail_candidates(works)
+    assert len(cands) == 2  # imageless 'Lost Work' dropped
+    fish = cands[0]
+    assert isinstance(fish, ThumbnailCandidate)
+    assert fish.qid == "Q3050231"
+    assert fish.museum == "Philadelphia Museum of Art"
+    assert fish.source_url == "https://www.wikidata.org/wiki/Q3050231"
+    assert fish.rights == "unknown"
+    assert fish.thumbnail_url.endswith("Paul_Klee%2C_Fish_Magic.jpg?width=400")
+    assert ("commons_file", "Paul Klee, Fish Magic.jpg") in fish.inst_ids
+
+
+def test_to_thumbnail_candidates_includes_aic_inst_id():
+    senecio = to_thumbnail_candidates(parse_works(WORKS))[1]
+    assert ("aic", "16569") in senecio.inst_ids
+    assert ("commons_file", "Senecio.jpg") in senecio.inst_ids
