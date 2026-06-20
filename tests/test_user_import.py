@@ -1,4 +1,5 @@
-from scripts.user_import import ImportRow, slug_work_id, verify_identification, build_review, parse_review
+from scripts.user_import import ImportRow, slug_work_id, verify_identification, build_review, parse_review, make_pipeline_lookup
+from scripts.museum_search import ThumbnailCandidate
 
 
 def _stub_lookup(record):
@@ -99,3 +100,28 @@ def test_parse_review_accepts_human_promoted_proposed_row():
     obj["rows"][1]["state"] = "confirmed"   # human edited + confirmed the barn row
     kept = parse_review(obj)
     assert {r.filename for r in kept} == {"senecio.jpg", "barn.jpg"}
+
+
+def test_make_pipeline_lookup_hits_and_misses():
+    cand = ThumbnailCandidate(
+        work_id="senecio", title="Senecio", museum="aic",
+        thumbnail_url="http://thumb", source_url="http://aic/senecio",
+        date="1922", rights="public_domain", medium="oil", qid="Q123",
+        inst_ids=(("aic", "555"),))
+    lookup = make_pipeline_lookup(
+        "Paul Klee",
+        wikidata_search=lambda a: ([], [], []),
+        aic_search=lambda a: [cand])
+    rec = lookup("Paul Klee", "senecio")          # folded title match
+    assert rec["qid"] == "Q123"
+    assert rec["source_url"] == "http://aic/senecio"
+    assert rec["inst_ids"] == (("aic", "555"),)
+    assert lookup("Paul Klee", "Nonexistent Work") is None
+
+
+def test_make_pipeline_lookup_survives_search_errors():
+    def boom(a):
+        raise RuntimeError("WDQS 504")
+    lookup = make_pipeline_lookup(
+        "Paul Klee", wikidata_search=boom, aic_search=lambda a: [])
+    assert lookup("Paul Klee", "Senecio") is None

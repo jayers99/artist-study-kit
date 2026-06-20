@@ -14,6 +14,8 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from scripts.paths import slugify
+from scripts.museum_search import search_aic
+from scripts.wikidata import search_wikidata
 
 IMPORT_STATES: tuple[str, ...] = ("confirmed", "proposed", "off_artist", "unidentified")
 
@@ -115,6 +117,36 @@ def parse_review(json_obj: dict) -> list[ImportRow]:
 
 def _esc(text: str) -> str:
     return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def make_pipeline_lookup(artist: str, *, wikidata_search=search_wikidata,
+                         aic_search=search_aic):
+    """Build the artist's board once; return a lookup(artist, title) closure that
+    corroborates a guessed title against it. Used as verify_identification's `lookup`."""
+    board = []
+    try:
+        cands, _works, _ambiguous = wikidata_search(artist)
+        board.extend(cands)
+    except Exception:
+        pass
+    try:
+        board.extend(aic_search(artist))
+    except Exception:
+        pass
+    index: dict[str, object] = {}
+    for c in board:
+        index.setdefault(_fold(c.title), c)
+
+    def lookup(_artist: str, title: str) -> dict | None:
+        c = index.get(_fold(title))
+        if c is None:
+            return None
+        return {"title": c.title, "date": c.date, "qid": c.qid, "museum": c.museum,
+                "source_url": c.source_url, "rights": c.rights,
+                "medium": getattr(c, "medium", ""),
+                "inst_ids": tuple(c.inst_ids)}
+
+    return lookup
 
 
 _REVIEW_TEMPLATE = """<!DOCTYPE html>
