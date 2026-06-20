@@ -84,3 +84,26 @@ def test_apply_selection_copies_liked_images(tmp_path):
     assert out[0].read_bytes().startswith(b"\xff\xd8\xff")
     # idempotent: second run does not raise and returns the same path set
     assert apply_selection(sel, cdir, sdir) == out
+
+
+def test_parse_selection_reads_board_provenance_fields():
+    data = {
+        "artist": "paul-klee",
+        "ratings": [{
+            "work_id": "fish-magic", "iiif_token": "phila-0",
+            "image_rel": "https://commons.wikimedia.org/wiki/Special:FilePath/Fish.jpg?width=400",
+            "rating": 5, "thesis": "t", "anchor_trait": "a", "handoff_note": "h",
+            "qid": "Q3050231", "source_url": "https://www.wikidata.org/wiki/Q3050231",
+            "museum": "Philadelphia Museum of Art", "rights": "unknown",
+            "inst_ids": [["commons_file", "Fish.jpg"], ["aic", "16569"]],
+        }],
+    }
+    r = parse_selection(data).ratings[0]
+    assert r.qid == "Q3050231"
+    assert r.museum == "Philadelphia Museum of Art"
+    assert r.inst_ids == (("commons_file", "Fish.jpg"), ("aic", "16569"))
+
+
+def test_parse_selection_defaults_missing_provenance():
+    r = parse_selection(_data()).ratings[0]
+    assert r.qid == "" and r.inst_ids == ()

@@ -26,6 +26,11 @@ class Rating:
     thesis: str = ""
     anchor_trait: str = ""
     handoff_note: str = ""
+    qid: str = ""
+    source_url: str = ""
+    museum: str = ""
+    rights: str = ""
+    inst_ids: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -45,6 +50,11 @@ def parse_selection(data: dict) -> Selection:
             thesis=str(r.get("thesis", "")),
             anchor_trait=str(r.get("anchor_trait", "")),
             handoff_note=str(r.get("handoff_note", "")),
+            qid=str(r.get("qid", "")),
+            source_url=str(r.get("source_url", "")),
+            museum=str(r.get("museum", "")),
+            rights=str(r.get("rights", "")),
+            inst_ids=tuple((str(p[0]), str(p[1])) for p in r.get("inst_ids", []) if len(p) == 2),
         )
         for r in data.get("ratings", [])
     ]
