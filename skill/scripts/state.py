@@ -189,6 +189,18 @@ class PackageState:
             added += 1
         return added, merged
 
+    def merge_user_candidate(self, bc: "BoardCandidate") -> str:
+        """Merge a user-supplied candidate: enrich a dedup match with its local file,
+        else append. Returns "enriched" or "added"."""
+        key = bc.dedup_key()
+        for c in self.candidates:
+            if c.dedup_key() == key:
+                if bc.local_path:
+                    c.local_path = bc.local_path
+                return "enriched"
+        self.candidates.append(bc)
+        return "added"
+
     def record_run(self, source: str, added: int, merged: int, total: int,
                    *, degraded: bool = False, now: str | None = None) -> DiscoveryRun:
         run = DiscoveryRun(id=f"run-{_next_index(self.runs)}", at=now or _now(),
