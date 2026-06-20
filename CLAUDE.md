@@ -96,6 +96,7 @@ the only layer carrying inter-note `[[wikilinks]]`; `raw/` is never edited to ad
   - `11` artist background research → `d2c20815-2f7f-4165-8314-88a318e0d2e7`
   - `12` works inventory method → `2cf4ccd2-0a0f-406a-91fd-a1c3ec4fe2f1`
   - `13` human curation ux → `c7723fe4-2a83-47de-9a2f-dd29e5c2a038`
+  - `16` image source hierarchy → `8260e980-d7cc-42f3-9c4f-4c24e054221f`
 
 ### Python / scripting
 - **Python** managed with **uv**. Use `uv run` / `uv add`; dependencies live in `pyproject.toml`.
