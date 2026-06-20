@@ -92,6 +92,8 @@ def build_thumbnail_gallery(cands, artist: str) -> str:
             "museum": c.museum,
             "date": c.date,
             "rights": c.rights,
+            "qid": c.qid,
+            "inst_ids": [list(pair) for pair in c.inst_ids],
         }
         for i, c in enumerate(cands)
     ]
@@ -375,6 +377,7 @@ document.getElementById("export").onclick = () => {
     return {
       work_id: c.work_id, iiif_token: c.iiif_token, image_rel: c.image_rel,
       source_url: c.source_url, museum: c.museum, rights: c.rights,
+      qid: c.qid, inst_ids: c.inst_ids,
       rating: s.rating || 0, thesis: s.thesis || "",
       anchor_trait: s.anchor_trait || "", handoff_note: s.handoff_note || "",
     };
