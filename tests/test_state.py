@@ -1,6 +1,6 @@
 import pytest
 
-from scripts.state import PAUSE_GATES, STAGES, PipelineState, PackageState, BoardCandidate, DiscoveryRun, StudySession, GROUPINGS
+from scripts.state import PAUSE_GATES, STAGES, PipelineState, PackageState, BoardCandidate, DiscoveryRun, StudySession, GROUPINGS, migrate_legacy
 
 
 def _thumb(**over):
@@ -279,3 +279,46 @@ def test_record_run_index_survives_legacy_run_zero():
     st.runs.append(DiscoveryRun(id="run-0", at="t", source="legacy-import",
                                 added=0, merged=0, total=0))
     assert st.record_run("aic", added=1, merged=0, total=1, now="T").id == "run-1"
+
+
+def _legacy_selection():
+    return {
+        "artist": "Paul Klee",
+        "ratings": [
+            {"work_id": "exotics", "iiif_token": "aic-8", "image_rel": "u1",
+             "rating": 4, "title": "Exotics", "date": "1939", "museum": "aic",
+             "source_url": "s1", "rights": "in_copyright",
+             "inst_ids": [["aic", "134057"]]},
+            {"work_id": "schoolhouse", "iiif_token": "aic-9", "image_rel": "u2",
+             "rating": 0, "title": "Schoolhouse", "date": "1924", "museum": "aic",
+             "source_url": "s2", "rights": "in_copyright", "inst_ids": [["aic", "32590"]]},
+        ],
+    }
+
+
+def test_migrate_without_selection_keeps_empty_board():
+    st = migrate_legacy({"artist": "Paul Klee", "completed": ["background"]})
+    assert st.completed == ["background"]
+    assert st.candidates == [] and st.runs == [] and st.sessions == []
+
+
+def test_migrate_seeds_candidates_run_and_liked_session():
+    st = migrate_legacy(
+        {"artist": "Paul Klee", "completed": ["image_discovery"]},
+        _legacy_selection(), now="T0")
+    assert [c.work_id for c in st.candidates] == ["exotics", "schoolhouse"]
+    assert st.candidates[0].first_run == "run-0"
+    assert st.candidates[0].inst_ids == (("aic", "134057"),)
+    assert st.runs[0].id == "run-0" and st.runs[0].source == "legacy-import"
+    # only the liked (>=4) row seeds the legacy study session
+    assert st.sessions[0].id == "sess-0"
+    assert st.sessions[0].study_set == ("exotics",)
+    assert st.sessions[0].outputs["study_briefs"] == "study-briefs.json"
+
+
+def test_migrate_with_no_liked_rows_records_no_session():
+    sel = _legacy_selection()
+    sel["ratings"][0]["rating"] = 0
+    st = migrate_legacy({"artist": "Paul Klee", "completed": []}, sel, now="T0")
+    assert st.sessions == []
+    assert len(st.candidates) == 2

@@ -253,3 +253,30 @@ class PackageState:
 
 
 PipelineState = PackageState
+
+
+def migrate_legacy(state_dict: dict, selection_dict: dict | None = None,
+                   *, now: str | None = None) -> PackageState:
+    from scripts.selection import liked, parse_selection
+
+    st = PackageState.from_dict(state_dict)
+    if not selection_dict:
+        return st
+
+    sel = parse_selection(selection_dict)
+    stamp = now or _now()
+    st.runs.append(DiscoveryRun(id="run-0", at=stamp, source="legacy-import",
+                                added=len(sel.ratings), merged=0, total=len(sel.ratings)))
+    for r in sel.ratings:
+        st.candidates.append(BoardCandidate(
+            work_id=r.work_id, title=r.title, date=r.date, museum=r.museum,
+            thumbnail_url=r.image_rel, source_url=r.source_url, rights=r.rights,
+            medium=r.medium, qid=r.qid, inst_ids=_tuple_inst_ids(r.inst_ids),
+            origin="discovered", first_run="run-0"))
+    liked_ids = [r.work_id for r in liked(sel)]
+    if liked_ids:
+        st.sessions.append(StudySession(
+            id="sess-0", at=stamp, kind="study", theme="legacy import",
+            grouping="other", selected=tuple(liked_ids), study_set=tuple(liked_ids),
+            outputs={"study_briefs": "study-briefs.json", "analysis": "analysis.md"}))
+    return st
