@@ -96,7 +96,7 @@ def serialize_briefs(artist: str, briefs: list[StudyBrief]) -> dict:
                 "work_id": b.work_id,
                 "title": b.title,
                 "year": b.year,
-                "members": list(b.members),
+                "members": list(b.members),  # intentional: JSON has no tuple; parse_briefs coerces back
                 "cluster": b.cluster,
                 "source_url": b.source_url,
                 "thesis": b.thesis,
@@ -148,7 +148,12 @@ def write_study_briefs_md(artist: str, briefs: list[StudyBrief], path: Path | st
     lines = frontmatter("study/curation-briefs", artist) + [f"# Study briefs — {artist}", ""]
     for b in briefs:
         lines += [
-            f"> [!example] {b.title} ({b.year})",
+            f"> [!example] [[{b.work_id}|{b.title}]] ({b.year})",
+        ]
+        if len(b.members) > 1:
+            merged = ", ".join(f"[[{m}]]" for m in b.members[1:])
+            lines.append(f"> **Merged study→final:** {merged}")
+        lines += [
             f"> **Thesis:** {b.thesis}",
             f"> **Anchor trait:** {b.anchor_trait}",
             "> **Study plan:**",
@@ -158,7 +163,7 @@ def write_study_briefs_md(artist: str, briefs: list[StudyBrief], path: Path | st
             if s.success_test:
                 lines.append(f">    *Test:* {s.success_test}")
         lines.append("")
-    path.write_text("\n".join(lines), encoding="utf-8")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path
 
 

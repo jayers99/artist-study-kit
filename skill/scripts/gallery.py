@@ -2,9 +2,13 @@
 
 Reads candidate sidecars written by image_download (<candidates_dir>/<work_id>/<token>.json
 with a sibling <token>.jpg), embeds them as JSON, and renders a self-contained HTML+JS
-page: grid grouped by work -> detail view with a 5-star auto-advancing control -> a
-curatorial gate revealed at >=4* -> Export button that downloads selection.json in the
-scripts.selection schema. MVP: no overlay markup / compare view (spec section 9).
+page: grid grouped by work -> detail view with a 5-star auto-advancing control ->
+Export button that downloads selection.json in the scripts.selection schema.
+MVP: no overlay markup / compare view (spec section 9).
+
+Also provides build_thumbnail_gallery for the remote-thumbnail curation board used in
+the image_discovery stage: hotlinked museum thumbnails with star-rating and liked/PD
+filters; export carries work_id / title / date / medium / provenance + rating.
 """
 
 from __future__ import annotations
@@ -76,11 +80,11 @@ def write_gallery(candidates_dir: Path | str, artist: str, out_path: Path | str)
 
 
 def build_thumbnail_gallery(cands, artist: str) -> str:
-    """Render a browse *board* of remote museum thumbnails with rating + gate + export.
+    """Render a browse *board* of remote museum thumbnails with rating + export.
 
     Unlike the download gallery (local PD files), this shows many hotlinked thumbnails for
     curation regardless of copyright; rights are resolved only for the selected works.
-    Export shape matches scripts.selection (work_id / iiif_token / image_rel / rating / gate).
+    Export shape: work_id / iiif_token / image_rel / title / date / medium / provenance + rating.
     """
     payload = [
         {

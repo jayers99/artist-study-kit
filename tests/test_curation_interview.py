@@ -81,7 +81,8 @@ def test_write_md_renders_thesis_anchor_and_steps(tmp_path):
     p = tmp_path / "study-briefs.md"
     write_study_briefs_md("Paul Klee", [_brief()], p)
     text = p.read_text()
-    assert "> [!example] Exotics (1939)" in text
+    assert "> [!example] [[exotics|Exotics]] (1939)" in text
+    assert "[[sales-woman]]" in text
     assert "facial economy as the dial" in text
     assert "1. copy the ink study" in text
     assert "*Test:* reads warm / tense / uneasy" in text

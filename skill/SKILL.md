@@ -20,10 +20,7 @@ The pipeline is **resumable**. On every invocation:
    `uv run python -c "from scripts.paths import scaffold; scaffold('studies', '<ARTIST>')"`
 2. Load state and find the next stage:
    `uv run python -c "from scripts.state import PipelineState; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); print(PipelineState.load(sp.state_json,'<ARTIST>').next_stage)"`
-3. If the next stage is gated by a human pause (`preference_synthesis`,
-   `visual_analysis`) and its requirement is unmet, print the instructions for
-   that pause and STOP. Otherwise run the next stage, then mark it complete and
-   save state before continuing.
+3. If the next stage is gated by a human pause (`curation_interview`, `preference_synthesis`, `visual_analysis`) and its requirement is unmet, print the instructions for that pause and STOP. Otherwise run the next stage, then mark it complete and save state before continuing.
 4. **Mark a stage complete** after its outputs are written, before moving on:
    `uv run python -c "from scripts.state import PipelineState; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); s=PipelineState.load(sp.state_json,'<ARTIST>'); s.mark_complete('<STAGE_ID>'); s.save(sp.state_json)"`
    Stages are idempotent — re-running overwrites their own outputs without corrupting
