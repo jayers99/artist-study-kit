@@ -218,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Skill runtime output (per-artist study packages, incl. large image sets)
+studies/

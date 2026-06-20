@@ -30,6 +30,15 @@ def test_commerce_page_scores_low_and_skips_llm():
     assert scan.needs_llm_review is False
 
 
+def test_commerce_hits_are_human_labels_not_regex():
+    md = "Senecio print $45.00. Add to cart. Estimate: $4,500."
+    scan = scan_source(_page("https://shop.example.com/p", md))
+    assert "add to cart" in scan.commerce_hits
+    assert "listed price" in scan.commerce_hits
+    # no raw regex metacharacters leak into the human-readable hits
+    assert all("\\" not in h and "$" not in h for h in scan.commerce_hits)
+
+
 def test_neutral_page_is_borderline_and_needs_llm():
     md = "An essay about the artist with some discussion and one footnote [1]."
     scan = scan_source(_page("https://some-blog.net/essay", md))

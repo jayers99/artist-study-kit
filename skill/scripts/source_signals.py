@@ -19,14 +19,16 @@ SHORTLIST_DOMAINS: frozenset[str] = frozenset(
 # Generic + national academic/cultural TLDs treated as higher trust.
 TRUSTED_TLDS: frozenset[str] = frozenset({"edu", "gov", "museum", "ac.uk"})
 
-COMMERCE_PATTERNS: tuple[str, ...] = (
-    r"add to cart",
-    r"buy now",
-    r"make an offer",
-    r"add to basket",
-    r"shipping calculated",
-    r"\$\s?\d[\d,]*",
-    r"estimate:\s*\$",
+# (regex, human-readable label). The label is what lands in `commerce_hits`, so the
+# grade report never leaks a raw pattern like `\$\s?\d[\d,]*` to the reader.
+COMMERCE_PATTERNS: tuple[tuple[str, str], ...] = (
+    (r"add to cart", "add to cart"),
+    (r"buy now", "buy now"),
+    (r"make an offer", "make an offer"),
+    (r"add to basket", "add to basket"),
+    (r"shipping calculated", "shipping calculated"),
+    (r"\$\s?\d[\d,]*", "listed price"),
+    (r"estimate:\s*\$", "auction estimate"),
 )
 
 CITATION_PATTERNS: tuple[str, ...] = (
@@ -70,7 +72,7 @@ def scan_source(page: FetchedPage) -> SignalScan:
     tld = _tld(domain)
     text = page.markdown.lower()
 
-    commerce_hits = [p for p in COMMERCE_PATTERNS if re.search(p, text)]
+    commerce_hits = [label for pattern, label in COMMERCE_PATTERNS if re.search(pattern, text)]
     citation_count = sum(len(re.findall(p, text)) for p in CITATION_PATTERNS)
     shortlisted = domain in SHORTLIST_DOMAINS
 

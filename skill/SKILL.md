@@ -54,6 +54,8 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
    candidates to `images/candidates/<work>/` with `scripts.image_download`, then
    generate the contact sheet:
    `uv run python -c "from scripts.gallery import write_gallery; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); write_gallery(sp.candidates_dir, '<ARTIST>', sp.gallery_html)"`
+   Save the image-search query you used to `prompts/` for reproducibility with
+   `scripts.prompts.save_prompt(sp.prompts_dir, 'image-search', '<the query>', artist='<ARTIST>', stage='image_discovery')`.
    Mark the stage complete, save state, and STOP for Human Pause 1.
 
 > [!info] Human Pause 1 — curation
@@ -79,7 +81,10 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
 7. **visual_analysis** — gated on a chosen study set. See
    `wiki/stage-visual-analysis.md`. Run the 5-stage formal-analysis instruction set
    per study-set work, cross-check against the artist grammar, then serialize with
-   `scripts.analysis.write_analysis_md` → `analysis.md`. Mark complete and save state.
+   `scripts.analysis.write_analysis_md` → `analysis.md`. Save the 5-stage analysis
+   instruction to `prompts/` with
+   `scripts.prompts.save_prompt(sp.prompts_dir, 'visual-analysis', '<the instruction>', artist='<ARTIST>', stage='visual_analysis')`.
+   Mark complete and save state.
 8. **study_retention** — see `wiki/stage-study-retention.md`. Emit the faded-aids
    `study-notes.md`, the `drills/discrimination-cards.md`, and `review-schedule.md`
    via `scripts.study_retention` (`write_study_notes_md`, `write_discrimination_cards_md`,
