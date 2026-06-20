@@ -100,6 +100,13 @@ class StudyPaths:
     def state_json(self) -> Path:
         return self.root / "state.json"
 
+    @property
+    def sessions_dir(self) -> Path:
+        return self.root / "sessions"
+
+    def session_dir(self, session_id: str) -> Path:
+        return self.sessions_dir / session_id
+
 
 _SCAFFOLD_DIRS = (
     "sources",
@@ -108,6 +115,7 @@ _SCAFFOLD_DIRS = (
     "images/selected",
     "drills",
     "prompts",
+    "sessions",
 )
 
 

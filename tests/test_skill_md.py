@@ -35,3 +35,16 @@ def test_skill_md_references_plan3_scripts():
 def test_skill_md_documents_stage_completion():
     text = SKILL_MD.read_text(encoding="utf-8")
     assert "mark_complete" in text
+
+
+def test_skill_md_documents_multi_run_state():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    for token in ("merge_candidates", "record_run", "record_session",
+                  "studied_work_ids", "ingest_selection"):
+        assert token in text, f"SKILL.md does not wire {token}"
+
+
+def test_skill_md_explains_studied_badge_is_not_a_gate():
+    text = SKILL_MD.read_text(encoding="utf-8").lower()
+    assert "studied" in text
+    assert "badge" in text

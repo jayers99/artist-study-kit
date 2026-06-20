@@ -67,3 +67,21 @@ def test_slugify_guards_empty_and_symbol_only(name):
 def test_study_paths_root_never_equals_base_for_blank_name():
     sp = study_paths("studies", "   ")
     assert sp.root == Path("studies/untitled")
+
+
+def test_sessions_dir_is_under_root():
+    from scripts.paths import study_paths
+    sp = study_paths("studies", "Paul Klee")
+    assert sp.sessions_dir == sp.root / "sessions"
+
+
+def test_session_dir_nests_by_id():
+    from scripts.paths import study_paths
+    sp = study_paths("studies", "Paul Klee")
+    assert sp.session_dir("sess-1") == sp.root / "sessions" / "sess-1"
+
+
+def test_scaffold_creates_sessions_dir(tmp_path):
+    from scripts.paths import scaffold
+    sp = scaffold(tmp_path, "Paul Klee")
+    assert sp.sessions_dir.is_dir()
