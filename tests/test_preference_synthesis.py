@@ -45,5 +45,14 @@ def test_emitter_respects_shortlist_cap(tmp_path):
     write_preference_synthesis_md("insight", cands, "Artist", p, shortlist_cap=8)
     text = p.read_text(encoding="utf-8")
     assert "Work 0" in text and "Work 7" in text
+    assert "Work 8" not in text
     # capped: the 9th-ranked work is noted as below the cap, not in the ranked table rows
     assert "shortlist cap" in text.lower()
+
+
+def test_emitter_escapes_pipe_in_rationale(tmp_path):
+    p = tmp_path / "preference-synthesis.md"
+    cands = [_c("w1", "Work One", 80, 70, rationale="strong values | bold edges")]
+    write_preference_synthesis_md("insight", cands, "Artist", p)
+    text = p.read_text(encoding="utf-8")
+    assert "strong values \\| bold edges" in text

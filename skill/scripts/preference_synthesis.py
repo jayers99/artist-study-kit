@@ -13,6 +13,11 @@ from pathlib import Path
 PREFERENCE_WEIGHTS: dict[str, int] = {"pattern_fit": 50, "studyability": 50}
 
 
+def _cell(text: str) -> str:
+    """Escape a pipe so it doesn't break the markdown table cell."""
+    return str(text).replace("|", "\\|")
+
+
 @dataclass(frozen=True)
 class StudyCandidate:
     work_id: str
@@ -67,8 +72,8 @@ def write_preference_synthesis_md(
     ]
     for i, c in enumerate(ranked[:shortlist_cap], start=1):
         lines.append(
-            f"| {i} | [[{c.work_id}\\|{c.title}]] | {combined_score(c)} | "
-            f"{c.pattern_fit} | {c.studyability} | {c.rationale} |"
+            f"| {i} | [[{c.work_id}\\|{_cell(c.title)}]] | {combined_score(c)} | "
+            f"{c.pattern_fit} | {c.studyability} | {_cell(c.rationale)} |"
         )
     if len(ranked) > shortlist_cap:
         dropped = len(ranked) - shortlist_cap
