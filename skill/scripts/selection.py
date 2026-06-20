@@ -89,6 +89,17 @@ def liked(sel: Selection, threshold: int = LIKED_THRESHOLD) -> list[Rating]:
     return [r for r in sel.ratings if r.rating >= threshold]
 
 
+def ingest_selection(sel: "Selection", *, liked_only: bool = True) -> tuple[list[str], list[str]]:
+    """Resolve an exported selection into (selected_ids, study_set_ids) for a session.
+
+    selected_ids are the wide cut (liked works by default); study_set defaults equal
+    to it — the Thrust-3 funnel narrows study_set to <=4 later.
+    """
+    rows = liked(sel) if liked_only else sel.ratings
+    selected_ids = [r.work_id for r in rows]
+    return selected_ids, list(selected_ids)
+
+
 def apply_selection(
     sel: Selection,
     candidates_dir: Path | str,

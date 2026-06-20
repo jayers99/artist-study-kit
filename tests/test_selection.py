@@ -100,3 +100,25 @@ def test_parse_selection_reads_board_provenance_fields():
 def test_parse_selection_defaults_missing_provenance():
     r = parse_selection(_data()).ratings[0]
     assert r.qid == "" and r.inst_ids == ()
+
+
+def test_ingest_selection_returns_liked_ids_and_defaults_study_set():
+    from scripts.selection import ingest_selection
+    sel = Selection(artist="x", ratings=[
+        Rating(work_id="a", iiif_token="", image_rel="u", rating=5),
+        Rating(work_id="b", iiif_token="", image_rel="u", rating=2),
+        Rating(work_id="c", iiif_token="", image_rel="u", rating=4),
+    ])
+    selected, study_set = ingest_selection(sel)
+    assert selected == ["a", "c"]
+    assert study_set == ["a", "c"]
+
+
+def test_ingest_selection_liked_only_false_keeps_all():
+    from scripts.selection import ingest_selection
+    sel = Selection(artist="x", ratings=[
+        Rating(work_id="a", iiif_token="", image_rel="u", rating=5),
+        Rating(work_id="b", iiif_token="", image_rel="u", rating=0),
+    ])
+    selected, study_set = ingest_selection(sel, liked_only=False)
+    assert selected == ["a", "b"]
