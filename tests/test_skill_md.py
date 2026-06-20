@@ -48,3 +48,12 @@ def test_skill_md_explains_studied_badge_is_not_a_gate():
     text = SKILL_MD.read_text(encoding="utf-8").lower()
     assert "studied" in text
     assert "badge" in text
+
+
+def test_skill_md_documents_user_import():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    assert "user_import" in text
+    assert "verify_identification" in text
+    assert "ingest_import_review" in text
+    assert "import-review" in text
+    assert "user-import" in text
