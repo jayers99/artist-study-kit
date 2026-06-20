@@ -70,8 +70,8 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
 ## Import your own images (origin:"user")
 
 A re-enterable operation alongside discover · select · study. The user points the
-skill at a folder of their own paintings for the **current** artist study. Entry point:
-`user_import(artist, user_images_dir, ...)`.
+skill at a folder of their own paintings for the **current** artist study. The steps
+below use the `scripts/user_import.py` helpers.
 
 1. **View each image (Claude vision).** For every image file, look at it and emit a
    guess `{filename, source_path, artist, title, date}` — or a null/empty title if you
