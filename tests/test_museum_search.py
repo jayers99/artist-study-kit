@@ -108,3 +108,19 @@ def test_aic_candidate_carries_aic_inst_id_and_empty_qid():
     first = cands[0]
     assert first.qid == ""
     assert first.inst_ids == (("aic", "10018"),)
+
+
+def test_aic_candidate_carries_medium():
+    payload = {
+        "data": [{"id": 7, "title": "Senecio", "image_id": "abc", "date_display": "1922",
+                  "is_public_domain": False, "artist_title": "Paul Klee",
+                  "medium_display": "Oil on gauze"}],
+        "config": {"iiif_url": "https://www.artic.edu/iiif/2"},
+    }
+    from scripts.museum_search import parse_aic_search
+    assert parse_aic_search(payload)[0].medium == "Oil on gauze"
+
+
+def test_aic_fields_request_medium():
+    from scripts.museum_search import AIC_FIELDS
+    assert "medium_display" in AIC_FIELDS

@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from scripts.paths import slugify
 
 AIC_BASE = "https://api.artic.edu/api/v1"
-AIC_FIELDS = "id,title,image_id,date_display,is_public_domain,artist_title"
+AIC_FIELDS = "id,title,image_id,date_display,is_public_domain,artist_title,medium_display"
 AIC_IIIF_DEFAULT = "https://www.artic.edu/iiif/2"
 
 
@@ -32,6 +32,7 @@ class ThumbnailCandidate:
     source_url: str
     date: str
     rights: str  # public_domain | in_copyright | unknown
+    medium: str = ""
     qid: str = ""
     inst_ids: tuple[tuple[str, str], ...] = ()
 
@@ -102,6 +103,7 @@ def parse_aic_search(payload: dict, *, artist: str | None = None,
                 source_url=f"https://www.artic.edu/artworks/{d.get('id')}",
                 date=str(d.get("date_display") or ""),
                 rights="public_domain" if d.get("is_public_domain") else "in_copyright",
+                medium=str(d.get("medium_display") or ""),
                 inst_ids=(("aic", str(d.get("id"))),),
             )
         )
