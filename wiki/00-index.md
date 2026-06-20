@@ -22,7 +22,7 @@ The skill's workflow, in order (seed: [[00-artist-study-kit-seed]]):
 3. [[stage-style-definition]] — the artist's visual grammar, up front.
 4. [[stage-works-inventory]] — select + rank works (important vs studyable).
 5. [[stage-image-discovery]] — high-res candidate images, legally.
-6. [[stage-curation]] — the human visually rates the board → `selection.json`.
+6a. [[stage-curation]] — the human visually rates the board → `selection.json`.
 6b. [[stage-curation-interview]] — Socratic per-work interview → `study-briefs`.
 7. [[stage-visual-analysis]] — deep-read the selected works.
 - ⟳ [[stage-study-retention]] — *cross-cutting*: notes, drills, aids, review schedule.
@@ -42,7 +42,7 @@ Chronological wiki history: [[log|wiki log]].
 - [[concept-spaced-repetition]] — spacing/lag, FSRS, RB/II, interleaving, 500ms.
   → study-retention, visual-analysis.
 - [[concept-worked-example-fading]] — job vs learning aids, fading, crutch problem.
-  → study-retention, curation, curation-interview.
+  → study-retention, style-definition, visual-analysis, curation-interview.
 
 ## Raw corpus (immutable sources)
 

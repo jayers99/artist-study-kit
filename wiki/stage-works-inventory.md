@@ -47,5 +47,6 @@ anatomy).
 - Score each work on **two axes** (art-historical importance + studyability) via a weighted
   rubric; let curation ([[stage-curation]]) sort by either.
 - Output a **clustered, ranked** list that reads as a study progression (general→specific).
-- Pull provenance/market facts from auction (Tier 3) sources flagged by
-  [[stage-source-grading]]; pull image availability from museum APIs ([[concept-iiif]]).
+- Pull provenance/market facts from auction (Tier 3) sources, weighting them by the
+  [[concept-source-trust-signals]] tiers that [[stage-source-grading]] assigns; pull image
+  availability from museum APIs ([[concept-iiif]]).

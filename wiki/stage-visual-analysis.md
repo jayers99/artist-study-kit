@@ -57,6 +57,7 @@ and start the "unseeing" handed over from [[stage-curation]].
   prompts; include the technique-imitation checklist as a [[concept-worked-example-fading]]
   job aid for the easel.
 - Generate **targeted drills** per work (e.g. the egg/Zorn drill, value thumbnails,
-  scumbling study) and pass them to [[stage-study-retention]] as study-passage candidates.
+  scumbling study) and pass them to [[stage-study-retention]] as study-passage candidates
+  for [[concept-spaced-repetition]] scheduling.
 - Cross-check each work against the artist-level grammar; note confirmations and surprises.
 - Include a predict-then-reveal variant of the analysis to preserve productive struggle.

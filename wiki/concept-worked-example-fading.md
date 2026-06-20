@@ -2,7 +2,7 @@
 title: "Worked Examples, Aids & Fading"
 type: wiki/concept
 sources: [07.1-study-aids-scaffolding]
-used-by: [stage-study-retention, stage-curation, stage-curation-interview]
+used-by: [stage-study-retention, stage-style-definition, stage-visual-analysis, stage-curation-interview]
 tags: [wiki/concept, learning/scaffolding]
 aliases: ["Job Aid vs Learning Aid", "Worked-Example Effect", "Fading", "Crutch Problem"]
 ---
@@ -11,8 +11,9 @@ aliases: ["Job Aid vs Learning Aid", "Worked-Example Effect", "Fading", "Crutch 
 
 How to design study aids that build mastery and then disappear. Source:
 [[07.1-study-aids-scaffolding]]. Used by [[stage-study-retention]] (drills, cheat sheets,
-checklists) and [[stage-curation]] (the attempt-first gate). Pairs with
-[[concept-desirable-difficulty]].
+checklists), [[stage-style-definition]] / [[stage-visual-analysis]] (the technique-imitation
+checklist as a job aid), and [[stage-curation-interview]] (the attempt-first study brief).
+Pairs with [[concept-desirable-difficulty]].
 
 ## Job aid vs learning aid
 
