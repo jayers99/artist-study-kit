@@ -12,6 +12,7 @@ STAGES: tuple[str, ...] = (
     "style_definition",
     "works_inventory",
     "image_discovery",
+    "curation_interview",
     "preference_synthesis",
     "visual_analysis",
     "study_retention",
@@ -19,7 +20,8 @@ STAGES: tuple[str, ...] = (
 
 # Stages that cannot start until the human supplies an artifact.
 PAUSE_GATES: dict[str, str] = {
-    "preference_synthesis": "curation complete: selection.json present",
+    "curation_interview": "curation complete: selection.json present",
+    "preference_synthesis": "study briefs ready: study-briefs.json present",
     "visual_analysis": "study set chosen from the ranked funnel",
 }
 
