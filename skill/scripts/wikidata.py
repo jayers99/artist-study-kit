@@ -207,3 +207,17 @@ def merge_boards(primary, supplement, *, suppress_aic_ids: set[str]):
         seen_titledates.add(td)
         out.append(c)
     return out
+
+
+def search_wikidata(artist: str, *, query=None, thumb_width: int = 400):
+    """Resolve the artist's QID, fetch their works, build board candidates.
+
+    Returns (board_candidates, works, ambiguous_candidates). When the QID can't be
+    auto-resolved, board/works are empty and ambiguous_candidates is non-empty.
+    """
+    query = query or default_sparql
+    qid, candidates = resolve_qid(artist, query=query)
+    if qid is None:
+        return [], [], candidates
+    works = parse_works(query(works_sparql(qid)))
+    return to_thumbnail_candidates(works, thumb_width=thumb_width), works, []

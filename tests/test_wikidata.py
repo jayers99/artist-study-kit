@@ -7,6 +7,7 @@ from scripts.wikidata import (
     parse_qid_candidates,
     parse_works,
     resolve_qid,
+    search_wikidata,
     to_thumbnail_candidates,
 )
 
@@ -160,3 +161,23 @@ def test_merge_dedups_unlinked_cross_source_by_title():
     supplement = [_tc("Senecio", aic_id="999", date="1922")]  # no qid, not suppressed
     out = merge_boards(primary, supplement, suppress_aic_ids=set())
     assert len(out) == 1 and out[0].qid == "Q123"
+
+
+def test_search_wikidata_resolves_then_fetches_works():
+    calls = []
+
+    def fake_query(q):
+        calls.append(q)
+        return QID_KLEE if "P31 wd:Q5" in q else WORKS
+
+    board, works, ambiguous = search_wikidata("Paul Klee", query=fake_query)
+    assert ambiguous == []                       # auto-resolved
+    assert [w.title for w in works] == ["Fish Magic", "Senecio", "Lost Work"]
+    assert {c.title for c in board} == {"Fish Magic", "Senecio"}
+    assert any("wd:Q44007" in q for q in calls)  # works query used the resolved QID
+
+
+def test_search_wikidata_returns_candidates_when_ambiguous():
+    board, works, ambiguous = search_wikidata("John Smith", query=lambda q: QID_TIE)
+    assert board == [] and works == []
+    assert [c.qid for c in ambiguous] == ["Q1", "Q2"]
