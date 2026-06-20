@@ -35,6 +35,15 @@ The pipeline is **resumable**. On every invocation:
 > or a page a later stage will cite) through the rubric even if its band is `high`, so
 > trust scores on load-bearing sources are confirmed, not assumed.
 
+> [!note] Stage-2 fetching — WebFetch first, Firecrawl on block
+> Fetch each source with **WebFetch** (free, built-in) by default. **Escalate to
+> `scripts.firecrawl_fetch.fetch_page(url)` (1 Firecrawl credit) when WebFetch is blocked
+> or empty** — HTTP 403/429 or no body. Empirically this is the norm for the highest-value
+> art sources: museum and scholarly sites (Smarthistory, the Met, MoMA) bot-block WebFetch
+> but Firecrawl gets through. WebFetch returns a model read of the page (good enough to
+> judge commerce/citation signals directly); Firecrawl returns full markdown for the
+> deterministic `scan_source`. Either way, feed what you obtained to the rubric.
+
 Stage ids, in order: `background`, `source_grading`, `style_definition`,
 `works_inventory`, `image_discovery`, `preference_synthesis`,
 `visual_analysis`, `study_retention`.

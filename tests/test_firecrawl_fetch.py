@@ -41,6 +41,23 @@ def test_normalize_defaults_when_metadata_missing():
     assert page.final_url == "https://example.com"
 
 
+def test_normalize_coerces_pydantic_metadata_with_snake_case_keys():
+    # firecrawl-py v4 returns a DocumentMetadata model (not a dict) with snake_case keys.
+    class DocumentMetadata:
+        def model_dump(self):
+            return {
+                "url": "https://example.com/x",
+                "source_url": "https://example.com/x",
+                "status_code": 200,
+            }
+
+    resp = SimpleNamespace(markdown="# Klee", metadata=DocumentMetadata())
+    page = normalize_scrape("https://example.com/x", resp)
+    assert page.status_code == 200
+    assert page.final_url == "https://example.com/x"
+    assert page.metadata["status_code"] == 200
+
+
 def test_fetch_page_uses_injected_client():
     class FakeClient:
         def __init__(self):
