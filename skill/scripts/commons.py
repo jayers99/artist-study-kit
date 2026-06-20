@@ -160,6 +160,32 @@ def default_search(query: str, *, limit: int = 8) -> dict:
     return resp.json()
 
 
+def build_fileinfo_params(filename: str) -> dict:
+    """MediaWiki params to fetch imageinfo for a known File: title."""
+    return {
+        "action": "query",
+        "format": "json",
+        "titles": f"File:{filename}",
+        "prop": "imageinfo",
+        "iiprop": "url|size|mediatype|extmetadata",
+        "iiextmetadatafilter": "LicenseShortName|UsageTerms",
+    }
+
+
+def default_fileinfo(filename: str) -> dict:
+    """Real MediaWiki file-info fetch (httpx). Not exercised in tests."""
+    import httpx
+
+    user_agent = (
+        "artist-study-kit/1.0 (studio-prep research; "
+        "+https://github.com/jayers99/artist-study-kit)"
+    )
+    resp = httpx.get(COMMONS_API, params=build_fileinfo_params(filename),
+                     headers={"User-Agent": user_agent}, timeout=40.0)
+    resp.raise_for_status()
+    return resp.json()
+
+
 def discover_commons(
     query: str,
     work_id: str,
