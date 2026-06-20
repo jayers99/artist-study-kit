@@ -330,3 +330,22 @@ def test_migrate_with_no_liked_rows_records_no_session():
     st = migrate_legacy({"artist": "Paul Klee", "completed": []}, sel, now="T0")
     assert st.sessions == []
     assert len(st.candidates) == 2
+
+
+def test_board_candidate_local_path_roundtrips():
+    from scripts.state import BoardCandidate
+    bc = BoardCandidate(
+        work_id="barn", title="Farmhouse", date="1925", museum="",
+        thumbnail_url="images/user/barn.jpg", source_url="", rights="unknown",
+        origin="user", local_path="images/user/barn.jpg")
+    d = bc.to_dict()
+    assert d["local_path"] == "images/user/barn.jpg"
+    assert BoardCandidate.from_dict(d).local_path == "images/user/barn.jpg"
+
+
+def test_board_candidate_local_path_defaults_empty_on_legacy_dict():
+    from scripts.state import BoardCandidate
+    legacy = {"work_id": "exotics", "title": "Exotics", "date": "1939",
+              "museum": "aic", "thumbnail_url": "u", "source_url": "s",
+              "rights": "in_copyright"}
+    assert BoardCandidate.from_dict(legacy).local_path == ""
