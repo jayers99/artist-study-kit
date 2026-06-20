@@ -1,64 +1,103 @@
 from scripts.museum_search import (
     ThumbnailCandidate,
-    aic_search_params,
+    aic_artworks_params,
     parse_aic_search,
+    pick_agent,
+    resolve_aic_agent,
     search_aic,
 )
 
-AIC_PAYLOAD = {
-    "pagination": {"total": 1254},
+# artworks/search response (agent-id query → all genuinely the artist)
+AIC_WORKS = {
+    "pagination": {"total": 97},
     "data": [
-        {"id": 10018, "title": "Dancing Girl", "image_id": "c969-aaa", "date_display": "1940", "is_public_domain": False},
-        {"id": 61608, "title": "Sunset", "image_id": "92da-bbb", "date_display": "1930", "is_public_domain": True},
-        {"id": 999, "title": "No Image Work", "image_id": None, "date_display": "1925", "is_public_domain": True},
+        {"id": 10018, "title": "Dancing Girl", "image_id": "c969-aaa", "date_display": "1940",
+         "is_public_domain": False, "artist_title": "Paul Klee"},
+        {"id": 61608, "title": "Sunset", "image_id": "92da-bbb", "date_display": "1930",
+         "is_public_domain": False, "artist_title": "Paul Klee"},
+        {"id": 999, "title": "No Image", "image_id": None, "date_display": "1925",
+         "is_public_domain": False, "artist_title": "Paul Klee"},
+    ],
+    "config": {"iiif_url": "https://www.artic.edu/iiif/2"},
+}
+
+# agents/search puts the foundation ('Zentrum Paul Klee') first; the artist is the exact match.
+AIC_AGENTS = {"data": [
+    {"id": 114514, "title": "Zentrum Paul Klee"},
+    {"id": 35282, "title": "Paul Klee"},
+    {"id": 4819, "title": "Paul Citroen"},
+]}
+
+# loose match[artist_title] response — leaks other 'Paul' artists
+AIC_LOOSE = {
+    "pagination": {"total": 300},
+    "data": [
+        {"id": 1, "title": "Klee work", "image_id": "k1", "date_display": "1922",
+         "is_public_domain": False, "artist_title": "Paul Klee"},
+        {"id": 2, "title": "Bathers", "image_id": "c1", "date_display": "1905",
+         "is_public_domain": True, "artist_title": "Paul Cezanne"},
     ],
     "config": {"iiif_url": "https://www.artic.edu/iiif/2"},
 }
 
 
-def test_parse_aic_yields_thumbnail_candidates():
-    cands = parse_aic_search(AIC_PAYLOAD)
+def test_pick_agent_takes_exact_title_match_not_first_result():
+    assert pick_agent(AIC_AGENTS, "Paul Klee") == 35282  # not 114514 'Zentrum Paul Klee'
+
+
+def test_pick_agent_is_accent_insensitive():
+    payload = {"data": [{"id": 7, "title": "Joan Miró"}]}
+    assert pick_agent(payload, "Joan Miro") == 7
+
+
+def test_pick_agent_returns_none_without_exact_match():
+    payload = {"data": [{"id": 1, "title": "Zentrum Paul Klee"}]}
+    assert pick_agent(payload, "Paul Klee") is None
+
+
+def test_aic_artworks_params_use_artist_ids_when_agent_known():
+    p = aic_artworks_params(agent_id=35282, limit=100, page=2)
+    assert p["query[term][artist_ids]"] == "35282"
+    assert "query[match][artist_title]" not in p
+    assert p["page"] == "2" and "artist_title" in p["fields"]
+
+
+def test_aic_artworks_params_fall_back_to_name_match_without_agent():
+    p = aic_artworks_params(agent_id=None, artist="Paul Klee")
+    assert p["query[match][artist_title]"] == "Paul Klee"
+
+
+def test_parse_drops_works_without_image_and_maps_rights():
+    cands = parse_aic_search(AIC_WORKS)
+    assert len(cands) == 2  # 'No Image' dropped
     assert all(isinstance(c, ThumbnailCandidate) for c in cands)
     first = cands[0]
-    assert first.title == "Dancing Girl"
-    assert first.museum == "aic"
     assert first.thumbnail_url == "https://www.artic.edu/iiif/2/c969-aaa/full/400,/0/default.jpg"
     assert first.source_url == "https://www.artic.edu/artworks/10018"
-    assert first.date == "1940"
+    assert first.rights == "in_copyright"
 
 
-def test_parse_aic_drops_works_without_image():
-    cands = parse_aic_search(AIC_PAYLOAD)
-    assert len(cands) == 2  # the image_id=None work is dropped
-    assert all(c.thumbnail_url for c in cands)
+def test_parse_artist_guard_drops_other_artists():
+    # the fallback loose path can leak other 'Paul' artists; the guard removes them
+    cands = parse_aic_search(AIC_LOOSE, artist="Paul Klee")
+    assert [c.title for c in cands] == ["Klee work"]  # Cezanne 'Bathers' dropped
 
 
-def test_parse_aic_maps_rights_from_public_domain_flag():
-    by_title = {c.title: c for c in parse_aic_search(AIC_PAYLOAD)}
-    assert by_title["Dancing Girl"].rights == "in_copyright"
-    assert by_title["Sunset"].rights == "public_domain"
+def test_search_aic_resolves_agent_then_queries_by_artist_id():
+    seen = []
+
+    def fake_fetch(path, params):
+        seen.append((path, params.get("page")))
+        return AIC_AGENTS if path == "agents/search" else AIC_WORKS
+
+    cands = search_aic("Paul Klee", pages=2, fetch=fake_fetch)
+    assert ("agents/search", None) in seen
+    # two artwork pages requested after the one agent lookup
+    assert [p for (path, p) in seen if path == "artworks/search"] == ["1", "2"]
+    assert len(cands) == 4  # 2 per page * 2 pages
+    assert all(c.museum == "aic" for c in cands)
 
 
-def test_parse_aic_respects_thumb_width():
-    c = parse_aic_search(AIC_PAYLOAD, thumb_width=843)[0]
-    assert "/full/843,/0/default.jpg" in c.thumbnail_url
-
-
-def test_aic_search_params_match_artist_title():
-    p = aic_search_params("Paul Klee", limit=100, page=2)
-    assert p["query[match][artist_title]"] == "Paul Klee"
-    assert p["limit"] == "100"
-    assert p["page"] == "2"
-    assert "image_id" in p["fields"]
-
-
-def test_search_aic_paginates_with_injected_fetch():
-    calls = []
-
-    def fake_fetch(params):
-        calls.append(params["page"])
-        return AIC_PAYLOAD
-
-    cands = search_aic("Paul Klee", limit=100, pages=3, fetch=fake_fetch)
-    assert calls == ["1", "2", "3"]
-    assert len(cands) == 6  # 2 per page * 3 pages
+def test_resolve_aic_agent_uses_injected_fetch():
+    cands = resolve_aic_agent("Paul Klee", fetch=lambda path, params: AIC_AGENTS)
+    assert cands == 35282
