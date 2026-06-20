@@ -1,5 +1,5 @@
 from scripts.selection import Rating
-from scripts.curation_interview import StudyTarget, build_queue, StudyBrief, StudyStep, serialize_briefs, parse_briefs
+from scripts.curation_interview import StudyTarget, build_queue, StudyBrief, StudyStep, serialize_briefs, parse_briefs, pending_targets, validate_briefs
 
 
 def _r(work_id, date="1930", title=None):
@@ -92,3 +92,39 @@ def test_study_briefs_paths():
     sp = study_paths("studies", "Paul Klee")
     assert sp.study_briefs_json.name == "study-briefs.json"
     assert sp.study_briefs_md.name == "study-briefs.md"
+
+
+def _target(work_id):
+    return StudyTarget(work_id=work_id, title=work_id, year="1930", medium="",
+                       cluster="c", source_url="u", members=(work_id,))
+
+
+def _full_brief(work_id):
+    return StudyBrief(work_id=work_id, title=work_id, year="1930", members=(work_id,),
+                      cluster="c", source_url="u", thesis="t", anchor_trait="a",
+                      study_plan=(StudyStep("do it"),))
+
+
+def test_pending_targets_excludes_briefed_works():
+    queue = [_target("a"), _target("b")]
+    assert [t.work_id for t in pending_targets(queue, [_full_brief("a")])] == ["b"]
+
+
+def test_validate_passes_when_every_target_has_a_full_brief():
+    queue = [_target("a")]
+    assert validate_briefs(queue, [_full_brief("a")]) == []
+
+
+def test_validate_flags_missing_brief():
+    queue = [_target("a")]
+    assert any("no study brief" in e for e in validate_briefs(queue, []))
+
+
+def test_validate_flags_empty_thesis_anchor_or_plan():
+    queue = [_target("a")]
+    bad = StudyBrief(work_id="a", title="a", year="1930", members=("a",), cluster="c",
+                     source_url="u", thesis="  ", anchor_trait="", study_plan=())
+    errs = validate_briefs(queue, [bad])
+    assert any("thesis" in e for e in errs)
+    assert any("anchor_trait" in e for e in errs)
+    assert any("study_plan" in e for e in errs)

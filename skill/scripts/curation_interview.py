@@ -160,3 +160,27 @@ def write_study_briefs_md(artist: str, briefs: list[StudyBrief], path: Path | st
         lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
     return path
+
+
+def pending_targets(queue: list[StudyTarget], briefs: list[StudyBrief]) -> list[StudyTarget]:
+    """Targets that do not yet have a study brief (resume support)."""
+    done = {b.work_id for b in briefs}
+    return [t for t in queue if t.work_id not in done]
+
+
+def validate_briefs(queue: list[StudyTarget], briefs: list[StudyBrief]) -> list[str]:
+    """Return errors; empty means every queued target has a complete brief."""
+    by_id = {b.work_id: b for b in briefs}
+    errors: list[str] = []
+    for t in queue:
+        b = by_id.get(t.work_id)
+        if b is None:
+            errors.append(f"{t.work_id}: no study brief")
+            continue
+        if not b.thesis.strip():
+            errors.append(f"{t.work_id}: empty thesis")
+        if not b.anchor_trait.strip():
+            errors.append(f"{t.work_id}: empty anchor_trait")
+        if not b.study_plan:
+            errors.append(f"{t.work_id}: empty study_plan")
+    return errors
