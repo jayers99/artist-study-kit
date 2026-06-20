@@ -183,29 +183,27 @@ def _aic_id(cand: ThumbnailCandidate) -> str:
 
 
 def merge_boards(primary, supplement, *, suppress_aic_ids: set[str]):
-    """Wikidata-primary board: drop AIC dupes by inst-id, then dedup by qid/title+date."""
+    """Wikidata-primary board: drop AIC dupes by inst-id, then dedup.
+
+    A candidate WITH a qid dedups only against other qids (never false-merges two
+    distinct works that share a title+year). A candidate WITHOUT a qid (AIC) dedups by
+    folded title|date against every kept work, so an unlinked cross-source duplicate of
+    a Wikidata work is removed.
+    """
     merged: list[ThumbnailCandidate] = list(primary)
     merged += [c for c in supplement if _aic_id(c) not in suppress_aic_ids]
-    seen: set[str] = set()
+    seen_qids: set[str] = set()
+    seen_titledates: set[str] = set()
     out: list[ThumbnailCandidate] = []
     for c in merged:
-        # Dedup by qid (if present) OR by folded title|date
-        qid_key = c.qid if c.qid else None
-        title_date_key = f"{_fold(c.title)}|{c.date}"
-
-        # Check if we've seen this work before (by either key)
-        is_dupe = False
-        if qid_key and qid_key in seen:
-            is_dupe = True
-        if title_date_key in seen:
-            is_dupe = True
-
-        if is_dupe:
+        td = f"{_fold(c.title)}|{c.date}"
+        if c.qid:
+            if c.qid in seen_qids:
+                continue
+        elif td in seen_titledates:
             continue
-
-        # Mark both keys as seen
-        if qid_key:
-            seen.add(qid_key)
-        seen.add(title_date_key)
+        if c.qid:
+            seen_qids.add(c.qid)
+        seen_titledates.add(td)
         out.append(c)
     return out

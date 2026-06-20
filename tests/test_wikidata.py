@@ -144,3 +144,19 @@ def test_merge_dedups_remaining_by_title_and_date():
     supplement = [_tc("Twittering Machine", aic_id="5", date="1922")]
     out = merge_boards(primary, supplement, suppress_aic_ids=set())
     assert len(out) == 1 and out[0].qid == "Q44"
+
+
+def test_merge_keeps_distinct_works_sharing_title_and_date():
+    # two DIFFERENT qid'd works with the same title+date must both survive
+    primary = [_tc("Composition", qid="Q1", date="1922")]
+    supplement = [_tc("Composition", qid="Q2", date="1922")]
+    out = merge_boards(primary, supplement, suppress_aic_ids=set())
+    assert [c.qid for c in out] == ["Q1", "Q2"]
+
+
+def test_merge_dedups_unlinked_cross_source_by_title():
+    # AIC dup of a Wikidata work, NOT linked by inst-id, is removed via title|date
+    primary = [_tc("Senecio", museum="Kunstmuseum Basel", qid="Q123", date="1922")]
+    supplement = [_tc("Senecio", aic_id="999", date="1922")]  # no qid, not suppressed
+    out = merge_boards(primary, supplement, suppress_aic_ids=set())
+    assert len(out) == 1 and out[0].qid == "Q123"
