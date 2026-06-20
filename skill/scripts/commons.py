@@ -13,6 +13,9 @@ Pure parsing (`parse_commons_search`) is fixture-tested; the network boundary
 
 from __future__ import annotations
 
+import re
+import unicodedata
+
 from scripts.iiif import ImageCandidate, classify_rights
 
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
@@ -32,8 +35,33 @@ def build_search_params(query: str, *, limit: int = 8) -> dict:
         "gsrlimit": str(limit),
         "prop": "imageinfo",
         "iiprop": "url|size|mediatype|extmetadata",
-        "iiextmetadatafilter": "LicenseShortName|UsageTerms",
+        # Categories + ObjectName let the artist guard confirm attribution.
+        "iiextmetadatafilter": "LicenseShortName|UsageTerms|Categories|ObjectName",
     }
+
+
+def _fold(text: str) -> str:
+    """Accent-fold to lowercase ASCII so 'Miró' and 'Miro' compare equal."""
+    return unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode("ascii").lower()
+
+
+def _artist_matches(artist: str, *fields: str) -> bool:
+    """True if the artist (surname token, or full name) appears in title/categories/etc.
+
+    Free-text Commons search matches query keywords regardless of creator, so it surfaces
+    wrong-artist PD works (e.g. Velázquez's *Philip IV as a Hunter* for Miró's *The Hunter*).
+    This guards on attribution. Conservative by design: it can drop a correctly-attributed
+    file that never names the artist in its title or immediate categories.
+    """
+    name = " ".join(_fold(artist).split())
+    if not name:
+        return True
+    parts = name.split()
+    haystack = _fold(" | ".join(f for f in fields if f))
+    tokens = set(re.findall(r"[a-z0-9]+", haystack))
+    if parts[-1] in tokens:  # surname as a whole token
+        return True
+    return len(parts) > 1 and name in haystack  # full name as a substring
 
 
 def _label(title: str) -> str:
@@ -65,6 +93,7 @@ def parse_commons_search(
     payload: dict,
     *,
     work_id: str,
+    artist: str | None = None,
     want: int = 3,
     min_long_edge: int = 1500,
     include_cc: bool = False,
@@ -72,8 +101,9 @@ def parse_commons_search(
     """Flatten a MediaWiki imageinfo response into ranked, validated candidates.
 
     Public-domain (PD/CC0) only by default; `include_cc=True` also keeps CC-licensed
-    images (rights_status `unknown`, usable with attribution). Largest first, capped to
-    `want`, with unique per-candidate iiif tokens so downloads don't collide.
+    images (rights_status `unknown`, usable with attribution). When `artist` is given,
+    drop keyword false positives whose title/categories don't name that artist. Largest
+    first, capped to `want`, with unique per-candidate iiif tokens so downloads don't collide.
     """
     pages = (payload.get("query") or {}).get("pages") or {}
     scored: list[tuple[int, str, int, int, str, str]] = []
@@ -82,6 +112,12 @@ def parse_commons_search(
         ok, license_str, rights = _eligible(info, min_long_edge=min_long_edge, include_cc=include_cc)
         if not ok:
             continue
+        if artist:
+            em = info.get("extmetadata") or {}
+            cats = (em.get("Categories") or {}).get("value", "")
+            obj = (em.get("ObjectName") or {}).get("value", "")
+            if not _artist_matches(artist, page.get("title", ""), cats, obj):
+                continue
         w, h = int(info["width"]), int(info["height"])
         scored.append((max(w, h), info["url"], w, h, license_str, _label(page.get("title", ""))))
 
@@ -128,16 +164,21 @@ def discover_commons(
     query: str,
     work_id: str,
     *,
+    artist: str | None = None,
     search=default_search,
     want: int = 3,
     min_long_edge: int = 1500,
     include_cc: bool = False,
 ) -> list[ImageCandidate]:
-    """Search Commons for `query` and return candidates for `work_id`."""
+    """Search Commons for `query` and return candidates for `work_id`.
+
+    Pass `artist` to drop wrong-artist keyword false positives (recommended).
+    """
     payload = search(query)
     return parse_commons_search(
         payload,
         work_id=work_id,
+        artist=artist,
         want=want,
         min_long_edge=min_long_edge,
         include_cc=include_cc,

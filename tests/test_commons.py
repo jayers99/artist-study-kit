@@ -62,6 +62,58 @@ def test_build_search_params_targets_files_with_imageinfo():
     assert params["gsrsearch"] == "Paul Klee Ancient Sound"
 
 
+def test_build_search_params_requests_attribution_metadata():
+    f = build_search_params("x")["iiextmetadatafilter"]
+    assert "Categories" in f and "ObjectName" in f  # needed for the artist guard
+
+
+def _page(title, *, license="Public domain", width=3000, height=3000,
+          mediatype="BITMAP", categories="", object_name=""):
+    safe = title.split(":", 1)[-1].replace(" ", "_")
+    return {
+        "title": title,
+        "imageinfo": [{
+            "url": f"https://upload.wikimedia.org/wikipedia/commons/0/00/{safe}",
+            "width": width, "height": height, "mediatype": mediatype,
+            "extmetadata": {
+                "LicenseShortName": {"value": license},
+                "Categories": {"value": categories},
+                "ObjectName": {"value": object_name},
+            },
+        }],
+    }
+
+
+def _payload(*pages):
+    return {"query": {"pages": {str(i): p for i, p in enumerate(pages)}}}
+
+
+def test_artist_guard_drops_wrong_artist_keyword_matches():
+    payload = _payload(
+        _page("File:Philip IV as a Hunter - Velazquez", categories="PD-old-100-expired|Paintings by Velázquez"),
+        _page("File:Joan Miro - Dona i ocell (1).jpg", categories="Dona i Ocell|FoP-Spain"),
+    )
+    labels = [c.label for c in parse_commons_search(payload, work_id="w", artist="Joan Miró")]
+    assert any("Dona" in l for l in labels)          # the Miró-titled file kept
+    assert not any("Velazquez" in l for l in labels)  # the Velázquez file dropped
+
+
+def test_artist_guard_matches_via_category_when_title_lacks_name():
+    payload = _payload(_page("File:Some sculpture at night.jpg", categories="Sculptures by Joan Miró|Barcelona"))
+    cands = parse_commons_search(payload, work_id="w", artist="Joan Miró")
+    assert len(cands) == 1  # matched on the category, not the title
+
+
+def test_artist_guard_is_accent_insensitive():
+    payload = _payload(_page("File:Senecio.jpg", categories="Paintings by Paul Klee"))
+    assert len(parse_commons_search(payload, work_id="w", artist="Paul Klee")) == 1
+
+
+def test_no_artist_means_no_filtering():
+    payload = _payload(_page("File:Philip IV as a Hunter - Velazquez", categories="x"))
+    assert len(parse_commons_search(payload, work_id="w")) == 1  # existing behavior preserved
+
+
 def test_discover_commons_uses_injected_search():
     calls = []
 

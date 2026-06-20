@@ -66,7 +66,11 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
    (e.g. died < ~85 years ago: museums flag the work non-PD) — **fall back to Wikimedia
    Commons** with `scripts.commons.discover_commons(query, work_id)`, which yields
    validated PD `ImageCandidate`s for the same download path:
-   `uv run python -c "from scripts.commons import discover_commons; from scripts.image_download import download_candidates; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); cs=discover_commons('<work search query>', '<work-id>'); download_candidates(cs, sp.candidates_dir)"`
+   `uv run python -c "from scripts.commons import discover_commons; from scripts.image_download import download_candidates; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); cs=discover_commons('<work search query>', '<work-id>', artist='<ARTIST>'); download_candidates(cs, sp.candidates_dir)"`
+   Always pass `artist='<ARTIST>'`: Commons search is keyword-based, so without it you get
+   wrong-artist PD hits (e.g. Velázquez's *Philip IV as a Hunter* for Miró's *The Hunter*).
+   The guard is conservative — it can drop a correct file that never names the artist in its
+   title/categories; for in-copyright artists expect few or zero PD candidates either way.
    (Pass `include_cc=True` to also accept CC-BY/CC-BY-SA images — usable with attribution,
    flagged `rights_status: unknown`.) Then generate the contact sheet:
    `uv run python -c "from scripts.gallery import write_gallery; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); write_gallery(sp.candidates_dir, '<ARTIST>', sp.gallery_html)"`
