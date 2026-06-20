@@ -49,10 +49,20 @@ and purely visual here, and the sense-making happens in the Socratic
 - **Narrowing funnel (request).** [[19-stateful-runs-custom-images-staged-analysis]]
   (Thrust 3) proposes a progressive-zoom flow — small-thumbnail grid → large two-up page →
   commit → interview — where the cut narrows to ≤3–4 as images get larger and dwell time
-  grows. Not yet decided; would make rating multi-pass and naturally cap the interview. The
+  grows. Not yet built; would make rating multi-pass and naturally cap the interview. The
   flow is a **divergent→convergent** cycle ([[concept-divergent-convergent-thinking]]): the
   wide board is the divergent search, the staged narrowing is convergent selection — and the
-  *human* does the converging, never the AI.
+  *human* does the converging, never the AI. It now sits on built multi-session state (below)
+  — the funnel records its wide cut as a session's `selected` and its narrow cut as
+  `study_set`; dropping `stars` for a binary select is the schema half of this same Thrust 3.
+- **Multi-session curation — backbone BUILT (Thrust 1).** Curation is no longer one-shot:
+  package state (`docs/superpowers/specs/2026-06-20-stateful-package-state-design.md`, merged
+  2026-06-20) records each pass as a `session` (`selected`, `study_set`, a `grouping`
+  dimension — subject/media/technique/other — and per-session output pointers). A work
+  studied in a prior session shows a **studied ✓ badge** (derived from
+  `PackageState.studied_work_ids()`) but is **never** filtered out — freedom of choice is
+  deliberate: the same work can be re-studied along a different dimension. *Open:* the
+  funnel UX and the binary-select gallery (Thrust 3) that consume this state.
 
 ## Skill design implications
 
