@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from scripts import commons
 from scripts.iiif import ImageCandidate
+from scripts.museum_search import AIC_IIIF_DEFAULT, default_aic_fetch
 
 
 def _find(inst_ids, key: str) -> str:
@@ -25,3 +26,27 @@ def commons_resolver(entry, *, fetch=None):
         return None
     cands = commons.parse_commons_search(fetch(filename), work_id=entry.work_id, want=1)
     return cands[0] if cands else None
+
+
+def aic_resolver(entry, *, fetch=None):
+    """Resolve via the work's AIC record (IIIF 1686px, public-domain only)."""
+    fetch = fetch or default_aic_fetch
+    aic_id = _find(entry.inst_ids, "aic")
+    if not aic_id:
+        return None
+    payload = fetch(f"artworks/{aic_id}", {"fields": "id,image_id,is_public_domain"})
+    data = payload.get("data") or {}
+    if not data.get("is_public_domain") or not data.get("image_id"):
+        return None
+    iiif = (payload.get("config") or {}).get("iiif_url") or AIC_IIIF_DEFAULT
+    return ImageCandidate(
+        work_id=entry.work_id,
+        institution="aic",
+        label=entry.work_id,
+        iiif_id=f"aic/{aic_id}",
+        image_url=f"{iiif}/{data['image_id']}/full/1686,/0/default.jpg",
+        width=1686,
+        height=1686,
+        license="Public Domain",
+        rights_status="public_domain",
+    )

@@ -1,5 +1,5 @@
 from scripts.iiif import ImageCandidate
-from scripts.resolve import commons_resolver
+from scripts.resolve import commons_resolver, aic_resolver
 from scripts.selection import Rating
 
 
@@ -36,3 +36,25 @@ def test_commons_resolver_drops_non_pd():
 
 def test_commons_resolver_none_without_commons_file():
     assert commons_resolver(_entry(inst_ids=(("aic", "5"),))) is None
+
+
+def _aic_payload(is_pd):
+    return {"data": {"id": 16569, "image_id": "abc-123", "is_public_domain": is_pd},
+            "config": {"iiif_url": "https://www.artic.edu/iiif/2"}}
+
+
+def test_aic_resolver_builds_1686_candidate_when_public_domain():
+    entry = _entry(inst_ids=(("aic", "16569"),))
+    cand = aic_resolver(entry, fetch=lambda path, params: _aic_payload(True))
+    assert cand.image_url == "https://www.artic.edu/iiif/2/abc-123/full/1686,/0/default.jpg"
+    assert cand.rights_status == "public_domain"
+    assert max(cand.width, cand.height) >= 1500
+
+
+def test_aic_resolver_none_when_in_copyright():
+    entry = _entry(inst_ids=(("aic", "16569"),))
+    assert aic_resolver(entry, fetch=lambda path, params: _aic_payload(False)) is None
+
+
+def test_aic_resolver_none_without_aic_id():
+    assert aic_resolver(_entry(inst_ids=(("commons_file", "x.jpg"),))) is None
