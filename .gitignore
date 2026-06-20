@@ -150,6 +150,8 @@ activemq-data/
 # Environments
 .env
 .envrc
+# keep the committed template (global gitignore has .env.*)
+!.env.example
 .venv
 .venv*
 ".venv 2"
