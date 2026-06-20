@@ -66,3 +66,29 @@ def test_empty_success_test_serializes_to_null():
     data = serialize_briefs("X", [_brief()])
     assert data["briefs"][0]["study_plan"][0]["success_test"] is None
     assert data["artist"] == "X"
+
+
+def test_write_json_then_parse_recovers_briefs(tmp_path):
+    from scripts.curation_interview import write_study_briefs_json
+    p = tmp_path / "study-briefs.json"
+    write_study_briefs_json("Paul Klee", [_brief()], p)
+    import json
+    assert parse_briefs(json.loads(p.read_text())) == [_brief()]
+
+
+def test_write_md_renders_thesis_anchor_and_steps(tmp_path):
+    from scripts.curation_interview import write_study_briefs_md
+    p = tmp_path / "study-briefs.md"
+    write_study_briefs_md("Paul Klee", [_brief()], p)
+    text = p.read_text()
+    assert "> [!example] Exotics (1939)" in text
+    assert "facial economy as the dial" in text
+    assert "1. copy the ink study" in text
+    assert "*Test:* reads warm / tense / uneasy" in text
+
+
+def test_study_briefs_paths():
+    from scripts.paths import study_paths
+    sp = study_paths("studies", "Paul Klee")
+    assert sp.study_briefs_json.name == "study-briefs.json"
+    assert sp.study_briefs_md.name == "study-briefs.md"

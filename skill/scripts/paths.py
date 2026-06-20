@@ -65,6 +65,14 @@ class StudyPaths:
         return self.root / "selection.json"
 
     @property
+    def study_briefs_json(self) -> Path:
+        return self.root / "study-briefs.json"
+
+    @property
+    def study_briefs_md(self) -> Path:
+        return self.root / "study-briefs.md"
+
+    @property
     def preference_synthesis_md(self) -> Path:
         return self.root / "preference-synthesis.md"
 

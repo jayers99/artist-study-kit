@@ -8,8 +8,11 @@ queued target has a complete brief before the stage closes.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 
+from scripts._md import frontmatter
 from scripts.selection import Rating
 
 _NO_CLUSTER = "~"  # sentinel: works without a cluster sort after named clusters
@@ -128,3 +131,32 @@ def parse_briefs(data: dict) -> list[StudyBrief]:
             study_plan=steps,
         ))
     return out
+
+
+def write_study_briefs_json(artist: str, briefs: list[StudyBrief], path: Path | str) -> Path:
+    """Persist the machine-readable study briefs."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(serialize_briefs(artist, briefs), indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def write_study_briefs_md(artist: str, briefs: list[StudyBrief], path: Path | str) -> Path:
+    """Write the Obsidian-native study briefs (one callout per study target)."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = frontmatter("study/curation-briefs", artist) + [f"# Study briefs — {artist}", ""]
+    for b in briefs:
+        lines += [
+            f"> [!example] {b.title} ({b.year})",
+            f"> **Thesis:** {b.thesis}",
+            f"> **Anchor trait:** {b.anchor_trait}",
+            "> **Study plan:**",
+        ]
+        for i, s in enumerate(b.study_plan, 1):
+            lines.append(f"> {i}. {s.step}")
+            if s.success_test:
+                lines.append(f">    *Test:* {s.success_test}")
+        lines.append("")
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return path
