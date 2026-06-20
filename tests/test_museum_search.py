@@ -101,3 +101,10 @@ def test_search_aic_resolves_agent_then_queries_by_artist_id():
 def test_resolve_aic_agent_uses_injected_fetch():
     cands = resolve_aic_agent("Paul Klee", fetch=lambda path, params: AIC_AGENTS)
     assert cands == 35282
+
+
+def test_aic_candidate_carries_aic_inst_id_and_empty_qid():
+    cands = parse_aic_search(AIC_WORKS)
+    first = cands[0]
+    assert first.qid == ""
+    assert first.inst_ids == (("aic", "10018"),)

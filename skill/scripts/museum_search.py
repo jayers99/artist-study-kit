@@ -32,6 +32,8 @@ class ThumbnailCandidate:
     source_url: str
     date: str
     rights: str  # public_domain | in_copyright | unknown
+    qid: str = ""
+    inst_ids: tuple[tuple[str, str], ...] = ()
 
 
 def _fold(text: str) -> str:
@@ -100,6 +102,7 @@ def parse_aic_search(payload: dict, *, artist: str | None = None,
                 source_url=f"https://www.artic.edu/artworks/{d.get('id')}",
                 date=str(d.get("date_display") or ""),
                 rights="public_domain" if d.get("is_public_domain") else "in_copyright",
+                inst_ids=(("aic", str(d.get("id"))),),
             )
         )
     return out

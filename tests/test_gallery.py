@@ -100,3 +100,16 @@ def test_write_gallery_writes_file(tmp_path):
     assert result == out
     assert out.is_file()
     assert "wheat-field" in out.read_text(encoding="utf-8")
+
+
+def test_thumbnail_gallery_embeds_qid_and_inst_ids():
+    cands = [ThumbnailCandidate(
+        work_id="fish-magic", title="Fish Magic", museum="Philadelphia Museum of Art",
+        thumbnail_url="https://commons.wikimedia.org/wiki/Special:FilePath/Fish.jpg?width=400",
+        source_url="https://www.wikidata.org/wiki/Q3050231", date="1925", rights="unknown",
+        qid="Q3050231", inst_ids=(("commons_file", "Fish.jpg"), ("aic", "16569")))]
+    html = build_thumbnail_gallery(cands, "Paul Klee")
+    assert "Q3050231" in html
+    assert "commons_file" in html and "Fish.jpg" in html
+    # the export builder forwards qid + inst_ids into selection.json ratings
+    assert "qid: c.qid" in html and "inst_ids: c.inst_ids" in html

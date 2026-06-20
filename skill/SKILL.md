@@ -59,21 +59,11 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
    grammar section + style cheat sheet into `report.md`.
 4. **works_inventory** — see `wiki/stage-works-inventory.md`. Dual-axis ranked,
    clustered `works.md`.
-5. **image_discovery** — see `wiki/stage-image-discovery.md`. **Two phases.** First build a
-   broad *curation board* of thumbnails for the human to browse and rate — this is a visual
-   search, NOT a download. Museums expose thumbnails for **every** work regardless of
-   copyright, so search by artist and render hundreds:
-   `uv run python -c "from scripts.museum_search import search_aic; from scripts.gallery import build_thumbnail_gallery; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); cs=search_aic('<ARTIST>', pages=3); sp.gallery_html.write_text(build_thumbnail_gallery(cs, '<ARTIST>'))"`
-   AIC (`scripts.museum_search.search_aic`) is the primary source (large holdings, thumbnails
-   for all works); thumbnails are hotlinked, so no rights issue for browsing. The board carries
-   a PD/© badge per work. Save the query to `prompts/` with `scripts.prompts.save_prompt`.
-   Mark the stage complete, save state, and STOP for Human Pause 1.
-   **High-res + rights are resolved only AFTER curation, for the selected works** (next
-   step): download PD/CC0 via `scripts.commons.discover_commons(query, work_id, artist=...)`
-   or museum IIIF `full/max` into `images/selected/`; for in-copyright picks, keep the
-   `source_url` from `selection.json` as the reference link (acquire reference legally — do
-   not redistribute). Always pass `artist=` to `discover_commons` (keyword search otherwise
-   returns wrong-artist PD hits, e.g. Velázquez's *Philip IV as a Hunter* for Miró's *The Hunter*).
+5. **image_discovery** — see `wiki/stage-image-discovery.md`. **Two phases.**
+
+   **Phase A — board build (discovery, thumbnails only):** Call `scripts.wikidata.search_wikidata(artist)`, which returns `(board_candidates, works, ambiguous_candidates)`. Wikidata is the **primary** source: it resolves the artist's QID, fetches linked works from Wikimedia Commons, and returns thumbnail candidates with PD/CC0 provenance baked in. If `ambiguous_candidates` is non-empty the QID is unclear — present the candidates to the user (name + birth/death dates), ask them to pick the correct artist, and record that disambiguation prompt under `prompts/` with `scripts.prompts.save_prompt`. Supplement the Wikidata board with AIC results via `scripts.museum_search.search_aic(artist)`, then combine the two boards: `scripts.wikidata.merge_boards(wikidata_board, aic_board, suppress_aic_ids={w.aic_id for w in works if w.aic_id})` (deduplicates works already known from Wikidata). Render the merged board with `scripts.gallery.build_thumbnail_gallery` and write it to `gallery.html`. Thumbnails are hotlinked — no rights issue for browsing. Save the gallery prompt under `prompts/` and mark the stage complete. STOP for Human Pause 1.
+
+   **Phase B — post-curation resolution (high-res, selected works only):** After the human exports `selection.json`, run `scripts.resolve.resolve_selection(load_selection(...), images/selected/)` to fetch high-res for each liked work. The resolver chain is: Wikimedia Commons PD/CC0 full-res → AIC IIIF 1686px (on `is_public_domain`) → else keep `source_url` as a reference link (do not redistribute in-copyright images). The legacy local-candidate path (IIIF discovery) still uses `scripts.selection.apply_selection`; the thumbnail-board path uses `resolve_selection`. Always browse thumbnails freely; **download high-res ONLY for works with a verified PD/CC0 flag**.
 
 > [!info] Human Pause 1 — curation
 > The user opens `gallery.html` (a board of many thumbnails), star-rates works, ticks the
