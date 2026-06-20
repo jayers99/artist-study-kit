@@ -1,6 +1,6 @@
 import pytest
 
-from scripts.state import PAUSE_GATES, STAGES, PipelineState, BoardCandidate, DiscoveryRun, StudySession, GROUPINGS
+from scripts.state import PAUSE_GATES, STAGES, PipelineState, PackageState, BoardCandidate, DiscoveryRun, StudySession, GROUPINGS
 
 
 def _thumb(**over):
@@ -168,3 +168,37 @@ def test_study_session_roundtrip():
     back = StudySession.from_dict(s.to_dict())
     assert back == s
     assert back.selected == ("a", "b")
+
+
+def test_package_state_defaults_to_empty_collections():
+    st = PackageState(artist="x")
+    assert st.runs == [] and st.candidates == [] and st.sessions == []
+    assert st.next_stage == "background"
+
+
+def test_pipeline_state_is_alias_of_package_state():
+    from scripts.state import PipelineState
+    assert PipelineState is PackageState
+
+
+def test_legacy_state_dict_loads_with_empty_collections():
+    st = PackageState.from_dict({"artist": "x", "completed": ["background"]})
+    assert st.completed == ["background"]
+    assert st.runs == [] and st.candidates == [] and st.sessions == []
+
+
+def test_fat_state_roundtrip(tmp_path):
+    st = PackageState(artist="Paul Klee", completed=["background"])
+    st.runs.append(DiscoveryRun(id="run-1", at="t", source="aic",
+                                added=1, merged=0, total=1))
+    st.candidates.append(BoardCandidate(
+        work_id="exotics", title="Exotics", date="1939", museum="aic",
+        thumbnail_url="u", source_url="s", rights="in_copyright",
+        inst_ids=(("aic", "134057"),), first_run="run-1"))
+    st.sessions.append(StudySession(id="sess-1", at="t", grouping="technique",
+                                    selected=("exotics",), study_set=("exotics",),
+                                    outputs={"analysis": "analysis.md"}))
+    p = tmp_path / "state.json"
+    st.save(p)
+    back = PackageState.load(p, artist="Paul Klee")
+    assert back == st

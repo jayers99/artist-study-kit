@@ -140,9 +140,12 @@ class StudySession:
 
 
 @dataclass
-class PipelineState:
+class PackageState:
     artist: str
     completed: list[str] = field(default_factory=list)
+    runs: list[DiscoveryRun] = field(default_factory=list)
+    candidates: list[BoardCandidate] = field(default_factory=list)
+    sessions: list[StudySession] = field(default_factory=list)
 
     @property
     def next_stage(self) -> str | None:
@@ -164,25 +167,40 @@ class PipelineState:
         return PAUSE_GATES.get(stage)
 
     def to_dict(self) -> dict:
-        return {"artist": self.artist, "completed": list(self.completed)}
+        return {
+            "artist": self.artist,
+            "completed": list(self.completed),
+            "runs": [r.to_dict() for r in self.runs],
+            "candidates": [c.to_dict() for c in self.candidates],
+            "sessions": [s.to_dict() for s in self.sessions],
+        }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "PipelineState":
+    def from_dict(cls, d: dict) -> "PackageState":
         seen: set[str] = set()
         deduped = [s for s in d.get("completed", []) if not (s in seen or seen.add(s))]
-        return cls(artist=d["artist"], completed=deduped)
+        return cls(
+            artist=d["artist"],
+            completed=deduped,
+            runs=[DiscoveryRun.from_dict(x) for x in d.get("runs", [])],
+            candidates=[BoardCandidate.from_dict(x) for x in d.get("candidates", [])],
+            sessions=[StudySession.from_dict(x) for x in d.get("sessions", [])],
+        )
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(self.to_dict(), indent=2) + "\n", encoding="utf-8")
 
     @classmethod
-    def load(cls, path: Path, artist: str) -> "PipelineState":
+    def load(cls, path: Path, artist: str) -> "PackageState":
         if not path.exists():
-            return cls(artist=artist, completed=[])
+            return cls(artist=artist)
         state = cls.from_dict(json.loads(path.read_text(encoding="utf-8")))
         if state.artist != artist:
             raise ValueError(
                 f"state.json artist {state.artist!r} != requested {artist!r}"
             )
         return state
+
+
+PipelineState = PackageState
