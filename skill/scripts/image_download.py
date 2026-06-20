@@ -16,6 +16,9 @@ from urllib.parse import urlsplit
 from scripts.iiif import ImageCandidate, validate_candidate
 
 
+USER_AGENT = "artist-study-kit/1.0 (studio-prep research; +https://github.com/jayers99/artist-study-kit)"
+
+
 def robots_allows(robots_txt: str, path: str, user_agent: str = "*") -> bool:
     """Minimal robots.txt check for the `*` (or named) user-agent group."""
     if not robots_txt.strip():
@@ -50,10 +53,18 @@ def _iiif_token(iiif_id: str) -> str:
 
 
 def default_fetch(url: str) -> tuple[int, str, bytes]:
-    """Real fetcher (httpx). Not exercised in tests."""
+    """Real fetcher (httpx). Not exercised in tests. Network errors → (0, "", b"")."""
     import httpx
 
-    resp = httpx.get(url, follow_redirects=True, timeout=60.0)
+    try:
+        resp = httpx.get(
+            url,
+            follow_redirects=True,
+            timeout=60.0,
+            headers={"User-Agent": USER_AGENT},
+        )
+    except httpx.HTTPError:
+        return 0, "", b""
     return resp.status_code, resp.headers.get("content-type", ""), resp.content
 
 
@@ -82,7 +93,10 @@ def download_candidate(
     if not robots_allows(robots_txt, urlsplit(candidate.image_url).path):
         return DownloadResult(candidate, None, None, "blocked", candidate.image_url)
 
-    status_code, content_type, content = fetch(candidate.image_url)
+    try:
+        status_code, content_type, content = fetch(candidate.image_url)
+    except Exception as exc:  # network errors must not crash the batch
+        return DownloadResult(candidate, None, None, "error", str(exc))
     if status_code != 200 or not content_type.startswith("image/") or not content:
         return DownloadResult(
             candidate, None, None, "error", f"status={status_code} type={content_type}"

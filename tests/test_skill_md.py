@@ -23,3 +23,15 @@ def test_skill_md_lists_every_pipeline_stage():
     text = SKILL_MD.read_text(encoding="utf-8")
     for stage in STAGES:
         assert stage in text, f"stage id {stage!r} missing from SKILL.md"
+
+
+def test_skill_md_references_plan3_scripts():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    for module in ("scripts.gallery", "scripts.selection", "scripts.preference_synthesis",
+                   "scripts.analysis", "scripts.study_retention"):
+        assert module in text, f"SKILL.md does not wire {module}"
+
+
+def test_skill_md_documents_stage_completion():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    assert "mark_complete" in text

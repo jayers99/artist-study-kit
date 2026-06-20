@@ -24,6 +24,16 @@ The pipeline is **resumable**. On every invocation:
    `visual_analysis`) and its requirement is unmet, print the instructions for
    that pause and STOP. Otherwise run the next stage, then mark it complete and
    save state before continuing.
+4. **Mark a stage complete** after its outputs are written, before moving on:
+   `uv run python -c "from scripts.state import PipelineState; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); s=PipelineState.load(sp.state_json,'<ARTIST>'); s.mark_complete('<STAGE_ID>'); s.save(sp.state_json)"`
+   Stages are idempotent — re-running overwrites their own outputs without corrupting
+   prior stages.
+
+> [!note] Stage-2 source routing
+> `scripts.source_signals.needs_llm_review` flags `borderline`-band pages for rubric
+> scoring. Also route any **high-value** page (seed domains: Smarthistory, Met, CAA;
+> or a page a later stage will cite) through the rubric even if its band is `high`, so
+> trust scores on load-bearing sources are confirmed, not assumed.
 
 Stage ids, in order: `background`, `source_grading`, `style_definition`,
 `works_inventory`, `image_discovery`, `preference_synthesis`,
@@ -41,8 +51,10 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
 4. **works_inventory** — see `wiki/stage-works-inventory.md`. Dual-axis ranked,
    clustered `works.md`.
 5. **image_discovery** — see `wiki/stage-image-discovery.md`. Download high-res
-   candidates to `images/candidates/<work>/` and generate `gallery.html`.
-   (Tooling: Plans 2–3.) Then STOP for Human Pause 1.
+   candidates to `images/candidates/<work>/` with `scripts.image_download`, then
+   generate the contact sheet:
+   `uv run python -c "from scripts.gallery import write_gallery; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); write_gallery(sp.candidates_dir, '<ARTIST>', sp.gallery_html)"`
+   Mark the stage complete, save state, and STOP for Human Pause 1.
 
 > [!info] Human Pause 1 — curation
 > The user opens `gallery.html`, star-rates candidates (detail view auto-advances),
@@ -51,10 +63,13 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
 
 ## Run B — synthesis + funnel (stage 6)
 
-6. **preference_synthesis** — gated on `selection.json`. Analyze the liked set
-   for patterns/connections; emit `preference-synthesis.md` with a "what you're
-   drawn to" note plus a ranked study-set list (pattern-fit + studyability).
-   Then STOP for Human Pause 2.
+6. **preference_synthesis** — gated on `selection.json`. First validate the human's
+   curation:
+   `uv run python -c "from scripts.selection import load_selection, validate_selection, apply_selection; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); sel=load_selection(sp.selection_json,'<ARTIST>'); print(validate_selection(sel) or 'ok'); apply_selection(sel, sp.candidates_dir, sp.selected_dir)"`
+   If validation returns errors, print them and STOP. Otherwise analyze the liked set
+   for patterns (your judgment), score each study-set candidate on pattern-fit +
+   studyability, and emit the note with `scripts.preference_synthesis.write_preference_synthesis_md`.
+   Then mark the stage complete, save state, and STOP for Human Pause 2.
 
 > [!info] Human Pause 2 — funnel
 > The user picks the final small study set from the ranked list.
@@ -62,10 +77,13 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
 ## Run C — study (stages 7–8)
 
 7. **visual_analysis** — gated on a chosen study set. See
-   `wiki/stage-visual-analysis.md`. Emit per-work `analysis.md` via the 5-stage
-   formal-analysis instruction set; cross-check against the artist grammar.
-8. **study_retention** — see `wiki/stage-study-retention.md`. Emit
-   `study-notes.md` (faded aids), `drills/`, and `review-schedule.md`.
+   `wiki/stage-visual-analysis.md`. Run the 5-stage formal-analysis instruction set
+   per study-set work, cross-check against the artist grammar, then serialize with
+   `scripts.analysis.write_analysis_md` → `analysis.md`. Mark complete and save state.
+8. **study_retention** — see `wiki/stage-study-retention.md`. Emit the faded-aids
+   `study-notes.md`, the `drills/discrimination-cards.md`, and `review-schedule.md`
+   via `scripts.study_retention` (`write_study_notes_md`, `write_discrimination_cards_md`,
+   `write_review_schedule_md`). Mark complete and save state.
 
 ## Output contract
 

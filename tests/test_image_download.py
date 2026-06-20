@@ -8,6 +8,7 @@ from scripts.image_download import (
     download_candidate,
     download_candidates,
     robots_allows,
+    USER_AGENT,
 )
 
 ROBOTS = (Path(__file__).parent / "fixtures" / "robots.txt").read_text()
@@ -114,3 +115,17 @@ def test_download_candidates_skip_does_not_trip_throttle(tmp_path):
     assert statuses[2] == "downloaded"
     # Exactly one sleep between the two real downloads; the skip adds none.
     assert calls.count(0.5) == 1
+
+
+def test_user_agent_is_descriptive():
+    assert "artist-study-kit" in USER_AGENT
+
+
+def test_download_candidate_handles_fetch_exception(tmp_path):
+    def _boom(url):
+        raise ConnectionError("connection reset")
+
+    res = download_candidate(_candidate(), tmp_path, fetch=_boom, sleep=lambda s: None)
+    assert res.status == "error"
+    assert res.image_path is None
+    assert "connection reset" in res.note
