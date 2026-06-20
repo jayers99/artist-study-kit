@@ -96,3 +96,10 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
 `gallery.html`, `selection.json`, `preference-synthesis.md`, `analysis.md`,
 `study-notes.md`, `drills/`, `review-schedule.md`, `prompts/`, `state.json`.
 Markdown is Obsidian-native (frontmatter + `[[wikilinks]]`).
+
+> [!important] Don't hard-wrap body text
+> When you author `report.md` / `works.md` (and any prose), put each paragraph, list
+> item, and callout body on a **single physical line** — let the editor soft-wrap.
+> Obsidian's default ("strict line breaks" off) renders every newline as a `<br>`, so
+> wrapping a sentence across source lines shows up as broken/extra blank lines in reading
+> view. Keep genuine `> -` callout list items one per line.
