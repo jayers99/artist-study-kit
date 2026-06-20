@@ -65,3 +65,32 @@ def slug_work_id(title: str, filename: str, existing: set[str]) -> str:
     while f"{base}-{n}" in existing:
         n += 1
     return f"{base}-{n}"
+
+
+def _fold(text: str) -> str:
+    return " ".join(str(text).strip().lower().split())
+
+
+def verify_identification(guess: dict, study_artist: str, *, lookup) -> ImportRow:
+    filename = str(guess.get("filename", ""))
+    base = ImportRow(
+        filename=filename, source_path=str(guess.get("source_path", "")),
+        state="unidentified", artist=str(guess.get("artist", "")).strip(),
+        title=str(guess.get("title", "")).strip(),
+        date=str(guess.get("date", "")).strip())
+    if not base.title:
+        return base
+    if base.artist and _fold(base.artist) != _fold(study_artist):
+        return replace(base, state="off_artist")
+    record = lookup(study_artist, base.title)
+    if record:
+        return replace(
+            base, state="confirmed",
+            title=str(record.get("title") or base.title),
+            date=str(record.get("date") or base.date),
+            qid=str(record.get("qid", "")), museum=str(record.get("museum", "")),
+            source_url=str(record.get("source_url", "")),
+            rights=str(record.get("rights") or "unknown"),
+            medium=str(record.get("medium", "")),
+            inst_ids=tuple((str(a), str(b)) for a, b in record.get("inst_ids", ())))
+    return replace(base, state="proposed", rights="unknown")
