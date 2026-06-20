@@ -3,6 +3,7 @@ from scripts.wikidata import (
     ArtistEntity,
     WikidataWork,
     commons_filepath,
+    merge_boards,
     parse_qid_candidates,
     parse_works,
     resolve_qid,
@@ -119,3 +120,27 @@ def test_to_thumbnail_candidates_includes_aic_inst_id():
     senecio = to_thumbnail_candidates(parse_works(WORKS))[1]
     assert ("aic", "16569") in senecio.inst_ids
     assert ("commons_file", "Senecio.jpg") in senecio.inst_ids
+
+
+def _tc(title, *, museum="aic", qid="", aic_id="", date="1922"):
+    inst = (("aic", aic_id),) if aic_id else ()
+    return ThumbnailCandidate(
+        work_id=title.lower().replace(" ", "-"), title=title, museum=museum,
+        thumbnail_url="t", source_url="s", date=date, rights="unknown",
+        qid=qid, inst_ids=inst)
+
+
+def test_merge_suppresses_aic_dupe_by_inst_id():
+    primary = [_tc("Senecio", museum="Kunstmuseum Basel", qid="Q123")]
+    supplement = [_tc("Senecio", aic_id="16569"), _tc("AIC Only", aic_id="999")]
+    out = merge_boards(primary, supplement, suppress_aic_ids={"16569"})
+    titles = [c.title for c in out]
+    assert titles == ["Senecio", "AIC Only"]   # AIC Senecio suppressed, AIC-only kept
+    assert out[0].qid == "Q123"                 # the Wikidata record wins
+
+
+def test_merge_dedups_remaining_by_title_and_date():
+    primary = [_tc("Twittering Machine", qid="Q44", date="1922")]
+    supplement = [_tc("Twittering Machine", aic_id="5", date="1922")]
+    out = merge_boards(primary, supplement, suppress_aic_ids=set())
+    assert len(out) == 1 and out[0].qid == "Q44"

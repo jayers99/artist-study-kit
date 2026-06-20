@@ -8,6 +8,7 @@ boundary (`default_sparql`) is injected so tests never hit live WDQS.
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 from urllib.parse import quote, unquote
 
@@ -170,4 +171,41 @@ def to_thumbnail_candidates(works: list[WikidataWork], *, thumb_width: int = 400
             qid=w.qid,
             inst_ids=tuple(inst),
         ))
+    return out
+
+
+def _fold(text: str) -> str:
+    return unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode("ascii").lower().strip()
+
+
+def _aic_id(cand: ThumbnailCandidate) -> str:
+    return next((v for k, v in cand.inst_ids if k == "aic"), "")
+
+
+def merge_boards(primary, supplement, *, suppress_aic_ids: set[str]):
+    """Wikidata-primary board: drop AIC dupes by inst-id, then dedup by qid/title+date."""
+    merged: list[ThumbnailCandidate] = list(primary)
+    merged += [c for c in supplement if _aic_id(c) not in suppress_aic_ids]
+    seen: set[str] = set()
+    out: list[ThumbnailCandidate] = []
+    for c in merged:
+        # Dedup by qid (if present) OR by folded title|date
+        qid_key = c.qid if c.qid else None
+        title_date_key = f"{_fold(c.title)}|{c.date}"
+
+        # Check if we've seen this work before (by either key)
+        is_dupe = False
+        if qid_key and qid_key in seen:
+            is_dupe = True
+        if title_date_key in seen:
+            is_dupe = True
+
+        if is_dupe:
+            continue
+
+        # Mark both keys as seen
+        if qid_key:
+            seen.add(qid_key)
+        seen.add(title_date_key)
+        out.append(c)
     return out
