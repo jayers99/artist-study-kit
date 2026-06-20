@@ -9,8 +9,12 @@ image_download.download_candidate. Network is injected so tests stay offline.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from pathlib import Path
+
 from scripts import commons
 from scripts.iiif import ImageCandidate
+from scripts.image_download import download_candidate
 from scripts.museum_search import AIC_IIIF_DEFAULT, default_aic_fetch
 
 
@@ -50,3 +54,30 @@ def aic_resolver(entry, *, fetch=None):
         license="Public Domain",
         rights_status="public_domain",
     )
+
+
+@dataclass(frozen=True)
+class Resolved:
+    work_id: str
+    rights: str  # public_domain | in_copyright
+    image_path: Path | None
+    image_url: str | None
+    source_url: str
+    license: str = ""
+    institution: str = ""
+
+
+RESOLVERS = (commons_resolver, aic_resolver)
+
+
+def resolve_selected(entry, selected_dir, *, resolvers=RESOLVERS, download=download_candidate) -> Resolved:
+    """Resolve one selected work to high-res, falling back to source_url when in copyright."""
+    for resolver in resolvers:
+        cand = resolver(entry)
+        if cand is None:
+            continue
+        result = download(cand, selected_dir)
+        if result.status in ("downloaded", "skipped") and result.image_path is not None:
+            return Resolved(entry.work_id, "public_domain", result.image_path, cand.image_url,
+                            entry.source_url, license=cand.license or "", institution=cand.institution)
+    return Resolved(entry.work_id, "in_copyright", None, None, entry.source_url)

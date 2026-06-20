@@ -1,5 +1,7 @@
+from types import SimpleNamespace
+
 from scripts.iiif import ImageCandidate
-from scripts.resolve import commons_resolver, aic_resolver
+from scripts.resolve import commons_resolver, aic_resolver, Resolved, resolve_selected
 from scripts.selection import Rating
 
 
@@ -58,3 +60,39 @@ def test_aic_resolver_none_when_in_copyright():
 
 def test_aic_resolver_none_without_aic_id():
     assert aic_resolver(_entry(inst_ids=(("commons_file", "x.jpg"),))) is None
+
+
+def _cand(work_id="fish-magic"):
+    return ImageCandidate(work_id=work_id, institution="wikimedia", label="x",
+                          iiif_id=f"wikimedia/{work_id}", image_url="u",
+                          width=4000, height=3000, license="Public Domain",
+                          rights_status="public_domain")
+
+
+def test_resolve_selected_uses_first_successful_resolver(tmp_path):
+    captured = {}
+
+    def fake_download(cand, sel_dir):
+        captured["dir"] = sel_dir
+        return SimpleNamespace(status="downloaded", image_path=tmp_path / "fish.jpg")
+
+    res = resolve_selected(
+        _entry(), tmp_path,
+        resolvers=[lambda e: None, lambda e: _cand()],   # commons misses, aic hits
+        download=fake_download)
+    assert isinstance(res, Resolved)
+    assert res.rights == "public_domain"
+    assert res.image_path == tmp_path / "fish.jpg"
+    assert captured["dir"] == tmp_path
+
+
+def test_resolve_selected_keeps_source_url_when_in_copyright(tmp_path):
+    called = []
+    res = resolve_selected(
+        _entry(source_url="https://www.wikidata.org/wiki/Q1"), tmp_path,
+        resolvers=[lambda e: None, lambda e: None],
+        download=lambda c, d: called.append(c) or SimpleNamespace(status="downloaded", image_path=None))
+    assert res.rights == "in_copyright"
+    assert res.image_path is None
+    assert res.source_url == "https://www.wikidata.org/wiki/Q1"
+    assert called == []   # nothing downloaded for in-copyright works
