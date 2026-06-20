@@ -9,6 +9,7 @@ image_download.download_candidate. Network is injected so tests stay offline.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from scripts import commons
 from scripts.iiif import ImageCandidate
 from scripts.image_download import download_candidate
 from scripts.museum_search import AIC_IIIF_DEFAULT, default_aic_fetch
+from scripts.selection import liked
 
 
 def _find(inst_ids, key: str) -> str:
@@ -81,3 +83,25 @@ def resolve_selected(entry, selected_dir, *, resolvers=RESOLVERS, download=downl
             return Resolved(entry.work_id, "public_domain", result.image_path, cand.image_url,
                             entry.source_url, license=cand.license or "", institution=cand.institution)
     return Resolved(entry.work_id, "in_copyright", None, None, entry.source_url)
+
+
+def resolve_selection(sel, selected_dir, *, resolvers=RESOLVERS, download=download_candidate) -> list[Resolved]:
+    """Resolve every liked work; write selected_dir/resolved.json; return the results."""
+    selected_dir = Path(selected_dir)
+    selected_dir.mkdir(parents=True, exist_ok=True)
+    out: list[Resolved] = []
+    for rating in liked(sel):
+        out.append(resolve_selected(rating, selected_dir, resolvers=resolvers, download=download))
+    manifest = [
+        {
+            "work_id": r.work_id,
+            "rights": r.rights,
+            "image": r.image_path.name if r.image_path else None,
+            "source_url": r.source_url,
+            "license": r.license,
+            "institution": r.institution,
+        }
+        for r in out
+    ]
+    (selected_dir / "resolved.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    return out

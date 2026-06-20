@@ -1,8 +1,9 @@
+import json
 from types import SimpleNamespace
 
 from scripts.iiif import ImageCandidate
-from scripts.resolve import commons_resolver, aic_resolver, Resolved, resolve_selected
-from scripts.selection import Rating
+from scripts.resolve import commons_resolver, aic_resolver, Resolved, resolve_selected, resolve_selection
+from scripts.selection import Rating, Selection
 
 
 def _entry(**kw):
@@ -96,3 +97,21 @@ def test_resolve_selected_keeps_source_url_when_in_copyright(tmp_path):
     assert res.image_path is None
     assert res.source_url == "https://www.wikidata.org/wiki/Q1"
     assert called == []   # nothing downloaded for in-copyright works
+
+
+def test_resolve_selection_resolves_liked_and_writes_manifest(tmp_path):
+    sel = Selection(artist="paul-klee", ratings=[
+        _entry(work_id="fish-magic", rating=5, inst_ids=(("commons_file", "Fish.jpg"),)),
+        _entry(work_id="meh", rating=2),  # below threshold → skipped
+    ])
+
+    def fake_download(cand, sel_dir):
+        return SimpleNamespace(status="downloaded", image_path=sel_dir / f"{cand.work_id}.jpg")
+
+    out = resolve_selection(sel, tmp_path,
+                            resolvers=[lambda e: _cand(e.work_id)], download=fake_download)
+    assert [r.work_id for r in out] == ["fish-magic"]   # only liked
+    manifest = json.loads((tmp_path / "resolved.json").read_text(encoding="utf-8"))
+    assert manifest[0]["work_id"] == "fish-magic"
+    assert manifest[0]["image"] == "fish-magic.jpg"
+    assert manifest[0]["rights"] == "public_domain"
