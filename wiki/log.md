@@ -23,3 +23,12 @@ Touched 9 wiki pages + index. Pipeline now 9 stage notes; concepts unchanged at 
 
 ## [2026-06-20] lint | health check + backlink repair
 Clean: no dangling links, no orphans, all `sources:` resolve, every `NN.1` report referenced. Fixed bidirectional `used-by` drift between concepts and stages: dropped stale `stage-curation` from [[concept-worked-example-fading]] (its use moved to [[stage-curation-interview]] in the F6 refocus) and added the missing backlinks ([[stage-style-definition]], [[stage-visual-analysis]]); restored intended concept backlinks in [[stage-works-inventory]] ([[concept-source-trust-signals]]) and [[stage-visual-analysis]] ([[concept-spaced-repetition]]); linked [[concept-formal-analysis-taxonomy]] from [[stage-curation-interview]]. Aligned index numbering (6a/6b) and the worked-example-fading annotation. Two pre-existing drifts predated this session's ingest.
+
+## [2026-06-20] ingest | 21.1 + 21.2 divergent/convergent thinking
+Ingested two NotebookLM reports from the "Divergent/convergent Thinking" notebook (new raw root **21**, no prompt doc — not from the research pipeline): [[21.1-divergent-convergent-strategic-partner-framework]] (a prompting protocol) and [[21.2-llm-creativity-vs-human-cognition-benchmark]] (human-vs-LLM creativity benchmarking). These are **meta** sources (about LLM/human creativity, not art pedagogy), so they contribute a cognitive *frame* the pipeline already instantiates.
+- **New** [[concept-divergent-convergent-thinking]] (variation→selection; semantic distance; creative ceiling; human owns the convergent selection). used-by: curation, curation-interview, visual-analysis (clears the rule-of-three promotion bar).
+- [[stage-curation]] — narrowing funnel reframed as a divergent→convergent cycle (human converges).
+- [[stage-curation-interview]] — grounded the "coverage, not redundancy" rule as *maximizing semantic distance across the study set* (DAT applied to lessons).
+- [[stage-visual-analysis]] — drill ideation as a divergent→convergent pass.
+- [[concept-desirable-difficulty]] — cross-linked: AI lacks an autonomous selection phase, so handing over the converged answer is the retrieval-strength anti-pattern.
+- Index: concept list + raw corpus (new "Creativity / cognition (meta)" line) + source→stage map (2 rows). Touched 6 wiki pages + index; pipeline unchanged at 9 stages; concepts 6 → 7.

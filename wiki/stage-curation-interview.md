@@ -2,7 +2,7 @@
 title: "Curation Interview — Socratic per-work study briefs"
 type: wiki/stage
 stage: 6b
-sources: [18-uat-feedback, 06.1-productive-friction-learning, 05.1-master-study-pedagogy, 20-dimensions-of-study-cheat-sheet]
+sources: [18-uat-feedback, 06.1-productive-friction-learning, 05.1-master-study-pedagogy, 20-dimensions-of-study-cheat-sheet, 21.1-divergent-convergent-strategic-partner-framework, 21.2-llm-creativity-vs-human-cognition-benchmark]
 tags: [wiki/stage, learning/friction, learning/socratic]
 aliases: ["Socratic Curation Interview", "Study Brief Interview"]
 ---
@@ -24,7 +24,7 @@ The interview embodies [[concept-desirable-difficulty]] (answer-withholding Socr
 
 - **AI must not pre-frame the picture.** The dry-run's sharpest lesson: the AI mislabeled *Mosaic-Like* as "color-grid" from title+year *without seeing it*; the human's eyes corrected it. Contract for the spec — present neutral facts only (title/year/medium/series/source-image link) and let observation lead. **Never assert what a work looks like from metadata.**
 - **The appreciation reflex.** Humans drift into iconography/story ("is this a brothel?"). The redirect that works is to seize the human's *own* formal noticing ("he didn't put eyes on that figure") and bridge it to a practiceable rule — an explicit "redirect narrative → technique" move.
-- **Coverage, not redundancy.** Track the running set of confirmed lessons and steer later works toward *non-overlapping* ones (contour-rhythm / facial-economy / opposed-geometries were kept distinct).
+- **Coverage, not redundancy.** Track the running set of confirmed lessons and steer later works toward *non-overlapping* ones (contour-rhythm / facial-economy / opposed-geometries were kept distinct). This is **maximizing semantic distance across the study set** ([[concept-divergent-convergent-thinking]]) — the divergent-association metric applied to lessons, not words: each new brief should sit far from the ones already confirmed. The AI runs the divergent search over candidate readings; the human owns the convergent selection of the lesson.
 - **Session cap.** [[19-stateful-runs-custom-images-staged-analysis]] (Thrust 3) wants the interview bounded to ~3–4 works per session via a narrowing funnel (small grid → large two-up → commit → interview); the no-hard-cap "interview prunes" stance and the ≤4 funnel cap need reconciling when the funnel is specced.
 
 ## Skill design implications

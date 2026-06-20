@@ -43,6 +43,8 @@ Chronological wiki history: [[log|wiki log]].
   → study-retention, visual-analysis.
 - [[concept-worked-example-fading]] — job vs learning aids, fading, crutch problem.
   → study-retention, style-definition, visual-analysis, curation-interview.
+- [[concept-divergent-convergent-thinking]] — variation→selection, semantic distance, creative ceiling; human owns selection.
+  → curation, curation-interview, visual-analysis.
 
 ## Raw corpus (immutable sources)
 
@@ -55,6 +57,8 @@ Chronological wiki history: [[log|wiki log]].
 [[12.1-works-inventory-method]] · [[13.1-human-curation-ux]] · [[16.1-image-source-hierarchy]]
 **Build-phase feedback & requests:** [[18-uat-feedback]] ·
 [[19-stateful-runs-custom-images-staged-analysis]] · [[20-dimensions-of-study-cheat-sheet]]
+**Creativity / cognition (meta):** [[21.1-divergent-convergent-strategic-partner-framework]] ·
+[[21.2-llm-creativity-vs-human-cognition-benchmark]]
 
 ## Source → stage map
 
@@ -75,6 +79,8 @@ Chronological wiki history: [[log|wiki log]].
 | 18 UAT feedback (F6) | curation-interview, curation, image-discovery (+ desirable-difficulty) |
 | 19 stateful runs / custom images / funnel | image-discovery, curation, visual-analysis, curation-interview |
 | 20 study-dimensions cheat sheet | visual-analysis, curation-interview (+ formal-analysis-taxonomy) |
+| 21.1 divergent-convergent protocol | curation, curation-interview, visual-analysis (+ divergent-convergent-thinking) |
+| 21.2 LLM-vs-human creativity benchmark | curation, curation-interview (+ divergent-convergent-thinking, desirable-difficulty) |
 
 Every raw report is referenced by at least one wiki note. The skill is now in build/refine
 (Phase 3); the wiki tracks UAT findings and feature requests back into the stage notes'

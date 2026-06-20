@@ -2,7 +2,7 @@
 title: "Curation — the human rates the board"
 type: wiki/stage
 stage: 6a
-sources: [13.1-human-curation-ux, 06.1-productive-friction-learning, 18-uat-feedback]
+sources: [13.1-human-curation-ux, 06.1-productive-friction-learning, 18-uat-feedback, 21.1-divergent-convergent-strategic-partner-framework, 21.2-llm-creativity-vs-human-cognition-benchmark]
 tags: [wiki/stage, learning/friction]
 aliases: []
 ---
@@ -49,7 +49,10 @@ and purely visual here, and the sense-making happens in the Socratic
 - **Narrowing funnel (request).** [[19-stateful-runs-custom-images-staged-analysis]]
   (Thrust 3) proposes a progressive-zoom flow — small-thumbnail grid → large two-up page →
   commit → interview — where the cut narrows to ≤3–4 as images get larger and dwell time
-  grows. Not yet decided; would make rating multi-pass and naturally cap the interview.
+  grows. Not yet decided; would make rating multi-pass and naturally cap the interview. The
+  flow is a **divergent→convergent** cycle ([[concept-divergent-convergent-thinking]]): the
+  wide board is the divergent search, the staged narrowing is convergent selection — and the
+  *human* does the converging, never the AI.
 
 ## Skill design implications
 

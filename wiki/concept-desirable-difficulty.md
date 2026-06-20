@@ -35,7 +35,11 @@ Theory + the **expertise-reversal effect** mean support must *fade* as skill gro
 
 Answer-withholding, Socratic dialogue, and a **help-abuse protocol** (detect low-effort
 markers like "just tell me" ×3 → hard-stop → metacognitive reframe). Meta-transparency:
-tell the learner the friction is intentional ("struggle shows learning").
+tell the learner the friction is intentional ("struggle shows learning"). Framed cognitively,
+the AI runs the **divergent** search (candidate readings, options) while the human owns the
+**convergent** selection — LLMs lack an autonomous selection phase grounded in intent
+([[concept-divergent-convergent-thinking]]), so handing over the converged answer is the same
+retrieval-strength-inflating anti-pattern.
 
 ## Art-study interaction patterns
 
