@@ -4,9 +4,32 @@ from pathlib import Path
 from scripts.gallery import (
     CandidateView,
     build_gallery_html,
+    build_thumbnail_gallery,
     load_candidate_sidecars,
     write_gallery,
 )
+from scripts.museum_search import ThumbnailCandidate
+
+
+def test_thumbnail_gallery_renders_remote_thumbnails_and_controls():
+    cands = [
+        ThumbnailCandidate(
+            work_id="senecio", title="Senecio", museum="aic",
+            thumbnail_url="https://www.artic.edu/iiif/2/abc/full/400,/0/default.jpg",
+            source_url="https://www.artic.edu/artworks/10018", date="1922", rights="in_copyright",
+        ),
+    ]
+    html = build_thumbnail_gallery(cands, "Paul Klee")
+    assert "<!DOCTYPE html>" in html and "Paul Klee" in html
+    # the remote thumbnail + source link are embedded (a browse board, not local files)
+    assert "https://www.artic.edu/iiif/2/abc/full/400,/0/default.jpg" in html
+    assert "https://www.artic.edu/artworks/10018" in html
+    assert "Senecio" in html
+    # same rating + gate + export contract as the download gallery
+    assert "data-star" in html
+    for gate in ("thesis", "anchor_trait", "handoff_note"):
+        assert gate in html
+    assert "selection.json" in html
 
 
 def _sidecar(cdir: Path, work_id="wheat-field", token="12345", width=4000):

@@ -75,6 +75,30 @@ def write_gallery(candidates_dir: Path | str, artist: str, out_path: Path | str)
     return out_path
 
 
+def build_thumbnail_gallery(cands, artist: str) -> str:
+    """Render a browse *board* of remote museum thumbnails with rating + gate + export.
+
+    Unlike the download gallery (local PD files), this shows many hotlinked thumbnails for
+    curation regardless of copyright; rights are resolved only for the selected works.
+    Export shape matches scripts.selection (work_id / iiif_token / image_rel / rating / gate).
+    """
+    payload = [
+        {
+            "work_id": c.work_id,
+            "iiif_token": f"{c.museum}-{i}",
+            "image_rel": c.thumbnail_url,  # remote thumbnail (hotlinked)
+            "source_url": c.source_url,
+            "title": c.title,
+            "museum": c.museum,
+            "date": c.date,
+            "rights": c.rights,
+        }
+        for i, c in enumerate(cands)
+    ]
+    data_json = json.dumps({"artist": artist, "candidates": payload}, indent=2)
+    return _THUMB_TEMPLATE.replace("__ARTIST__", _escape(artist)).replace("__DATA__", data_json)
+
+
 def _escape(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -221,6 +245,150 @@ document.getElementById("export").onclick = () => {
 };
 
 renderGrid();
+</script>
+</body>
+</html>
+"""
+
+
+_THUMB_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Curation board — __ARTIST__</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #111; color: #eee; }
+  header { padding: 0.75rem 1rem; background: #1c1c1c; position: sticky; top: 0; z-index: 5;
+           display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  header strong { font-size: 1.05rem; }
+  #filters label { font-size: 12px; color: #bbb; margin-right: 0.75rem; cursor: pointer; }
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+          gap: 10px; padding: 1rem; }
+  .card { background: #1c1c1c; border: 2px solid transparent; border-radius: 4px; overflow: hidden; }
+  .card.liked { border-color: gold; }
+  .card img { width: 100%; height: 200px; object-fit: contain; background: #000; display: block; }
+  .meta { padding: 6px 8px; font-size: 12px; }
+  .meta .title { font-weight: 600; }
+  .meta .sub { color: #999; font-size: 11px; margin: 2px 0; }
+  .badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+  .pd { background: #1d5e2a; color: #d7ffd9; }
+  .copy { background: #5e1d1d; color: #ffd7d7; }
+  .stars .star { font-size: 1.25rem; cursor: pointer; color: #555; }
+  .stars .star.on { color: gold; }
+  a.src { color: #7aa7ff; font-size: 11px; }
+  .gate { display: none; margin-top: 4px; }
+  .card.liked .gate { display: block; }
+  .gate input, .gate textarea { width: 100%; box-sizing: border-box; background: #222;
+           color: #eee; border: 1px solid #444; font-size: 11px; margin-top: 3px; }
+  button { font-size: 0.95rem; padding: 0.4rem 0.9rem; cursor: pointer; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Curation board — __ARTIST__</strong>
+  <span id="count"></span>
+  <span id="filters">
+    <label><input type="checkbox" id="only-liked"> liked only</label>
+    <label><input type="checkbox" id="only-pd"> public-domain only</label>
+  </span>
+  <button id="export">Export selection.json</button>
+  <span id="status"></span>
+</header>
+<div id="grid"></div>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const DATA = JSON.parse(document.getElementById("data").textContent);
+const LIKED = 4;
+const state = {};  // token -> {rating, thesis, anchor_trait, handoff_note}
+const onlyLiked = document.getElementById("only-liked");
+const onlyPd = document.getElementById("only-pd");
+
+function visible() {
+  return DATA.candidates.filter(c => {
+    const s = state[c.iiif_token] || {rating: 0};
+    if (onlyLiked.checked && s.rating < LIKED) return false;
+    if (onlyPd.checked && c.rights !== "public_domain") return false;
+    return true;
+  });
+}
+
+function render() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  const shown = visible();
+  const liked = DATA.candidates.filter(c => (state[c.iiif_token]||{}).rating >= LIKED).length;
+  document.getElementById("count").textContent =
+    DATA.candidates.length + " works \\u00b7 " + liked + " liked \\u00b7 " + shown.length + " shown";
+  shown.forEach(c => {
+    const s = state[c.iiif_token] || {rating: 0};
+    const card = document.createElement("div");
+    card.className = "card" + (s.rating >= LIKED ? " liked" : "");
+    const pd = c.rights === "public_domain";
+    let stars = "";
+    for (let n = 1; n <= 5; n++)
+      stars += '<span class="star' + (n <= s.rating ? " on" : "") +
+               '" data-star="' + n + '" data-tok="' + c.iiif_token + '">\\u2605</span>';
+    card.innerHTML =
+      '<img loading="lazy" src="' + c.image_rel + '" alt="">' +
+      '<div class="meta">' +
+        '<div class="title">' + c.title + '</div>' +
+        '<div class="sub">' + c.museum + ' \\u00b7 ' + (c.date || "n.d.") + ' ' +
+          '<span class="badge ' + (pd ? "pd" : "copy") + '">' + (pd ? "PD" : "\\u00a9") + '</span></div>' +
+        '<div class="stars">' + stars + '</div>' +
+        '<a class="src" href="' + c.source_url + '" target="_blank">source \\u2197</a>' +
+        '<div class="gate">' +
+          '<input data-gate="thesis" data-tok="' + c.iiif_token + '" placeholder="thesis (why study)">' +
+          '<input data-gate="anchor_trait" data-tok="' + c.iiif_token + '" placeholder="anchor trait">' +
+          '<input data-gate="handoff_note" data-tok="' + c.iiif_token + '" placeholder="handoff note">' +
+        '</div>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+  bind();
+}
+
+function bind() {
+  document.querySelectorAll(".star").forEach(el => {
+    el.onclick = () => {
+      const tok = el.dataset.tok;
+      const st = state[tok] || (state[tok] = {rating: 0});
+      st.rating = parseInt(el.dataset.star, 10);
+      render();
+    };
+  });
+  document.querySelectorAll("[data-gate]").forEach(el => {
+    const tok = el.dataset.tok;
+    el.value = (state[tok] || {})[el.dataset.gate] || "";
+    el.oninput = () => {
+      const st = state[tok] || (state[tok] = {rating: 0});
+      st[el.dataset.gate] = el.value;
+    };
+  });
+}
+
+onlyLiked.onchange = render;
+onlyPd.onchange = render;
+
+document.getElementById("export").onclick = () => {
+  const ratings = DATA.candidates.map(c => {
+    const s = state[c.iiif_token] || {rating: 0};
+    return {
+      work_id: c.work_id, iiif_token: c.iiif_token, image_rel: c.image_rel,
+      source_url: c.source_url, museum: c.museum, rights: c.rights,
+      rating: s.rating || 0, thesis: s.thesis || "",
+      anchor_trait: s.anchor_trait || "", handoff_note: s.handoff_note || "",
+    };
+  });
+  const blob = new Blob([JSON.stringify({artist: DATA.artist, ratings}, null, 2)],
+                        {type: "application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "selection.json";
+  a.click();
+  document.getElementById("status").textContent = " saved selection.json";
+};
+
+render();
 </script>
 </body>
 </html>
