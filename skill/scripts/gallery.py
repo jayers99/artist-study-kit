@@ -99,6 +99,7 @@ def build_thumbnail_gallery(cands, artist: str) -> str:
             "rights": c.rights,
             "qid": c.qid,
             "inst_ids": [list(pair) for pair in c.inst_ids],
+            "origin": getattr(c, "origin", "discovered"),
         }
         for i, c in enumerate(cands)
     ]
@@ -252,8 +253,9 @@ _THUMB_TEMPLATE = """<!DOCTYPE html>
   .meta .title { font-weight: 600; }
   .meta .sub { color: #999; font-size: 11px; margin: 2px 0; }
   .badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; }
-  .pd { background: #1d5e2a; color: #d7ffd9; }
-  .copy { background: #5e1d1d; color: #ffd7d7; }
+  .badge.pd { background: #1d5e2a; color: #d7ffd9; }
+  .badge.copy { background: #5e1d1d; color: #ffd7d7; }
+  .badge.user { background: #5b3; color: #042; }
   .stars .star { font-size: 1.25rem; cursor: pointer; color: #555; }
   .stars .star.on { color: gold; }
   a.src { color: #7aa7ff; font-size: 11px; }
@@ -310,7 +312,8 @@ function render() {
       '<div class="meta">' +
         '<div class="title">' + c.title + '</div>' +
         '<div class="sub">' + c.museum + ' \\u00b7 ' + (c.date || "n.d.") + ' ' +
-          '<span class="badge ' + (pd ? "pd" : "copy") + '">' + (pd ? "PD" : "\\u00a9") + '</span></div>' +
+          '<span class="badge ' + (pd ? "pd" : "copy") + '">' + (pd ? "PD" : "\\u00a9") + '</span>' +
+          (c.origin === "user" ? '<span class="badge user">USER</span>' : '') + '</div>' +
         '<div class="stars">' + stars + '</div>' +
         '<a class="src" href="' + c.source_url + '" target="_blank">source \\u2197</a>' +
       '</div>';
