@@ -91,6 +91,7 @@ def build_thumbnail_gallery(cands, artist: str) -> str:
             "title": c.title,
             "museum": c.museum,
             "date": c.date,
+            "medium": c.medium,
             "rights": c.rights,
             "qid": c.qid,
             "inst_ids": [list(pair) for pair in c.inst_ids],
@@ -122,9 +123,6 @@ _TEMPLATE = """<!DOCTYPE html>
   #detail img { max-height: 70vh; display: block; margin: 0 auto; }
   .star { font-size: 2rem; cursor: pointer; color: #555; }
   .star.on { color: gold; }
-  #gate { display: none; margin-top: 1rem; }
-  #gate label { display: block; margin: 0.5rem 0; }
-  #gate input, #gate textarea { width: 100%; background: #222; color: #eee; border: 1px solid #444; }
   button { font-size: 1rem; padding: 0.5rem 1rem; margin: 0.25rem; }
 </style>
 </head>
@@ -139,18 +137,12 @@ _TEMPLATE = """<!DOCTYPE html>
   <button id="back">&larr; Back to grid</button>
   <img id="detail-img" alt="">
   <div id="stars"></div>
-  <div id="gate">
-    <p>Rated 4&#9733;+ — record the curatorial gate before this work joins the study set:</p>
-    <label>thesis (why study this)<textarea data-gate="thesis" rows="2"></textarea></label>
-    <label>anchor_trait (the trait to study)<input data-gate="anchor_trait"></label>
-    <label>handoff_note (note for analysis)<textarea data-gate="handoff_note" rows="2"></textarea></label>
-  </div>
 </div>
 <script id="data" type="application/json">__DATA__</script>
 <script>
 const DATA = JSON.parse(document.getElementById("data").textContent);
 const LIKED = 4;
-const state = {};  // key -> {rating, thesis, anchor_trait, handoff_note}
+const state = {};  // key -> {rating}
 let current = 0;
 
 function key(c) { return c.work_id + "/" + c.iiif_token; }
@@ -179,7 +171,6 @@ function openDetail(i) {
   const c = DATA.candidates[i];
   document.getElementById("detail-img").src = c.image_rel;
   renderStars();
-  renderGate();
 }
 
 function renderStars() {
@@ -197,26 +188,11 @@ function renderStars() {
   }
 }
 
-function renderGate() {
-  const c = DATA.candidates[current];
-  const s = state[key(c)] || {rating: 0};
-  const gate = document.getElementById("gate");
-  gate.style.display = s.rating >= LIKED ? "block" : "none";
-  gate.querySelectorAll("[data-gate]").forEach(el => { el.value = s[el.dataset.gate] || ""; });
-  gate.querySelectorAll("[data-gate]").forEach(el => {
-    el.oninput = () => {
-      const st = state[key(c)] || (state[key(c)] = {rating: s.rating});
-      st[el.dataset.gate] = el.value;
-    };
-  });
-}
-
 function rate(n) {
   const c = DATA.candidates[current];
   const st = state[key(c)] || (state[key(c)] = {});
   st.rating = n;
   renderStars();
-  renderGate();
   if (n < LIKED && current < DATA.candidates.length - 1) {
     setTimeout(() => openDetail(current + 1), 200);  // auto-advance below the gate
   }
@@ -233,8 +209,7 @@ document.getElementById("export").onclick = () => {
     const s = state[key(c)] || {rating: 0};
     return {
       work_id: c.work_id, iiif_token: c.iiif_token, image_rel: c.image_rel,
-      rating: s.rating || 0, thesis: s.thesis || "",
-      anchor_trait: s.anchor_trait || "", handoff_note: s.handoff_note || "",
+      rating: s.rating || 0,
     };
   });
   const blob = new Blob([JSON.stringify({artist: DATA.artist, ratings}, null, 2)],
@@ -278,10 +253,6 @@ _THUMB_TEMPLATE = """<!DOCTYPE html>
   .stars .star { font-size: 1.25rem; cursor: pointer; color: #555; }
   .stars .star.on { color: gold; }
   a.src { color: #7aa7ff; font-size: 11px; }
-  .gate { display: none; margin-top: 4px; }
-  .card.liked .gate { display: block; }
-  .gate input, .gate textarea { width: 100%; box-sizing: border-box; background: #222;
-           color: #eee; border: 1px solid #444; font-size: 11px; margin-top: 3px; }
   button { font-size: 0.95rem; padding: 0.4rem 0.9rem; cursor: pointer; }
 </style>
 </head>
@@ -301,7 +272,7 @@ _THUMB_TEMPLATE = """<!DOCTYPE html>
 <script>
 const DATA = JSON.parse(document.getElementById("data").textContent);
 const LIKED = 4;
-const state = {};  // token -> {rating, thesis, anchor_trait, handoff_note}
+const state = {};  // token -> {rating}
 const onlyLiked = document.getElementById("only-liked");
 const onlyPd = document.getElementById("only-pd");
 
@@ -338,11 +309,6 @@ function render() {
           '<span class="badge ' + (pd ? "pd" : "copy") + '">' + (pd ? "PD" : "\\u00a9") + '</span></div>' +
         '<div class="stars">' + stars + '</div>' +
         '<a class="src" href="' + c.source_url + '" target="_blank">source \\u2197</a>' +
-        '<div class="gate">' +
-          '<input data-gate="thesis" data-tok="' + c.iiif_token + '" placeholder="thesis (why study)">' +
-          '<input data-gate="anchor_trait" data-tok="' + c.iiif_token + '" placeholder="anchor trait">' +
-          '<input data-gate="handoff_note" data-tok="' + c.iiif_token + '" placeholder="handoff note">' +
-        '</div>' +
       '</div>';
     grid.appendChild(card);
   });
@@ -358,14 +324,6 @@ function bind() {
       render();
     };
   });
-  document.querySelectorAll("[data-gate]").forEach(el => {
-    const tok = el.dataset.tok;
-    el.value = (state[tok] || {})[el.dataset.gate] || "";
-    el.oninput = () => {
-      const st = state[tok] || (state[tok] = {rating: 0});
-      st[el.dataset.gate] = el.value;
-    };
-  });
 }
 
 onlyLiked.onchange = render;
@@ -376,10 +334,9 @@ document.getElementById("export").onclick = () => {
     const s = state[c.iiif_token] || {rating: 0};
     return {
       work_id: c.work_id, iiif_token: c.iiif_token, image_rel: c.image_rel,
+      title: c.title, date: c.date, medium: c.medium,
       source_url: c.source_url, museum: c.museum, rights: c.rights,
-      qid: c.qid, inst_ids: c.inst_ids,
-      rating: s.rating || 0, thesis: s.thesis || "",
-      anchor_trait: s.anchor_trait || "", handoff_note: s.handoff_note || "",
+      qid: c.qid, inst_ids: c.inst_ids, rating: s.rating || 0,
     };
   });
   const blob = new Blob([JSON.stringify({artist: DATA.artist, ratings}, null, 2)],
