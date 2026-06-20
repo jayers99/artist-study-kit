@@ -30,6 +30,7 @@ def commons_resolver(entry, *, fetch=None):
     filename = _find(entry.inst_ids, "commons_file")
     if not filename:
         return None
+    # No artist= guard needed: this is the QID-verified P18 file, not a keyword search.
     cands = commons.parse_commons_search(fetch(filename), work_id=entry.work_id, want=1)
     return cands[0] if cands else None
 
@@ -52,7 +53,7 @@ def aic_resolver(entry, *, fetch=None):
         iiif_id=f"aic/{aic_id}",
         image_url=f"{iiif}/{data['image_id']}/full/1686,/0/default.jpg",
         width=1686,
-        height=1686,
+        height=0,  # height unknown until fetched; width pinned by the IIIF 1686, request
         license="Public Domain",
         rights_status="public_domain",
     )
@@ -73,7 +74,14 @@ RESOLVERS = (commons_resolver, aic_resolver)
 
 
 def resolve_selected(entry, selected_dir, *, resolvers=RESOLVERS, download=download_candidate) -> Resolved:
-    """Resolve one selected work to high-res, falling back to source_url when in copyright."""
+    """Resolve one selected work to high-res, falling back to source_url when in copyright.
+
+    A resolver returning a candidate means PD/CC0 was verified. If the byte fetch then
+    fails, the work is still public-domain (we just have no local file) — report it as
+    public_domain with image_path=None, NOT in_copyright. Only when no resolver yields a
+    candidate at all is the work treated as in-copyright (keep source_url, download nothing).
+    """
+    verified = None  # first PD/CC0 candidate whose download did not succeed
     for resolver in resolvers:
         cand = resolver(entry)
         if cand is None:
@@ -82,6 +90,11 @@ def resolve_selected(entry, selected_dir, *, resolvers=RESOLVERS, download=downl
         if result.status in ("downloaded", "skipped") and result.image_path is not None:
             return Resolved(entry.work_id, "public_domain", result.image_path, cand.image_url,
                             entry.source_url, license=cand.license or "", institution=cand.institution)
+        if verified is None:
+            verified = cand
+    if verified is not None:
+        return Resolved(entry.work_id, "public_domain", None, verified.image_url,
+                        entry.source_url, license=verified.license or "", institution=verified.institution)
     return Resolved(entry.work_id, "in_copyright", None, None, entry.source_url)
 
 

@@ -99,6 +99,17 @@ def test_resolve_selected_keeps_source_url_when_in_copyright(tmp_path):
     assert called == []   # nothing downloaded for in-copyright works
 
 
+def test_resolve_selected_pd_download_failure_stays_public_domain(tmp_path):
+    # resolver verified PD/CC0 but the byte fetch fails -> still public_domain, no local file
+    res = resolve_selected(
+        _entry(), tmp_path,
+        resolvers=[lambda e: _cand()],
+        download=lambda c, d: SimpleNamespace(status="error", image_path=None))
+    assert res.rights == "public_domain"
+    assert res.image_path is None
+    assert res.image_url == "u"   # _cand() sets image_url="u"; preserved for retry
+
+
 def test_resolve_selection_resolves_liked_and_writes_manifest(tmp_path):
     sel = Selection(artist="paul-klee", ratings=[
         _entry(work_id="fish-magic", rating=5, inst_ids=(("commons_file", "Fish.jpg"),)),
