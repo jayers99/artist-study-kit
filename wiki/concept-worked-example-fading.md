@@ -2,7 +2,7 @@
 title: "Worked Examples, Aids & Fading"
 type: wiki/concept
 sources: [07.1-study-aids-scaffolding]
-used-by: [stage-study-retention, stage-curation]
+used-by: [stage-study-retention, stage-curation, stage-curation-interview]
 tags: [wiki/concept, learning/scaffolding]
 aliases: ["Job Aid vs Learning Aid", "Worked-Example Effect", "Fading", "Crutch Problem"]
 ---
@@ -49,3 +49,12 @@ build the aid (SOI: select-organize-integrate).
 Style cheat sheet (chunked "structural DNA") · value/composition checklist (error
 prevention) · technique reference card (numbered steps) · "what to notice first" prompt
 (interrupts System 1).
+
+## Fading in the study brief
+
+The [[stage-curation-interview]] output is a faded worked example: each brief's `study_plan`
+is an ordered protocol with **success tests** that strips support as skill grows — e.g.
+monochrome line only → add ~4 grays → add color chords last, each step testable ("trace your
+eye-path — does it loop?"). Merged study→final pairs (a prep drawing then its painting) are a
+built-in completion-problem progression. This is the worked-example effect applied to copying:
+isolate one rule, fade toward independent variation.

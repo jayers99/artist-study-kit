@@ -13,9 +13,13 @@ wiki, then build. Latest session handoff: `raw/14-phase-2-wiki-session.md`.
 
 ## Working method (LLM-Wiki)
 
-This repo follows Karpathy's LLM-Wiki pattern: immutable **raw sources** → an LLM-maintained
+This repo follows the **LLM-Wiki pattern**: immutable **raw sources** → an LLM-maintained
 **wiki** → a **schema** (this file). The raw layer (Phase 1) and the `wiki/` synthesis layer
-(Phase 2) are both populated.
+(Phase 2) are both populated. Method reference (the pattern's source doc — read it before an
+ingest/lint pass): `/Users/jayers/code/public_shuttle/prompts/llm-wiki.md`. Its three core
+operations are **ingest** (a new `raw/` source → update every wiki page it touches + the
+index + append to `wiki/log.md`), **query** (answer from the wiki; file good answers back as
+notes), and **lint** (health-check for contradictions, stale claims, orphans, missing links).
 
 - `raw/`     — immutable, numbered corpus: research reports, decision docs, brainstorms.
 - `wiki/`    — LLM-maintained synthesis: interlinked stage + concept notes (see below).
@@ -49,16 +53,20 @@ raw/
 
 ### wiki/ structure (synthesis layer)
 The `wiki/` is the LLM-maintained synthesis of `raw/`, organized around the **skill
-pipeline**. Design rationale: `raw/10-wiki-synthesis-design.md`. Three note types:
+pipeline**. Design rationale: `raw/10-wiki-synthesis-design.md`. Note types:
 
 - **Index** — `00-index.md` (MOC): pipeline order + concept clusters + source→stage map.
+- **Log** — `log.md`: append-only, chronological ingest/query/lint record (newest last).
+  Entry prefix `## [YYYY-MM-DD] <op> | <title>` so `grep "^## \[" wiki/log.md | tail` works.
+  Update it on every ingest. Deeper narrative still lives in the `raw/` session handoffs.
 - **Stage notes** — `stage-<slug>.md`, one per skill-pipeline step. Body =
   `## What the research says` · `## Open questions / tensions` · `## Skill design implications`.
-  Frontmatter `sources:` lists the backing `raw/` reports (empty = research gap).
+  Frontmatter `sources:` lists the backing `raw/` reports (empty = research gap). UAT findings
+  and feature requests are folded into the relevant stage's "Open questions / tensions".
 - **Concept notes** — `concept-<slug>.md`: atomic, cross-cutting ideas referenced by 2+
   stages (promotion rule: only create one when a 3rd stage needs it). Frontmatter `used-by:`.
 
-Conventions: kebab-case filenames; `type: wiki/stage|wiki/concept|wiki/index`; link back to
+Conventions: kebab-case filenames; `type: wiki/stage|wiki/concept|wiki/index|wiki/log`; link back to
 raw via `[[NN.1-slug]]` and between wiki notes via `[[stage-*]]`/`[[concept-*]]`. The wiki is
 the only layer carrying inter-note `[[wikilinks]]`; `raw/` is never edited to add them.
 
@@ -158,7 +166,8 @@ See `TODO.md`. **Phase 2 (wiki synthesis) complete.** Research corpus = 11 topic
 - Pedagogy/learning-science: `05` master-study pedagogy · `06` productive-friction · `07` study aids/scaffolding · `08` spaced-repetition retention.
 - Pipeline-stage gaps (added during wiki design): `11` artist background research · `12` works inventory method · `13` human curation UX.
 
-`wiki/` is stood up (15 notes: 8 stage + 6 concept + index; design `raw/10-wiki-synthesis-design.md`,
-entry point `wiki/00-index.md`). Phase 1 handoff: `raw/09-phase-1-research-session.md`.
-**Next: draft the skill spec** from the stage notes' "Skill design implications", then build
-first `scripts/` (Firecrawl + IIIF image discovery).
+`wiki/` is maintained (9 stage + 6 concept + index + log; design `raw/10-wiki-synthesis-design.md`,
+entry point `wiki/00-index.md`, history `wiki/log.md`). Phase 1 handoff: `raw/09-phase-1-research-session.md`.
+Phase 3 (skill build/refine) is underway; build-phase feedback is ingested back into the wiki
+— latest: `raw/18` (UAT → Socratic [[stage-curation-interview]]), `raw/19` (stateful-runs /
+custom-images / narrowing-funnel requests), `raw/20` (study-dimensions). **Next** per `TODO.md`.

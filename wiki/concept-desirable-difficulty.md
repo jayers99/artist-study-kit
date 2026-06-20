@@ -1,8 +1,8 @@
 ---
 title: "Desirable Difficulty"
 type: wiki/concept
-sources: [06.1-productive-friction-learning]
-used-by: [stage-curation, stage-visual-analysis, stage-study-retention]
+sources: [06.1-productive-friction-learning, 18-uat-feedback]
+used-by: [stage-curation-interview, stage-curation, stage-visual-analysis, stage-study-retention]
 tags: [wiki/concept, learning/friction]
 aliases: ["Productive Friction", "Bjork's Principles", "ZPD", "Socratic AI"]
 ---
@@ -42,3 +42,13 @@ tell the learner the friction is intentional ("struggle shows learning").
 Predict-then-reveal (generation effect) · memory-based retrieval prompts · spaced check-ins
 · Socratic critique ("how many head-lengths is that forearm?") · worked-example fading.
 Anti-patterns: the fluency illusion, the "median pitch" failure, feedback dependency.
+
+## Worked instance: the curation interview
+
+[[stage-curation-interview]] is this concept made concrete and dry-run-validated
+([[18-uat-feedback]] F6). The per-work arc — observe → hypothesize the rule → **redirect
+narrative → technique** → commit + design the drill → confirm — keeps the human doing the
+sense-making. The hard contract: the AI proposes *questions and sharpened restatements only,
+never the lesson*; handing over the answer is exactly the retrieval-strength-inflating
+anti-pattern above. The reliable convergence move is "if you copy this to steal that one
+rule, what's the test that proves you learned it vs. a nice copy?"

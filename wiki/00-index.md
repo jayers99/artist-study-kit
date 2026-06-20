@@ -22,24 +22,27 @@ The skill's workflow, in order (seed: [[00-artist-study-kit-seed]]):
 3. [[stage-style-definition]] — the artist's visual grammar, up front.
 4. [[stage-works-inventory]] — select + rank works (important vs studyable).
 5. [[stage-image-discovery]] — high-res candidate images, legally.
-6. [[stage-curation]] — the human picks the shortlist.
+6. [[stage-curation]] — the human visually rates the board → `selection.json`.
+6b. [[stage-curation-interview]] — Socratic per-work interview → `study-briefs`.
 7. [[stage-visual-analysis]] — deep-read the selected works.
 - ⟳ [[stage-study-retention]] — *cross-cutting*: notes, drills, aids, review schedule.
 
+Chronological wiki history: [[log|wiki log]].
+
 ## Concepts (cross-cutting)
 
-- [[concept-formal-analysis-taxonomy]] — Notan, Dow's principles, levels, palette.
-  → style-definition, visual-analysis.
+- [[concept-formal-analysis-taxonomy]] — Notan, Dow's principles, levels, palette; 18-dim / core-12 study sheet.
+  → style-definition, visual-analysis, curation-interview.
 - [[concept-source-trust-signals]] — lateral reading, rubric, tiers, machine cues.
   → source-grading, background, works.
 - [[concept-iiif]] — IIIF + open-access museum APIs, source priority, rights.
   → image-discovery, works.
 - [[concept-desirable-difficulty]] — productive friction, Bjork, ZPD, Socratic AI.
-  → curation, visual-analysis, study-retention.
+  → curation-interview, curation, visual-analysis, study-retention.
 - [[concept-spaced-repetition]] — spacing/lag, FSRS, RB/II, interleaving, 500ms.
   → study-retention, visual-analysis.
 - [[concept-worked-example-fading]] — job vs learning aids, fading, crutch problem.
-  → study-retention, curation.
+  → study-retention, curation, curation-interview.
 
 ## Raw corpus (immutable sources)
 
@@ -49,7 +52,9 @@ The skill's workflow, in order (seed: [[00-artist-study-kit-seed]]):
 [[06.1-productive-friction-learning]] · [[07.1-study-aids-scaffolding]] ·
 [[08.1-spaced-repetition-retention]]
 **Pipeline-stage method:** [[11.1-artist-background-research]] ·
-[[12.1-works-inventory-method]] · [[13.1-human-curation-ux]]
+[[12.1-works-inventory-method]] · [[13.1-human-curation-ux]] · [[16.1-image-source-hierarchy]]
+**Build-phase feedback & requests:** [[18-uat-feedback]] ·
+[[19-stateful-runs-custom-images-staged-analysis]] · [[20-dimensions-of-study-cheat-sheet]]
 
 ## Source → stage map
 
@@ -66,6 +71,11 @@ The skill's workflow, in order (seed: [[00-artist-study-kit-seed]]):
 | 11.1 artist background | background-research |
 | 12.1 works inventory | works-inventory |
 | 13.1 human curation | curation |
+| 16.1 image source hierarchy | image-discovery |
+| 18 UAT feedback (F6) | curation-interview, curation, image-discovery (+ desirable-difficulty) |
+| 19 stateful runs / custom images / funnel | image-discovery, curation, visual-analysis, curation-interview |
+| 20 study-dimensions cheat sheet | visual-analysis, curation-interview (+ formal-analysis-taxonomy) |
 
-Every raw report is referenced by at least one wiki note. Next: draft the skill spec from
-these stage notes' "Skill design implications" sections.
+Every raw report is referenced by at least one wiki note. The skill is now in build/refine
+(Phase 3); the wiki tracks UAT findings and feature requests back into the stage notes'
+"Open questions / tensions". Chronological history: [[log|wiki log]].

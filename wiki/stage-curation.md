@@ -1,8 +1,8 @@
 ---
-title: "Curation — the human picks the shortlist"
+title: "Curation — the human rates the board"
 type: wiki/stage
-stage: 6
-sources: [13.1-human-curation-ux, 06.1-productive-friction-learning]
+stage: 6a
+sources: [13.1-human-curation-ux, 06.1-productive-friction-learning, 18-uat-feedback]
 tags: [wiki/stage, learning/friction]
 aliases: []
 ---
@@ -10,8 +10,9 @@ aliases: []
 # Curation
 
 > [!info] Pipeline role
-> The human-in-the-loop step: the artist reviews the candidate gallery and selects a
-> shortlist for deep study. Emits `images/selected/` + a shortlist rationale.
+> The human-in-the-loop step: the artist reviews the candidate gallery and **visually
+> rates/filters** it to a shortlist. Emits `selection.json` (purely visual — no typed
+> rationale). The rationale is drawn out next, in [[stage-curation-interview]].
 
 ## What the research says
 
@@ -26,27 +27,37 @@ value, texture, space, pattern) plus tech data (medium, source, resolution) so t
 is about *educational value*, not just prettiness. Selection heuristics favor
 **learnability** over taste (the "learnability ladder"; "truth to materials" filter).
 
-Crucially, this stage embodies [[concept-desirable-difficulty]]: a **curatorial gate**
-forces a sense-making pause (assign an Element-of-Art tag + a one-line observation) before a
-work joins the shortlist — preventing a passive "visual heap" and keeping the human a real
-agent. This is productive friction by design, not automation.
+This stage originally embodied [[concept-desirable-difficulty]] with a **curatorial gate** —
+typing a thesis + anchor trait + handoff note before a work joined the shortlist. UAT
+([[18-uat-feedback]] **F6**, superseding F4) found that typing rationale into a form is
+opaque and teaches nothing. The friction was **relocated, not removed**: rating stays fast
+and purely visual here, and the sense-making happens in the Socratic
+[[stage-curation-interview]] that follows. This note now covers only the visual phase.
 
 ## Open questions / tensions
 
 - How much to automate the cull (e.g. pre-flag low-res/duplicates) without
   short-circuiting observation? Tooling research is photography-DAM-centric (Lightroom,
   PureRef) — adapt, don't adopt wholesale.
-- Where does the UI live? A CLI/skill can't render a Lightroom-grade survey view; likely an
-  Obsidian/HTML contact sheet + a structured selection worksheet.
+- **Export fidelity (F2).** `selection.json` must round-trip `title`/`date`/`medium`, not
+  just `work_id`/`stars`/`rights` — downstream stages and the interview should never re-fetch
+  to learn what a selected work *is*.
+- **Reproduction badge (F3).** The board should flag posthumous "after / produced by /
+  manner of" reproductions (the 1972 Montgomery Ward *Drummer Boy* leaked onto the Klee
+  board) so the human isn't asked to rate a non-original; the attribution guard lives in
+  [[stage-image-discovery]].
+- **Narrowing funnel (request).** [[19-stateful-runs-custom-images-staged-analysis]]
+  (Thrust 3) proposes a progressive-zoom flow — small-thumbnail grid → large two-up page →
+  commit → interview — where the cut narrows to ≤3–4 as images get larger and dwell time
+  grows. Not yet decided; would make rating multi-pass and naturally cap the interview.
 
 ## Skill design implications
 
 - Present a **contact-sheet gallery** per work with the decision metadata inline; support a
-  fast pick/reject pass, then a thesis-driven shortlist (cap ~8–10).
-- Implement a **curatorial gate**: to select a work, the human must record a curatorial
-  thesis, a visual anchor (the trait to study), and a handoff note — this *is* the
-  shortlist rationale handed to [[stage-visual-analysis]].
+  fast pick/reject/star pass to a shortlist. Rating is purely visual — **no typed gate**.
 - Keep selection human; the skill informs (pre-sorts by importance/studyability/resolution)
   but never auto-picks.
+- Emit `selection.json` carrying visual + provenance + `title`/`date`/`medium`; that file is
+  the sole input to [[stage-curation-interview]], which produces the study rationale.
 - Provide non-destructive markup affordances (overlay arrows/frames) to start the
-  "unseeing" that visual analysis continues.
+  "unseeing" that the interview and [[stage-visual-analysis]] continue.

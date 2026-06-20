@@ -1,10 +1,10 @@
 ---
 title: "Formal-Analysis Taxonomy"
 type: wiki/concept
-sources: [04.1-style-analysis-frameworks]
-used-by: [stage-style-definition, stage-visual-analysis]
+sources: [04.1-style-analysis-frameworks, 20-dimensions-of-study-cheat-sheet]
+used-by: [stage-style-definition, stage-visual-analysis, stage-curation-interview]
 tags: [wiki/concept, technique/composition, technique/value, technique/color]
-aliases: ["Notan", "Dow's Principles", "Layered Levels", "Zorn Palette"]
+aliases: ["Notan", "Dow's Principles", "Layered Levels", "Zorn Palette", "Study Dimensions"]
 ---
 
 # Formal-Analysis Taxonomy
@@ -36,6 +36,23 @@ Isolating the abstract design (Notan, Dow) before the illusion is what makes a m
 *instructive* rather than slavish — it trains the eye on decisions, not just appearances.
 The taxonomy doubles as a vocabulary: each level supplies precise terms an analysis or
 study note can use ("subordination", "chroma", "scumbling") instead of vague description.
+
+## The wider checklist (18 dimensions / core-12)
+
+[[20-dimensions-of-study-cheat-sheet]] is a broader masterwork-study taxonomy the four-level
+model nests inside. It runs **material → organization → subject → feeling → historical**:
+(1) medium & material behavior, (2) line & edge, (3) shape & design, (4) composition &
+movement, (5) value & light, (6) color, (7) space & depth, (8) form & structure,
+(9) subject & motif, (10) figure/face/expression, (11) texture & surface, (12) rhythm &
+time, (13) mood & atmosphere, (14) symbol & iconography, (15) style & artistic language,
+(16) historical position, (17) intention/function/audience, (18) **translation into your own
+study**. A **core-12** condensation drops the slow analytical dimensions for repeated
+practice (the long form is for analysis, the short form for at-the-easel use).
+
+Dimension 18 is the practical hinge: *one thing to copy exactly · one to analyze separately
+· one to exaggerate · one to avoid copying literally · one sentence lesson ("this artist
+teaches me how to ___")*. That is exactly the artifact the [[stage-curation-interview]] draws
+out of the human, and the rationale [[stage-visual-analysis]] deepens.
 
 ## Operationalization
 
