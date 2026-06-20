@@ -16,6 +16,7 @@ from pathlib import Path
 from scripts.paths import slugify
 from scripts.museum_search import search_aic
 from scripts.wikidata import search_wikidata
+from scripts.state import BoardCandidate
 
 IMPORT_STATES: tuple[str, ...] = ("confirmed", "proposed", "off_artist", "unidentified")
 
@@ -147,6 +148,34 @@ def make_pipeline_lookup(artist: str, *, wikidata_search=search_wikidata,
                 "inst_ids": tuple(c.inst_ids)}
 
     return lookup
+
+
+def ingest_import_review(rows, state, user_dir: Path, run_id: str,
+                         *, copy_file=shutil.copy2) -> tuple[int, int]:
+    """Copy confirmed user images into user_dir and merge them into state.candidates[].
+    Returns (added, enriched). The caller records the run."""
+    user_dir = Path(user_dir)
+    user_dir.mkdir(parents=True, exist_ok=True)
+    existing_ids = {c.work_id for c in state.candidates}
+    added = enriched = 0
+    for row in rows:
+        wid = slug_work_id(row.title, row.filename, existing_ids)
+        existing_ids.add(wid)
+        name = Path(row.filename).name
+        dest = user_dir / name
+        copy_file(row.source_path, dest)
+        local_rel = f"images/user/{name}"
+        bc = BoardCandidate(
+            work_id=wid, title=row.title, date=row.date, museum=row.museum,
+            thumbnail_url=local_rel, source_url=row.source_url,
+            rights=row.rights or "unknown", medium=row.medium, qid=row.qid,
+            inst_ids=tuple(row.inst_ids), origin="user", first_run=run_id,
+            local_path=local_rel)
+        if state.merge_user_candidate(bc) == "added":
+            added += 1
+        else:
+            enriched += 1
+    return added, enriched
 
 
 _REVIEW_TEMPLATE = """<!DOCTYPE html>

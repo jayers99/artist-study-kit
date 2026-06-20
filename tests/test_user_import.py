@@ -1,5 +1,7 @@
-from scripts.user_import import ImportRow, slug_work_id, verify_identification, build_review, parse_review, make_pipeline_lookup
+from pathlib import Path
+from scripts.user_import import ImportRow, slug_work_id, verify_identification, build_review, parse_review, make_pipeline_lookup, ingest_import_review
 from scripts.museum_search import ThumbnailCandidate
+from scripts.state import PackageState, BoardCandidate
 
 
 def _stub_lookup(record):
@@ -125,3 +127,54 @@ def test_make_pipeline_lookup_survives_search_errors():
     lookup = make_pipeline_lookup(
         "Paul Klee", wikidata_search=boom, aic_search=lambda a: [])
     assert lookup("Paul Klee", "Senecio") is None
+
+
+def _copy_spy(calls):
+    def _copy(src, dst):
+        calls.append((str(src), str(dst)))
+    return _copy
+
+
+def test_ingest_appends_new_user_candidate(tmp_path):
+    st = PackageState(artist="Paul Klee")
+    rows = [ImportRow(filename="barn.jpg", source_path="/x/barn.jpg",
+                      state="confirmed", title="Farmhouse", date="1925",
+                      rights="unknown")]
+    calls = []
+    added, enriched = ingest_import_review(
+        rows, st, tmp_path / "user", "run-1", copy_file=_copy_spy(calls))
+    assert (added, enriched) == (1, 0)
+    c = st.candidates[0]
+    assert c.origin == "user"
+    assert c.work_id == "farmhouse"
+    assert c.local_path == "images/user/barn.jpg"
+    assert c.thumbnail_url == "images/user/barn.jpg"
+    assert c.first_run == "run-1"
+    assert calls == [("/x/barn.jpg", str(tmp_path / "user" / "barn.jpg"))]
+
+
+def test_ingest_enriches_existing_discovered(tmp_path):
+    existing = BoardCandidate(work_id="senecio", title="Senecio", date="1922",
+                              museum="aic", thumbnail_url="http://thumb",
+                              source_url="http://aic/senecio", rights="public_domain",
+                              qid="Q123", origin="discovered", first_run="run-1")
+    st = PackageState(artist="Paul Klee", candidates=[existing])
+    rows = [ImportRow(filename="senecio.jpg", source_path="/x/senecio.jpg",
+                      state="confirmed", title="Senecio", qid="Q123")]
+    added, enriched = ingest_import_review(
+        rows, st, tmp_path / "user", "run-2", copy_file=_copy_spy([]))
+    assert (added, enriched) == (0, 1)
+    assert len(st.candidates) == 1
+    assert st.candidates[0].origin == "discovered"
+    assert st.candidates[0].local_path == "images/user/senecio.jpg"
+
+
+def test_ingest_is_idempotent_on_reimport(tmp_path):
+    st = PackageState(artist="Paul Klee")
+    rows = [ImportRow(filename="barn.jpg", source_path="/x/barn.jpg",
+                      state="confirmed", title="Farmhouse", qid="Q9")]
+    ingest_import_review(rows, st, tmp_path / "user", "run-1", copy_file=_copy_spy([]))
+    added, enriched = ingest_import_review(
+        rows, st, tmp_path / "user", "run-2", copy_file=_copy_spy([]))
+    assert (added, enriched) == (0, 1)        # second pass dedups on qid
+    assert len(st.candidates) == 1
