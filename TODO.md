@@ -33,3 +33,4 @@
 ## Later
 - [ ] Draft the skill design/spec from the synthesized wiki (stage notes' "Skill design implications").
 - [ ] Build scraping + image-discovery scripts in `scripts/`.
+- [ ] **Future: duplicate handling on re-query/ingest.** As the gallery grows across discovery runs + custom-image imports, define what happens when a newly-found image is (or may be) a duplicate of one already on the board — so a starred work isn't re-added unstarred. Deferred out of the first Thrust-3 build; its own spec. (Context: raw/19 Thrust 3 stateful-stars revision.)

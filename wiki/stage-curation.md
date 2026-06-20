@@ -54,7 +54,22 @@ and purely visual here, and the sense-making happens in the Socratic
   wide board is the divergent search, the staged narrowing is convergent selection — and the
   *human* does the converging, never the AI. It now sits on built multi-session state (below)
   — the funnel records its wide cut as a session's `selected` and its narrow cut as
-  `study_set`; dropping `stars` for a binary select is the schema half of this same Thrust 3.
+  `study_set`.
+- **Stateful gallery stars (Thrust 3, revised request).**
+  [[19-stateful-runs-custom-images-staged-analysis]] §(d) now **keeps** the 1–5★ control
+  (reversing the earlier "drop stars for binary select") and makes the star **persistent on
+  the candidate, not the session**: set once, it survives every session and every
+  discovery/import run, so a growing board stays manageable. 1★ = "seen it, not interested"
+  (kept but filterable-out); **filter by stars** (e.g. unstarred → rate → hide later) and
+  **sort** by year (default) / stars / file size. The star moves onto `BoardCandidate`
+  (`candidates[]`), reversing the Thrust-1 "rating is per-session" decision **for the star
+  only**. **Stars and selection-for-advancement are orthogonal axes that never read each
+  other** — a 1★ work can still be selected into a study, a 5★ work can be left unselected;
+  rating never selects, selecting never rates. This **breaks the built coupling** in
+  `selection.ingest_selection` (which currently derives `selected` from `liked()`, rating
+  ≥ 4): Thrust 3 must drive selection from the funnel's explicit picks, not a star threshold.
+  Not yet built; deferred alongside it: duplicate handling when re-query/ingest may
+  re-surface an already-starred work (see `TODO.md`).
 - **Multi-session curation — backbone BUILT (Thrust 1).** Curation is no longer one-shot:
   package state (`docs/superpowers/specs/2026-06-20-stateful-package-state-design.md`, merged
   2026-06-20) records each pass as a `session` (`selected`, `study_set`, a `grouping`
