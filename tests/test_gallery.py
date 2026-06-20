@@ -25,10 +25,8 @@ def test_thumbnail_gallery_renders_remote_thumbnails_and_controls():
     assert "https://www.artic.edu/iiif/2/abc/full/400,/0/default.jpg" in html
     assert "https://www.artic.edu/artworks/10018" in html
     assert "Senecio" in html
-    # same rating + gate + export contract as the download gallery
+    # rating + export contract; gate fields are intentionally absent (moved to interview stage)
     assert "data-star" in html
-    for gate in ("thesis", "anchor_trait", "handoff_note"):
-        assert gate in html
     assert "selection.json" in html
 
 
@@ -85,10 +83,8 @@ def test_build_html_embeds_candidate_data_and_controls():
     assert "images/candidates/wheat-field/12345.jpg" in html
     # decision metadata surfaced inline
     assert "met" in html and "4000" in html
-    # star control + curatorial-gate fields + export present
+    # star control + export present; gate fields intentionally absent (moved to interview stage)
     assert 'data-star' in html
-    for gate in ("thesis", "anchor_trait", "handoff_note"):
-        assert gate in html
     assert "selection.json" in html
 
 
@@ -100,6 +96,36 @@ def test_write_gallery_writes_file(tmp_path):
     assert result == out
     assert out.is_file()
     assert "wheat-field" in out.read_text(encoding="utf-8")
+
+
+def _cand():
+    return ThumbnailCandidate(
+        work_id="senecio", title="Senecio", museum="aic",
+        thumbnail_url="http://x/t.jpg", source_url="http://x/9",
+        date="1922", rights="in_copyright", medium="Oil on gauze",
+        qid="Q1", inst_ids=(("aic", "9"),),
+    )
+
+
+def test_board_payload_includes_medium():
+    html = build_thumbnail_gallery([_cand()], "Paul Klee")
+    assert '"medium": "Oil on gauze"' in html
+
+
+def test_board_has_no_rationale_gate():
+    html = build_thumbnail_gallery([_cand()], "Paul Klee")
+    assert "data-gate" not in html
+    assert "thesis" not in html
+    assert "anchor_trait" not in html
+    assert "handoff_note" not in html
+
+
+def test_board_export_carries_title_date_medium():
+    html = build_thumbnail_gallery([_cand()], "Paul Klee")
+    # export object source in the embedded template
+    assert "title: c.title" in html
+    assert "date: c.date" in html
+    assert "medium: c.medium" in html
 
 
 def test_thumbnail_gallery_embeds_qid_and_inst_ids():

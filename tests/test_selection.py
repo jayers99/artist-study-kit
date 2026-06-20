@@ -15,48 +15,41 @@ from scripts.selection import (
 )
 
 
-def _data(rating=5, **gate):
-    fields = {"thesis": "studies broken color", "anchor_trait": "warm/cool value split",
-              "handoff_note": "look at the sky"}
-    fields.update(gate)
+def _data(rating=5):
     return {
         "artist": "vincent-van-gogh",
         "ratings": [
             {"work_id": "wheat-field", "iiif_token": "12345",
              "image_rel": "images/candidates/wheat-field/12345.jpg",
-             "rating": rating, **(fields if rating >= LIKED_THRESHOLD else {})},
+             "rating": rating},
         ],
     }
 
 
-def test_parse_selection_reads_ratings():
-    sel = parse_selection(_data())
-    assert isinstance(sel, Selection)
-    assert sel.artist == "vincent-van-gogh"
-    assert sel.ratings[0].rating == 5
-    assert sel.ratings[0].thesis == "studies broken color"
+def test_liked_work_needs_no_rationale():
+    sel = Selection(artist="X", ratings=[Rating(work_id="w", iiif_token="t", image_rel="r", rating=5)])
+    assert validate_selection(sel) == []  # gate removed: a liked work with no rationale is valid
 
 
-def test_parse_selection_defaults_missing_gate_fields():
-    sel = parse_selection(_data(rating=2))
-    assert sel.ratings[0].anchor_trait == ""
+def test_rating_out_of_range_still_flagged():
+    sel = Selection(artist="X", ratings=[Rating(work_id="w", iiif_token="t", image_rel="r", rating=7)])
+    assert any("out of range" in e for e in validate_selection(sel))
 
 
-def test_validate_passes_clean_selection():
-    assert validate_selection(parse_selection(_data())) == []
+def test_missing_work_id_still_flagged():
+    sel = Selection(artist="X", ratings=[Rating(work_id="", iiif_token="t", image_rel="r", rating=2)])
+    assert any("missing work_id" in e for e in validate_selection(sel))
 
 
-def test_validate_rejects_out_of_range_rating():
-    sel = parse_selection(_data(rating=9))
-    errs = validate_selection(sel)
-    assert any("rating" in e for e in errs)
-
-
-def test_validate_requires_gate_fields_when_liked():
-    sel = parse_selection(_data(rating=4, thesis="", anchor_trait="", handoff_note=""))
-    errs = validate_selection(sel)
-    assert any("thesis" in e for e in errs)
-    assert sum(1 for e in errs if any(g in e for g in ("thesis", "anchor_trait", "handoff_note"))) == 3
+def test_parse_reads_title_date_medium_ignores_stale_gate():
+    data = {"artist": "X", "ratings": [{
+        "work_id": "w", "iiif_token": "t", "image_rel": "r", "rating": 5,
+        "title": "Senecio", "date": "1922", "medium": "oil on gauze",
+        "thesis": "stale", "anchor_trait": "stale",  # must be ignored, not error
+    }]}
+    r = parse_selection(data).ratings[0]
+    assert (r.title, r.date, r.medium) == ("Senecio", "1922", "oil on gauze")
+    assert not hasattr(r, "thesis")
 
 
 def test_liked_filters_by_threshold():
@@ -92,7 +85,7 @@ def test_parse_selection_reads_board_provenance_fields():
         "ratings": [{
             "work_id": "fish-magic", "iiif_token": "phila-0",
             "image_rel": "https://commons.wikimedia.org/wiki/Special:FilePath/Fish.jpg?width=400",
-            "rating": 5, "thesis": "t", "anchor_trait": "a", "handoff_note": "h",
+            "rating": 5,
             "qid": "Q3050231", "source_url": "https://www.wikidata.org/wiki/Q3050231",
             "museum": "Philadelphia Museum of Art", "rights": "unknown",
             "inst_ids": [["commons_file", "Fish.jpg"], ["aic", "16569"]],

@@ -1,9 +1,10 @@
 """Human Pause 1 output: parse/validate selection.json and materialize the liked set.
 
-selection.json is produced by gallery.html (star ratings + curatorial-gate text) and
-ingested by Run B. The schema: {"artist", "ratings": [{work_id, iiif_token, image_rel,
-rating, thesis, anchor_trait, handoff_note}]}. Works rated >= LIKED_THRESHOLD must carry
-gate text and are copied into images/selected/.
+selection.json is produced by gallery.html (star ratings) and ingested by Run B.
+The schema: {"artist", "ratings": [{work_id, iiif_token, image_rel, rating,
+title, date, medium}]}. Works rated >= LIKED_THRESHOLD are copied into images/selected/.
+Rationale (thesis/anchor/handoff) is no longer stored here — it is produced by the
+curation_interview stage as study-briefs.json.
 """
 
 from __future__ import annotations
@@ -14,7 +15,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 LIKED_THRESHOLD = 4
-_GATE_FIELDS = ("thesis", "anchor_trait", "handoff_note")
 
 
 @dataclass(frozen=True)
@@ -23,9 +23,9 @@ class Rating:
     iiif_token: str
     image_rel: str
     rating: int
-    thesis: str = ""
-    anchor_trait: str = ""
-    handoff_note: str = ""
+    title: str = ""
+    date: str = ""
+    medium: str = ""
     qid: str = ""
     source_url: str = ""
     museum: str = ""
@@ -40,16 +40,16 @@ class Selection:
 
 
 def parse_selection(data: dict) -> Selection:
-    """Build a Selection from the gallery's JSON payload (missing gate fields → '')."""
+    """Build a Selection from the gallery's JSON payload (missing fields → '')."""
     ratings = [
         Rating(
             work_id=str(r.get("work_id", "")),
             iiif_token=str(r.get("iiif_token", "")),
             image_rel=str(r.get("image_rel", "")),
             rating=int(r.get("rating", 0)),
-            thesis=str(r.get("thesis", "")),
-            anchor_trait=str(r.get("anchor_trait", "")),
-            handoff_note=str(r.get("handoff_note", "")),
+            title=str(r.get("title", "")),
+            date=str(r.get("date", "")),
+            medium=str(r.get("medium", "")),
             qid=str(r.get("qid", "")),
             source_url=str(r.get("source_url", "")),
             museum=str(r.get("museum", "")),
@@ -62,16 +62,16 @@ def parse_selection(data: dict) -> Selection:
 
 
 def validate_selection(sel: Selection) -> list[str]:
-    """Return human-readable errors; empty list means the selection is valid."""
+    """Return human-readable errors; empty list means the selection is valid.
+
+    Rationale (thesis/anchor/handoff) is no longer gated here — it is produced by the
+    curation_interview stage as study-briefs.json. This validates only the visual export.
+    """
     errors: list[str] = []
     for r in sel.ratings:
         label = r.work_id or r.iiif_token or "<unknown>"
         if not (0 <= r.rating <= 5):
             errors.append(f"{label}: rating {r.rating} out of range 0-5")
-        elif r.rating >= LIKED_THRESHOLD:
-            for gate in _GATE_FIELDS:
-                if not getattr(r, gate).strip():
-                    errors.append(f"{label}: liked (>={LIKED_THRESHOLD}*) but {gate} is empty")
         if not r.work_id:
             errors.append(f"{label}: missing work_id")
     return errors

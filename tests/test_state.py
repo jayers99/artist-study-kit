@@ -10,6 +10,7 @@ def test_stage_order_is_the_contract():
         "style_definition",
         "works_inventory",
         "image_discovery",
+        "curation_interview",
         "preference_synthesis",
         "visual_analysis",
         "study_retention",
@@ -92,3 +93,25 @@ def test_load_allows_matching_artist(tmp_path):
     PipelineState(artist="Vincent van Gogh", completed=[]).save(p)
     loaded = PipelineState.load(p, artist="Vincent van Gogh")
     assert loaded.artist == "Vincent van Gogh"
+
+
+def test_curation_interview_sits_between_discovery_and_synthesis():
+    i = STAGES.index("curation_interview")
+    assert STAGES[i - 1] == "image_discovery"
+    assert STAGES[i + 1] == "preference_synthesis"
+
+
+def test_curation_interview_is_gated_on_selection_json():
+    assert "selection.json" in PAUSE_GATES["curation_interview"]
+
+
+def test_preference_synthesis_gate_now_references_study_briefs():
+    assert "study-briefs.json" in PAUSE_GATES["preference_synthesis"]
+
+
+def test_next_stage_reaches_curation_interview_after_discovery():
+    s = PipelineState(artist="X", completed=[
+        "background", "source_grading", "style_definition",
+        "works_inventory", "image_discovery",
+    ])
+    assert s.next_stage == "curation_interview"
