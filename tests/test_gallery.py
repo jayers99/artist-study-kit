@@ -37,7 +37,14 @@ def test_load_sidecars_ignores_json_without_image(tmp_path):
     wdir = tmp_path / "orphan"
     wdir.mkdir()
     (wdir / "9.json").write_text("{}", encoding="utf-8")
+    # Orphan json (no jpg) should be filtered out
     assert load_candidate_sidecars(tmp_path) == []
+
+    # Add the jpg sibling; now the json should be included
+    (wdir / "9.jpg").write_bytes(b"\xff\xd8\xffJPEG")
+    views = load_candidate_sidecars(tmp_path)
+    assert len(views) == 1
+    assert views[0].token == "9"
 
 
 def test_build_html_embeds_candidate_data_and_controls():
