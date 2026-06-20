@@ -94,3 +94,46 @@ def verify_identification(guess: dict, study_artist: str, *, lookup) -> ImportRo
             medium=str(record.get("medium", "")),
             inst_ids=tuple((str(a), str(b)) for a, b in record.get("inst_ids", ())))
     return replace(base, state="proposed", rights="unknown")
+
+
+def build_review(rows: list[ImportRow], artist: str) -> tuple[dict, str]:
+    json_obj = {"artist": artist, "rows": [r.to_dict() for r in rows]}
+    cells = "\n".join(
+        "<tr><td>{fn}</td><td class='st {st}'>{st}</td>"
+        "<td>{title}</td><td>{date}</td><td>{museum}</td><td>{rights}</td></tr>".format(
+            fn=_esc(r.filename), st=_esc(r.state), title=_esc(r.title),
+            date=_esc(r.date), museum=_esc(r.museum), rights=_esc(r.rights))
+        for r in rows)
+    html = _REVIEW_TEMPLATE.replace("__ARTIST__", _esc(artist)).replace("__ROWS__", cells)
+    return json_obj, html
+
+
+def parse_review(json_obj: dict) -> list[ImportRow]:
+    rows = [ImportRow.from_dict(d) for d in json_obj.get("rows", [])]
+    return [r for r in rows if r.state == "confirmed" and r.title.strip()]
+
+
+def _esc(text: str) -> str:
+    return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+_REVIEW_TEMPLATE = """<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Import review — __ARTIST__</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 1rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 4px 8px; font-size: 13px; text-align: left; }
+  .st { font-weight: bold; }
+  .st.confirmed { color: #137333; }
+  .st.proposed { color: #b06000; }
+  .st.off_artist, .st.unidentified { color: #a50e0e; }
+</style></head><body>
+<h2>Import review — __ARTIST__</h2>
+<p>Edit proposed rows and set their <code>state</code> to <code>confirmed</code> in
+import-review.json to keep them. off_artist / unidentified rows are set aside.</p>
+<table>
+<tr><th>file</th><th>state</th><th>title</th><th>date</th><th>museum</th><th>rights</th></tr>
+__ROWS__
+</table></body></html>
+"""

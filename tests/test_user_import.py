@@ -1,4 +1,4 @@
-from scripts.user_import import ImportRow, slug_work_id, verify_identification
+from scripts.user_import import ImportRow, slug_work_id, verify_identification, build_review, parse_review
 
 
 def _stub_lookup(record):
@@ -68,3 +68,34 @@ def test_slug_work_id_falls_back_to_filename():
 def test_slug_work_id_suffixes_on_collision():
     assert slug_work_id("Senecio", "x.jpg", {"senecio"}) == "senecio-2"
     assert slug_work_id("Senecio", "x.jpg", {"senecio", "senecio-2"}) == "senecio-3"
+
+
+def _rows():
+    return [
+        ImportRow(filename="senecio.jpg", source_path="/x/senecio.jpg",
+                  state="confirmed", title="Senecio", date="1922", qid="Q123"),
+        ImportRow(filename="barn.jpg", source_path="/x/barn.jpg",
+                  state="proposed", title="Farmhouse", rights="unknown"),
+        ImportRow(filename="miro.jpg", source_path="/x/miro.jpg",
+                  state="off_artist", artist="Joan Miro", title="Harlequin"),
+    ]
+
+
+def test_build_review_json_and_html():
+    obj, html = build_review(_rows(), "Paul Klee")
+    assert obj["artist"] == "Paul Klee"
+    assert [r["filename"] for r in obj["rows"]] == ["senecio.jpg", "barn.jpg", "miro.jpg"]
+    assert "Senecio" in html and "off_artist" in html and "proposed" in html
+
+
+def test_parse_review_keeps_only_confirmed_with_title():
+    obj, _ = build_review(_rows(), "Paul Klee")
+    kept = parse_review(obj)
+    assert [r.filename for r in kept] == ["senecio.jpg"]
+
+
+def test_parse_review_accepts_human_promoted_proposed_row():
+    obj, _ = build_review(_rows(), "Paul Klee")
+    obj["rows"][1]["state"] = "confirmed"   # human edited + confirmed the barn row
+    kept = parse_review(obj)
+    assert {r.filename for r in kept} == {"senecio.jpg", "barn.jpg"}
