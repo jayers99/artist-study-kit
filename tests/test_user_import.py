@@ -178,3 +178,28 @@ def test_ingest_is_idempotent_on_reimport(tmp_path):
         rows, st, tmp_path / "user", "run-2", copy_file=_copy_spy([]))
     assert (added, enriched) == (0, 1)        # second pass dedups on qid
     assert len(st.candidates) == 1
+
+
+def test_ingest_no_qid_reimport_is_idempotent(tmp_path):
+    st = PackageState(artist="Paul Klee")
+    rows = [ImportRow(filename="barn.jpg", source_path="/x/barn.jpg",
+                      state="confirmed", title="Farmhouse", rights="unknown")]
+    ingest_import_review(rows, st, tmp_path / "user", "run-1", copy_file=_copy_spy([]))
+    added, enriched = ingest_import_review(
+        rows, st, tmp_path / "user", "run-2", copy_file=_copy_spy([]))
+    assert (added, enriched) == (0, 1)
+    assert len(st.candidates) == 1
+
+
+def test_ingest_distinct_files_same_title_get_distinct_cards(tmp_path):
+    st = PackageState(artist="Paul Klee")
+    rows = [
+        ImportRow(filename="study-a.jpg", source_path="/x/study-a.jpg",
+                  state="confirmed", title="Study"),
+        ImportRow(filename="study-b.jpg", source_path="/x/study-b.jpg",
+                  state="confirmed", title="Study"),
+    ]
+    added, enriched = ingest_import_review(
+        rows, st, tmp_path / "user", "run-1", copy_file=_copy_spy([]))
+    assert (added, enriched) == (2, 0)
+    assert {c.work_id for c in st.candidates} == {"study", "study-2"}

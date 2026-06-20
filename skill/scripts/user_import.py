@@ -10,7 +10,7 @@ into the package's candidates[].
 from __future__ import annotations
 
 import shutil
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from scripts.paths import slugify
@@ -159,12 +159,19 @@ def ingest_import_review(rows, state, user_dir: Path, run_id: str,
     existing_ids = {c.work_id for c in state.candidates}
     added = enriched = 0
     for row in rows:
-        wid = slug_work_id(row.title, row.filename, existing_ids)
-        existing_ids.add(wid)
         name = Path(row.filename).name
         dest = user_dir / name
         copy_file(row.source_path, dest)
         local_rel = f"images/user/{name}"
+        # An unverified user image (no qid/inst_ids) is identified by its source file:
+        # re-importing the same file must enrich/no-op, never duplicate.
+        if not row.qid and not row.inst_ids:
+            prior = next((c for c in state.candidates if c.local_path == local_rel), None)
+            if prior is not None:
+                enriched += 1
+                continue
+        wid = slug_work_id(row.title, row.filename, existing_ids)
+        existing_ids.add(wid)
         bc = BoardCandidate(
             work_id=wid, title=row.title, date=row.date, museum=row.museum,
             thumbnail_url=local_rel, source_url=row.source_url,
