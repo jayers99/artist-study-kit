@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from scripts._md import frontmatter
+
 # The formal-analysis 5-stage instruction set (spec stage 7).
 ANALYSIS_STAGES: tuple[str, ...] = (
     "Structural skeleton",
@@ -38,17 +40,7 @@ def write_analysis_md(works: list[WorkAnalysis], artist: str, path: Path | str) 
     """Emit analysis.md: one section per work, all five formal-analysis stages."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    lines = [
-        "---",
-        "type: study/analysis",
-        f"artist: {artist}",
-        "tags:",
-        "  - 'study/analysis'",
-        "---",
-        "",
-        f"# Visual analysis — {artist}",
-        "",
-    ]
+    lines = frontmatter("study/analysis", artist) + [f"# Visual analysis — {artist}", ""]
     for w in works:
         body = {
             "Structural skeleton": w.structural_skeleton,

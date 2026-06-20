@@ -22,6 +22,8 @@ def test_study_notes_is_obsidian_native_with_faded_aids(tmp_path):
     text = p.read_text(encoding="utf-8")
     fm = parse_frontmatter(text)
     assert fm["type"] == "study/notes"
+    assert "#artist/vincent-van-gogh" in fm.get("tags", [])
+    assert "#study/notes" in fm.get("tags", [])
     assert "Wheat Field" in text
     # faded aids: cheat sheet -> checklist -> bare prompt
     assert "Cheat sheet" in text and "Checklist" in text and "Bare prompt" in text

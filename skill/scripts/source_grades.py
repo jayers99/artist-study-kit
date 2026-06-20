@@ -10,6 +10,7 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from scripts._md import frontmatter
 from scripts.source_signals import SignalScan
 
 RUBRIC_WEIGHTS: dict[str, int] = {
@@ -113,17 +114,8 @@ def write_source_grades_md(sources: list[GradedSource], artist: str, path: Path)
     """Write the human-readable, Obsidian-native grade report."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    tags = sorted({f"#source-grade/{s.tier.lower()}" for s in sources})
-    # Use block-style YAML list so '#' characters don't break the YAML parser.
-    tag_lines = "\n".join(f"  - '{t}'" for t in tags)
-    lines = [
-        "---",
-        "type: study/source-grades",
-        f"artist: {artist}",
-        "tags:",
-        tag_lines,
-        "---",
-        "",
+    tier_tags = sorted({f"#source-grade/{s.tier.lower()}" for s in sources})
+    lines = frontmatter("study/source-grades", artist, extra_tags=tier_tags) + [
         f"# Source grades — {artist}",
         "",
     ]

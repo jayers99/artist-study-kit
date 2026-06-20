@@ -27,6 +27,8 @@ def test_emitter_is_obsidian_native_with_all_stages(tmp_path):
     fm = parse_frontmatter(text)
     assert fm["type"] == "study/analysis"
     assert fm["artist"] == "Vincent van Gogh"
+    assert "#artist/vincent-van-gogh" in fm.get("tags", [])
+    assert "#study/analysis" in fm.get("tags", [])
     for stage in ANALYSIS_STAGES:
         assert stage in text
     assert "Wheat Field" in text

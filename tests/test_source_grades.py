@@ -87,6 +87,7 @@ def test_write_source_grades_md_is_obsidian_native(tmp_path):
     fm = parse_frontmatter(text)
     assert fm["type"] == "study/source-grades"
     assert "#source-grade/a" in fm.get("tags", [])
+    assert "#artist/vincent-van-gogh" in fm.get("tags", [])
     assert "Met page" in text
     assert "facts" in text
     assert "aesthetic claims" in text

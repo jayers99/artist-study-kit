@@ -10,10 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-
-def _cell(text: str) -> str:
-    """Escape a pipe so it doesn't break the markdown table cell."""
-    return str(text).replace("|", "\\|")
+from scripts._md import cell as _cell
+from scripts._md import frontmatter as _frontmatter
 
 
 @dataclass(frozen=True)
@@ -38,11 +36,6 @@ class ReviewItem:
     day: int
     focus: str
     mode: str
-
-
-def _frontmatter(doc_type: str, artist: str) -> list[str]:
-    return ["---", f"type: {doc_type}", f"artist: {artist}", "tags:",
-            f"  - '{doc_type}'", "---", ""]
 
 
 def write_study_notes_md(notes: list[StudyNote], artist: str, path: Path | str) -> None:

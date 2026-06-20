@@ -10,12 +10,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from scripts._md import cell as _cell
+from scripts._md import frontmatter
+
 PREFERENCE_WEIGHTS: dict[str, int] = {"pattern_fit": 50, "studyability": 50}
-
-
-def _cell(text: str) -> str:
-    """Escape a pipe so it doesn't break the markdown table cell."""
-    return str(text).replace("|", "\\|")
 
 
 @dataclass(frozen=True)
@@ -50,14 +48,7 @@ def write_preference_synthesis_md(
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     ranked = rank_candidates(cands)
-    lines = [
-        "---",
-        "type: study/preference-synthesis",
-        f"artist: {artist}",
-        "tags:",
-        "  - 'study/preference-synthesis'",
-        "---",
-        "",
+    lines = frontmatter("study/preference-synthesis", artist) + [
         f"# What you're drawn to — {artist}",
         "",
         "> [!tip] Pattern across your liked set",

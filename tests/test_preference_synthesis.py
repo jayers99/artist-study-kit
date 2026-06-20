@@ -33,6 +33,8 @@ def test_emitter_is_obsidian_native(tmp_path):
     fm = parse_frontmatter(text)
     assert fm["type"] == "study/preference-synthesis"
     assert fm["artist"] == "Vincent van Gogh"
+    assert "#artist/vincent-van-gogh" in fm.get("tags", [])
+    assert "#study/preference-synthesis" in fm.get("tags", [])
     assert "You gravitate to high-chroma rural scenes." in text
     assert "Wheat Field" in text
     # ranked list is ordered: Wheat Field (87) before Irises (65)
