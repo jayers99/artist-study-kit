@@ -85,3 +85,17 @@ def test_scaffold_creates_sessions_dir(tmp_path):
     from scripts.paths import scaffold
     sp = scaffold(tmp_path, "Paul Klee")
     assert sp.sessions_dir.is_dir()
+
+
+def test_user_images_dir_and_review_paths(tmp_path):
+    from scripts.paths import study_paths
+    sp = study_paths(tmp_path, "Paul Klee")
+    assert sp.user_images_dir == sp.root / "images" / "user"
+    assert sp.import_review_json == sp.root / "import-review.json"
+    assert sp.import_review_html == sp.root / "import-review.html"
+
+
+def test_scaffold_creates_user_images_dir(tmp_path):
+    from scripts.paths import scaffold
+    sp = scaffold(tmp_path, "Paul Klee")
+    assert sp.user_images_dir.is_dir()

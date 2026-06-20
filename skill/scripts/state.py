@@ -57,6 +57,7 @@ class BoardCandidate:
     inst_ids: tuple[tuple[str, str], ...] = ()
     origin: str = "discovered"
     first_run: str = ""
+    local_path: str = ""
 
     def dedup_key(self) -> tuple:
         if self.qid:
@@ -73,6 +74,7 @@ class BoardCandidate:
             "medium": self.medium, "qid": self.qid,
             "inst_ids": [list(p) for p in self.inst_ids],
             "origin": self.origin, "first_run": self.first_run,
+            "local_path": self.local_path,
         }
 
     @classmethod
@@ -84,6 +86,7 @@ class BoardCandidate:
             medium=d.get("medium", ""), qid=d.get("qid", ""),
             inst_ids=_tuple_inst_ids(d.get("inst_ids", ())),
             origin=d.get("origin", "discovered"), first_run=d.get("first_run", ""),
+            local_path=d.get("local_path", ""),
         )
 
     @classmethod
@@ -185,6 +188,18 @@ class PackageState:
             self.candidates.append(bc)
             added += 1
         return added, merged
+
+    def merge_user_candidate(self, bc: "BoardCandidate") -> str:
+        """Merge a user-supplied candidate: enrich a dedup match with its local file,
+        else append. Returns "enriched" or "added"."""
+        key = bc.dedup_key()
+        for c in self.candidates:
+            if c.dedup_key() == key:
+                if bc.local_path:
+                    c.local_path = bc.local_path
+                return "enriched"
+        self.candidates.append(bc)
+        return "added"
 
     def record_run(self, source: str, added: int, merged: int, total: int,
                    *, degraded: bool = False, now: str | None = None) -> DiscoveryRun:

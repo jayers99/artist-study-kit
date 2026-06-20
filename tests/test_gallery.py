@@ -9,6 +9,7 @@ from scripts.gallery import (
     write_gallery,
 )
 from scripts.museum_search import ThumbnailCandidate
+from scripts.state import BoardCandidate
 
 
 def test_thumbnail_gallery_renders_remote_thumbnails_and_controls():
@@ -139,3 +140,13 @@ def test_thumbnail_gallery_embeds_qid_and_inst_ids():
     assert "commons_file" in html and "Fish.jpg" in html
     # the export builder forwards qid + inst_ids into selection.json ratings
     assert "qid: c.qid" in html and "inst_ids: c.inst_ids" in html
+
+
+def test_thumbnail_gallery_marks_user_origin():
+    user = BoardCandidate(
+        work_id="barn", title="Farmhouse", date="1925", museum="",
+        thumbnail_url="images/user/barn.jpg", source_url="", rights="unknown",
+        origin="user", local_path="images/user/barn.jpg")
+    html = build_thumbnail_gallery([user], "Paul Klee")
+    assert '"origin": "user"' in html
+    assert "USER" in html  # badge label rendered in the grid template

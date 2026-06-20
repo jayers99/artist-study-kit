@@ -67,6 +67,37 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
 > [!info] Human Pause 1 — visual rating
 > The user opens `gallery.html` (a board of many thumbnails; works studied in a prior session carry a **studied ✓ badge** but stay selectable), rates/selects works, and exports `selection.json`. On return, the skill resolves it with `selected, study_set = ingest_selection(load_selection(sp.selection_json, '<ARTIST>'))`, asks the human for the session's grouping dimension (`subject` / `media` / `technique` / `other`) and a short theme label, then `state.record_session(theme, grouping, selected, study_set, outputs={...})` and saves state. Rating is purely visual — rationale is drawn out next in the `curation_interview` stage. See [[stage-curation]].
 
+## Import your own images (origin:"user")
+
+A re-enterable operation alongside discover · select · study. The user points the
+skill at a folder of their own paintings for the **current** artist study. The steps
+below use the `scripts/user_import.py` helpers.
+
+1. **View each image (Claude vision).** For every image file, look at it and emit a
+   guess `{filename, source_path, artist, title, date}` — or a null/empty title if you
+   cannot identify the work.
+2. **Verify against the pipeline.** Build the verification seam once with
+   `make_pipeline_lookup(artist)`, then `verify_identification(guess, artist, lookup=...)`
+   per image. Each becomes an `ImportRow` in state `confirmed` (pipeline corroborated),
+   `proposed` (a guess, no record — `rights:"unknown"`), `off_artist` (different artist —
+   set aside), or `unidentified` (no guess — set aside).
+3. **Human trust gate.** `build_review(rows, artist)` → write `import-review.json` and
+   `import-review.html` (paths: `StudyPaths.import_review_json` / `import_review_html`).
+   **Pause.** The user opens the HTML, edits `proposed` rows, and sets a row's `state` to
+   `confirmed` in the JSON to keep it. off_artist / unidentified rows are never ingested.
+4. **Ingest.** `parse_review(json)` → confirmed rows →
+   `ingest_import_review(rows, state, paths.user_images_dir, run_id, copy_file=shutil.copy2)`.
+   It copies files into `images/user/`, appends new works as `origin:"user"`, and
+   **enriches** a work already on the board (dedup by QID/inst_ids/work_id) by attaching
+   its local file — no duplicate card. Then record the run:
+   `state.record_run(source="user-import", added=added, merged=enriched, total=len(state.candidates))`
+   and `state.save(paths.state_json)`.
+
+From here, user images flow through curation and analysis identically to discovered
+ones — except visual analysis reads their full-resolution local file
+(`candidate.local_path`) directly, with no rights-gated re-download. The gallery shows a
+`USER` badge on these cards; the studied ✓ badge composes unchanged.
+
 ## Run B — Socratic curation interview (stage 6)
 
 6. **curation_interview** — gated on `selection.json`. Build the interview queue, then

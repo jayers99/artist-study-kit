@@ -289,6 +289,37 @@ def test_record_run_index_survives_legacy_run_zero():
     assert st.record_run("aic", added=1, merged=0, total=1, now="T").id == "run-1"
 
 
+def test_merge_user_candidate_appends_new():
+    from scripts.state import PackageState, BoardCandidate
+    st = PackageState(artist="Paul Klee")
+    bc = BoardCandidate(work_id="barn", title="Farmhouse", date="1925", museum="",
+                        thumbnail_url="images/user/barn.jpg", source_url="",
+                        rights="unknown", origin="user",
+                        local_path="images/user/barn.jpg", first_run="run-1")
+    assert st.merge_user_candidate(bc) == "added"
+    assert len(st.candidates) == 1
+    assert st.candidates[0].origin == "user"
+    assert st.candidates[0].local_path == "images/user/barn.jpg"
+
+
+def test_merge_user_candidate_enriches_existing_by_qid():
+    from scripts.state import PackageState, BoardCandidate
+    existing = BoardCandidate(work_id="senecio", title="Senecio", date="1922",
+                              museum="aic", thumbnail_url="http://thumb",
+                              source_url="http://aic/senecio", rights="public_domain",
+                              qid="Q123", origin="discovered", first_run="run-1")
+    st = PackageState(artist="Paul Klee", candidates=[existing])
+    user = BoardCandidate(work_id="senecio-user", title="Senecio", date="1922",
+                          museum="", thumbnail_url="images/user/senecio.jpg",
+                          source_url="", rights="unknown", qid="Q123", origin="user",
+                          local_path="images/user/senecio.jpg", first_run="run-2")
+    assert st.merge_user_candidate(user) == "enriched"
+    assert len(st.candidates) == 1                      # no duplicate
+    assert st.candidates[0].origin == "discovered"      # provenance preserved
+    assert st.candidates[0].source_url == "http://aic/senecio"
+    assert st.candidates[0].local_path == "images/user/senecio.jpg"  # gained the file
+
+
 def _legacy_selection():
     return {
         "artist": "Paul Klee",
@@ -330,3 +361,22 @@ def test_migrate_with_no_liked_rows_records_no_session():
     st = migrate_legacy({"artist": "Paul Klee", "completed": []}, sel, now="T0")
     assert st.sessions == []
     assert len(st.candidates) == 2
+
+
+def test_board_candidate_local_path_roundtrips():
+    from scripts.state import BoardCandidate
+    bc = BoardCandidate(
+        work_id="barn", title="Farmhouse", date="1925", museum="",
+        thumbnail_url="images/user/barn.jpg", source_url="", rights="unknown",
+        origin="user", local_path="images/user/barn.jpg")
+    d = bc.to_dict()
+    assert d["local_path"] == "images/user/barn.jpg"
+    assert BoardCandidate.from_dict(d).local_path == "images/user/barn.jpg"
+
+
+def test_board_candidate_local_path_defaults_empty_on_legacy_dict():
+    from scripts.state import BoardCandidate
+    legacy = {"work_id": "exotics", "title": "Exotics", "date": "1939",
+              "museum": "aic", "thumbnail_url": "u", "source_url": "s",
+              "rights": "in_copyright"}
+    assert BoardCandidate.from_dict(legacy).local_path == ""

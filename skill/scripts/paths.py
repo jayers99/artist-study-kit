@@ -107,12 +107,25 @@ class StudyPaths:
     def session_dir(self, session_id: str) -> Path:
         return self.sessions_dir / session_id
 
+    @property
+    def user_images_dir(self) -> Path:
+        return self.images_dir / "user"
+
+    @property
+    def import_review_json(self) -> Path:
+        return self.root / "import-review.json"
+
+    @property
+    def import_review_html(self) -> Path:
+        return self.root / "import-review.html"
+
 
 _SCAFFOLD_DIRS = (
     "sources",
     "images",
     "images/candidates",
     "images/selected",
+    "images/user",
     "drills",
     "prompts",
     "sessions",
