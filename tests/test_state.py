@@ -1,6 +1,16 @@
 import pytest
 
-from scripts.state import PAUSE_GATES, STAGES, PipelineState
+from scripts.state import PAUSE_GATES, STAGES, PipelineState, BoardCandidate, DiscoveryRun, StudySession, GROUPINGS
+
+
+def _thumb(**over):
+    from scripts.museum_search import ThumbnailCandidate
+    base = dict(work_id="exotics", title="Exotics", museum="aic",
+                thumbnail_url="https://x/t.jpg", source_url="https://x/134057",
+                date="1939", rights="in_copyright", medium="oil",
+                qid="Q1", inst_ids=(("aic", "134057"),))
+    base.update(over)
+    return ThumbnailCandidate(**base)
 
 
 def test_stage_order_is_the_contract():
@@ -115,3 +125,46 @@ def test_next_stage_reaches_curation_interview_after_discovery():
         "works_inventory", "image_discovery",
     ])
     assert s.next_stage == "curation_interview"
+
+
+def test_board_candidate_from_thumbnail_carries_origin_and_run():
+    bc = BoardCandidate.from_thumbnail(_thumb(), run_id="run-1")
+    assert bc.work_id == "exotics"
+    assert bc.thumbnail_url == "https://x/t.jpg"
+    assert bc.origin == "discovered"
+    assert bc.first_run == "run-1"
+
+
+def test_board_candidate_roundtrip_preserves_inst_ids_as_tuples():
+    bc = BoardCandidate.from_thumbnail(_thumb(), run_id="run-1")
+    back = BoardCandidate.from_dict(bc.to_dict())
+    assert back == bc
+    assert back.inst_ids == (("aic", "134057"),)
+
+
+def test_dedup_key_prefers_qid():
+    bc = BoardCandidate.from_thumbnail(_thumb(qid="Q42"), run_id="run-1")
+    assert bc.dedup_key() == ("qid", "Q42")
+
+
+def test_dedup_key_falls_back_to_inst_ids_then_work_id():
+    no_qid = BoardCandidate.from_thumbnail(_thumb(qid=""), run_id="run-1")
+    assert no_qid.dedup_key() == ("inst", (("aic", "134057"),))
+    bare = BoardCandidate.from_thumbnail(_thumb(qid="", inst_ids=()), run_id="run-1")
+    assert bare.dedup_key() == ("wid", "exotics")
+
+
+def test_discovery_run_roundtrip():
+    r = DiscoveryRun(id="run-1", at="2026-06-20T14:02:00", source="wikidata+aic",
+                     added=92, merged=0, total=92, degraded=True)
+    assert DiscoveryRun.from_dict(r.to_dict()) == r
+
+
+def test_study_session_roundtrip():
+    s = StudySession(id="sess-1", at="2026-06-21T09:00:00", kind="study",
+                     theme="line", grouping="technique",
+                     selected=("a", "b"), study_set=("a",),
+                     outputs={"analysis": "analysis.md"})
+    back = StudySession.from_dict(s.to_dict())
+    assert back == s
+    assert back.selected == ("a", "b")
