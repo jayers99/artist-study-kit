@@ -50,9 +50,16 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
    grammar section + style cheat sheet into `report.md`.
 4. **works_inventory** — see `wiki/stage-works-inventory.md`. Dual-axis ranked,
    clustered `works.md`.
-5. **image_discovery** — see `wiki/stage-image-discovery.md`. Download high-res
-   candidates to `images/candidates/<work>/` with `scripts.image_download`, then
-   generate the contact sheet:
+5. **image_discovery** — see `wiki/stage-image-discovery.md`. Discover candidates per
+   work, then download to `images/candidates/<work>/` with `scripts.image_download`.
+   Source order: **priority-museum IIIF** (`scripts.iiif`) first; if a work returns no
+   public-domain, high-res candidate there — expected for any artist still in copyright
+   (e.g. died < ~85 years ago: museums flag the work non-PD) — **fall back to Wikimedia
+   Commons** with `scripts.commons.discover_commons(query, work_id)`, which yields
+   validated PD `ImageCandidate`s for the same download path:
+   `uv run python -c "from scripts.commons import discover_commons; from scripts.image_download import download_candidates; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); cs=discover_commons('<work search query>', '<work-id>'); download_candidates(cs, sp.candidates_dir)"`
+   (Pass `include_cc=True` to also accept CC-BY/CC-BY-SA images — usable with attribution,
+   flagged `rights_status: unknown`.) Then generate the contact sheet:
    `uv run python -c "from scripts.gallery import write_gallery; from scripts.paths import study_paths; sp=study_paths('studies','<ARTIST>'); write_gallery(sp.candidates_dir, '<ARTIST>', sp.gallery_html)"`
    Save the image-search query you used to `prompts/` for reproducibility with
    `scripts.prompts.save_prompt(sp.prompts_dir, 'image-search', '<the query>', artist='<ARTIST>', stage='image_discovery')`.

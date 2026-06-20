@@ -1,0 +1,71 @@
+{
+  "query": {
+    "pages": {
+      "1001": {
+        "pageid": 1001,
+        "title": "File:Paul Klee, 1925, Ancient Sound.jpg",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/a/aa/Ancient_Sound.jpg",
+            "width": 4462,
+            "height": 4459,
+            "mediatype": "BITMAP",
+            "extmetadata": { "LicenseShortName": { "value": "Public domain" } }
+          }
+        ]
+      },
+      "1002": {
+        "pageid": 1002,
+        "title": "File:Klee small thumb.jpg",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/thumb.jpg",
+            "width": 800,
+            "height": 600,
+            "mediatype": "BITMAP",
+            "extmetadata": { "LicenseShortName": { "value": "Public domain" } }
+          }
+        ]
+      },
+      "1003": {
+        "pageid": 1003,
+        "title": "File:Klee photo by user.jpg",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/c/cc/ccbysa.jpg",
+            "width": 3000,
+            "height": 2000,
+            "mediatype": "BITMAP",
+            "extmetadata": { "LicenseShortName": { "value": "CC BY-SA 4.0" } }
+          }
+        ]
+      },
+      "1004": {
+        "pageid": 1004,
+        "title": "File:Klee catalogue raisonne.pdf",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/d/dd/catalogue.pdf",
+            "width": 2000,
+            "height": 3000,
+            "mediatype": "OFFICE",
+            "extmetadata": { "LicenseShortName": { "value": "Public domain" } }
+          }
+        ]
+      },
+      "1005": {
+        "pageid": 1005,
+        "title": "File:Paul Klee, 1925, Ancient Sound, variant.jpg",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Ancient_Sound_variant.jpg",
+            "width": 3500,
+            "height": 2800,
+            "mediatype": "BITMAP",
+            "extmetadata": { "LicenseShortName": { "value": "Public domain" } }
+          }
+        ]
+      }
+    }
+  }
+}
