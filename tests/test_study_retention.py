@@ -41,6 +41,14 @@ def test_discrimination_cards_render_a_vs_not_a(tmp_path):
     assert "edge stays crisp in shadow" in text
 
 
+def test_discrimination_cards_escape_pipe_in_cell(tmp_path):
+    p = tmp_path / "discrimination-cards.md"
+    cards = [DiscriminationCard(trait="blending", is_a="dissolves | softly", not_a="stays crisp")]
+    write_discrimination_cards_md(cards, "Artist", p)
+    text = p.read_text(encoding="utf-8")
+    assert "dissolves \\| softly" in text
+
+
 def test_review_schedule_is_spaced_table(tmp_path):
     p = tmp_path / "review-schedule.md"
     items = [ReviewItem(day=1, focus="Wheat Field value map", mode="reconstruct"),

@@ -57,7 +57,7 @@ def write_analysis_md(works: list[WorkAnalysis], artist: str, path: Path | str) 
             "Technical layering hypothesis": w.layering,
             "Traps & misconceptions": w.traps,
         }
-        lines += [f"## {w.title}", f"`work: [[{w.work_id}]]`", ""]
+        lines += [f"## {w.title}", f"**Work:** [[{w.work_id}]]", ""]
         lines += ["> [!example] Predict, then reveal", f"> {w.predict_then_reveal}", ""]
         for stage in ANALYSIS_STAGES:
             lines += [f"### {stage}", body[stage], ""]

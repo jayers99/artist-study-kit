@@ -11,6 +11,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+def _cell(text: str) -> str:
+    """Escape a pipe so it doesn't break the markdown table cell."""
+    return str(text).replace("|", "\\|")
+
+
 @dataclass(frozen=True)
 class StudyNote:
     work_id: str
@@ -46,7 +51,7 @@ def write_study_notes_md(notes: list[StudyNote], artist: str, path: Path | str) 
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = _frontmatter("study/notes", artist) + [f"# Study notes — {artist}", ""]
     for n in notes:
-        lines += [f"## {n.title}", f"`work: [[{n.work_id}]]`", ""]
+        lines += [f"## {n.title}", f"**Work:** [[{n.work_id}]]", ""]
         # Aid 1 — cheat sheet (most support)
         lines += ["### Cheat sheet", f"> [!tip] Notice first", f"> {n.notice_first}", ""]
         lines += ["Decisions to imitate:"]
@@ -77,7 +82,7 @@ def write_discrimination_cards_md(cards: list[DiscriminationCard], artist: str, 
         "| ----- | ------ | -------------- |",
     ]
     for c in cards:
-        lines.append(f"| {c.trait} | {c.is_a} | {c.not_a} |")
+        lines.append(f"| {_cell(c.trait)} | {_cell(c.is_a)} | {_cell(c.not_a)} |")
     lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
 
@@ -93,6 +98,6 @@ def write_review_schedule_md(items: list[ReviewItem], artist: str, path: Path | 
         "| ---- | ----- | ---- |",
     ]
     for it in sorted(items, key=lambda x: x.day):
-        lines.append(f"| Day {it.day} | {it.focus} | {it.mode} |")
+        lines.append(f"| Day {it.day} | {_cell(it.focus)} | {_cell(it.mode)} |")
     lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
