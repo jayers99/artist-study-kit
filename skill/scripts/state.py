@@ -33,6 +33,12 @@ def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
+def _next_index(items: list) -> int:
+    nums = [int(x.id.rsplit("-", 1)[1]) for x in items
+            if x.id.rsplit("-", 1)[-1].isdigit()]
+    return (max(nums) + 1) if nums else 1
+
+
 def _tuple_inst_ids(raw) -> tuple[tuple[str, str], ...]:
     return tuple((str(a), str(b)) for a, b in raw)
 
@@ -179,6 +185,35 @@ class PackageState:
             self.candidates.append(bc)
             added += 1
         return added, merged
+
+    def record_run(self, source: str, added: int, merged: int, total: int,
+                   *, degraded: bool = False, now: str | None = None) -> DiscoveryRun:
+        run = DiscoveryRun(id=f"run-{_next_index(self.runs)}", at=now or _now(),
+                           source=source, added=added, merged=merged,
+                           total=total, degraded=degraded)
+        self.runs.append(run)
+        return run
+
+    def record_session(self, theme: str, grouping: str, selected, study_set,
+                       outputs: dict, *, kind: str = "study",
+                       now: str | None = None) -> StudySession:
+        if grouping not in GROUPINGS:
+            raise ValueError(f"grouping {grouping!r} not in {GROUPINGS}")
+        sess = StudySession(id=f"sess-{_next_index(self.sessions)}", at=now or _now(),
+                            kind=kind, theme=theme, grouping=grouping,
+                            selected=tuple(selected), study_set=tuple(study_set),
+                            outputs=dict(outputs))
+        self.sessions.append(sess)
+        return sess
+
+    def studied_work_ids(self) -> set[str]:
+        return {wid for s in self.sessions for wid in s.study_set}
+
+    def candidate(self, work_id: str):
+        for c in self.candidates:
+            if c.work_id == work_id:
+                return c
+        return None
 
     def to_dict(self) -> dict:
         return {

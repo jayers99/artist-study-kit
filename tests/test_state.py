@@ -240,3 +240,42 @@ def test_merge_falls_back_to_inst_ids_when_no_qid():
 def test_merge_empty_is_noop():
     st = PackageState(artist="x")
     assert st.merge_candidates([], "run-1") == (0, 0)
+
+
+def test_record_run_assigns_monotonic_ids_and_timestamp():
+    st = PackageState(artist="x")
+    r1 = st.record_run("aic", added=5, merged=0, total=5, now="T1")
+    r2 = st.record_run("wikidata", added=2, merged=3, total=7, degraded=True, now="T2")
+    assert (r1.id, r1.at) == ("run-1", "T1")
+    assert (r2.id, r2.source, r2.degraded) == ("run-2", "wikidata", True)
+    assert [r.id for r in st.runs] == ["run-1", "run-2"]
+
+
+def test_record_session_assigns_ids_and_validates_grouping():
+    st = PackageState(artist="x")
+    s1 = st.record_session("line", "technique", ["a", "b"], ["a"],
+                           {"analysis": "analysis.md"}, now="T1")
+    assert (s1.id, s1.grouping, s1.study_set) == ("sess-1", "technique", ("a",))
+    with pytest.raises(ValueError):
+        st.record_session("x", "vibes", ["a"], ["a"], {})
+
+
+def test_studied_work_ids_is_union_over_sessions():
+    st = PackageState(artist="x")
+    st.record_session("t1", "technique", ["a", "b", "c"], ["a", "b"], {})
+    st.record_session("t2", "subject", ["b", "d"], ["b", "d"], {})
+    assert st.studied_work_ids() == {"a", "b", "d"}
+
+
+def test_candidate_lookup_by_work_id():
+    st = PackageState(artist="x")
+    st.merge_candidates([_thumb(work_id="a", qid="Q1")], "run-1")
+    assert st.candidate("a").qid == "Q1"
+    assert st.candidate("missing") is None
+
+
+def test_record_run_index_survives_legacy_run_zero():
+    st = PackageState(artist="x")
+    st.runs.append(DiscoveryRun(id="run-0", at="t", source="legacy-import",
+                                added=0, merged=0, total=0))
+    assert st.record_run("aic", added=1, merged=0, total=1, now="T").id == "run-1"
