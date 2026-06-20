@@ -166,6 +166,20 @@ class PackageState:
     def gate_for(self, stage: str) -> str | None:
         return PAUSE_GATES.get(stage)
 
+    def merge_candidates(self, new: list, run_id: str) -> tuple[int, int]:
+        seen = {c.dedup_key() for c in self.candidates}
+        added = merged = 0
+        for cand in new:
+            bc = BoardCandidate.from_thumbnail(cand, run_id=run_id)
+            key = bc.dedup_key()
+            if key in seen:
+                merged += 1
+                continue
+            seen.add(key)
+            self.candidates.append(bc)
+            added += 1
+        return added, merged
+
     def to_dict(self) -> dict:
         return {
             "artist": self.artist,

@@ -202,3 +202,41 @@ def test_fat_state_roundtrip(tmp_path):
     st.save(p)
     back = PackageState.load(p, artist="Paul Klee")
     assert back == st
+
+
+def test_merge_adds_new_and_reports_counts():
+    st = PackageState(artist="x")
+    added, merged = st.merge_candidates([_thumb(work_id="a", qid="Q1"),
+                                         _thumb(work_id="b", qid="Q2")], "run-1")
+    assert (added, merged) == (2, 0)
+    assert [c.work_id for c in st.candidates] == ["a", "b"]
+    assert all(c.first_run == "run-1" for c in st.candidates)
+
+
+def test_merge_is_idempotent_by_qid():
+    st = PackageState(artist="x")
+    st.merge_candidates([_thumb(work_id="a", qid="Q1")], "run-1")
+    added, merged = st.merge_candidates([_thumb(work_id="a-again", qid="Q1")], "run-2")
+    assert (added, merged) == (0, 1)
+    assert len(st.candidates) == 1
+    assert st.candidates[0].first_run == "run-1"  # original kept, not clobbered
+
+
+def test_merge_distinct_qids_with_same_title_year_both_kept():
+    st = PackageState(artist="x")
+    added, _ = st.merge_candidates(
+        [_thumb(work_id="a", qid="Q1"), _thumb(work_id="b", qid="Q2")], "run-1")
+    assert added == 2
+
+
+def test_merge_falls_back_to_inst_ids_when_no_qid():
+    st = PackageState(artist="x")
+    st.merge_candidates([_thumb(work_id="a", qid="", inst_ids=(("aic", "1"),))], "run-1")
+    added, merged = st.merge_candidates(
+        [_thumb(work_id="a2", qid="", inst_ids=(("aic", "1"),))], "run-2")
+    assert (added, merged) == (0, 1)
+
+
+def test_merge_empty_is_noop():
+    st = PackageState(artist="x")
+    assert st.merge_candidates([], "run-1") == (0, 0)
