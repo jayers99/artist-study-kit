@@ -63,3 +63,68 @@ def build_queue(liked_ratings: list[Rating], work_meta: dict[str, dict]) -> list
         return (t.cluster or _NO_CLUSTER, -studyability, t.work_id)
 
     return sorted(targets, key=sort_key)
+
+
+@dataclass(frozen=True)
+class StudyStep:
+    step: str
+    success_test: str = ""
+
+
+@dataclass(frozen=True)
+class StudyBrief:
+    work_id: str
+    title: str
+    year: str
+    members: tuple[str, ...]
+    cluster: str
+    source_url: str
+    thesis: str
+    anchor_trait: str
+    study_plan: tuple[StudyStep, ...]
+
+
+def serialize_briefs(artist: str, briefs: list[StudyBrief]) -> dict:
+    """Build the study-briefs.json payload (empty success_test -> null)."""
+    return {
+        "artist": artist,
+        "briefs": [
+            {
+                "work_id": b.work_id,
+                "title": b.title,
+                "year": b.year,
+                "members": list(b.members),
+                "cluster": b.cluster,
+                "source_url": b.source_url,
+                "thesis": b.thesis,
+                "anchor_trait": b.anchor_trait,
+                "study_plan": [
+                    {"step": s.step, "success_test": s.success_test or None}
+                    for s in b.study_plan
+                ],
+            }
+            for b in briefs
+        ],
+    }
+
+
+def parse_briefs(data: dict) -> list[StudyBrief]:
+    """Parse a study-briefs.json payload back into StudyBriefs (null test -> '')."""
+    out: list[StudyBrief] = []
+    for d in data.get("briefs", []):
+        steps = tuple(
+            StudyStep(step=str(s.get("step", "")), success_test=str(s.get("success_test") or ""))
+            for s in d.get("study_plan", [])
+        )
+        out.append(StudyBrief(
+            work_id=str(d.get("work_id", "")),
+            title=str(d.get("title", "")),
+            year=str(d.get("year", "")),
+            members=tuple(str(m) for m in d.get("members", [])),
+            cluster=str(d.get("cluster", "")),
+            source_url=str(d.get("source_url", "")),
+            thesis=str(d.get("thesis", "")),
+            anchor_trait=str(d.get("anchor_trait", "")),
+            study_plan=steps,
+        ))
+    return out

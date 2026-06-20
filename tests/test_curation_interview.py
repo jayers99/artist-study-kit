@@ -1,5 +1,5 @@
 from scripts.selection import Rating
-from scripts.curation_interview import StudyTarget, build_queue
+from scripts.curation_interview import StudyTarget, build_queue, StudyBrief, StudyStep, serialize_briefs, parse_briefs
 
 
 def _r(work_id, date="1930", title=None):
@@ -42,3 +42,27 @@ def test_target_carries_display_facts():
     queue = build_queue(liked, {"senecio": {"cluster": "grid", "studyability": 5}})
     t = queue[0]
     assert (t.title, t.year, t.cluster, t.source_url) == ("Senecio", "1922", "grid", "http://x/senecio")
+
+
+def _brief():
+    return StudyBrief(
+        work_id="exotics", title="Exotics", year="1939",
+        members=("exotics", "sales-woman"), cluster="late",
+        source_url="http://x/exotics", thesis="facial economy as the dial",
+        anchor_trait="economy of facial information",
+        study_plan=(
+            StudyStep("copy the ink study"),
+            StudyStep("variation drill", success_test="reads warm / tense / uneasy"),
+        ),
+    )
+
+
+def test_brief_round_trips_through_json_shape():
+    briefs = [_brief()]
+    assert parse_briefs(serialize_briefs("Paul Klee", briefs)) == briefs
+
+
+def test_empty_success_test_serializes_to_null():
+    data = serialize_briefs("X", [_brief()])
+    assert data["briefs"][0]["study_plan"][0]["success_test"] is None
+    assert data["artist"] == "X"
