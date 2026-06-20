@@ -63,8 +63,11 @@ The through-line: **today the skill is a single linear pass.** The request is to
 
 **Why.** Keeps each session's expensive analysis bounded and focused, and produces a concrete, actionable study plan instead of a sprawl. The progressive-zoom UX matches how real curation feels — fast wide scan, then slow close looking — and naturally enforces the 3–4 cap. Dovetails with the F6 finding that the interview output is really a **structured study protocol with success tests**, not flat text.
 
+**(c) Sort order — by year created.** The HTML gallery should sort works by **year created (ascending)**, not by relevance/score or arbitrary API order. Seeing the board chronologically lets the human read an artist's development across the wall and makes period/series grouping legible at a glance (reinforces the F6 "surface series/period" intent). Applies to the first small-thumb grid and should carry through to the large two-up page. Year comes from the candidate metadata (Wikidata `inception` / museum `date`); works with an unknown/undated year sort last.
+
 **Open questions.**
 - Stage-count: is it always two visual cuts (small grid → large two-up → Socratic), or can there be a third intermediate size for very large initial selections?
+- Sort: is chronological the only order, or a default with optional toggles (by museum, by score)? How do we handle date ranges / circa dates when sorting (sort on the start year)?
 - What's the triage criterion at the final cut — studyability, non-overlap of lessons (F6 tracks a "running set, steer toward coverage" rule), human gut, or AI-proposed + human-confirmed?
 - Are the widths (small/large) and the final cap (≤4) fixed or configurable? Does the funnel's top width depend on board size?
 - Layout specifics for the large-thumb page: strictly two-up, or responsive (two-up on wide screens)? Does it carry the same star/gate/filter affordances as the first board, or is it stripped down to "look + pick"?
