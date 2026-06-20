@@ -209,7 +209,7 @@ class PackageState:
     def studied_work_ids(self) -> set[str]:
         return {wid for s in self.sessions for wid in s.study_set}
 
-    def candidate(self, work_id: str):
+    def candidate(self, work_id: str) -> "BoardCandidate | None":
         for c in self.candidates:
             if c.work_id == work_id:
                 return c

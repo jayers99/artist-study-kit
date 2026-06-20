@@ -237,6 +237,14 @@ def test_merge_falls_back_to_inst_ids_when_no_qid():
     assert (added, merged) == (0, 1)
 
 
+def test_merge_dedups_two_same_key_items_in_one_call():
+    st = PackageState(artist="x")
+    added, merged = st.merge_candidates(
+        [_thumb(work_id="a", qid="Q1"), _thumb(work_id="a2", qid="Q1")], "run-1")
+    assert (added, merged) == (1, 1)
+    assert len(st.candidates) == 1
+
+
 def test_merge_empty_is_noop():
     st = PackageState(artist="x")
     assert st.merge_candidates([], "run-1") == (0, 0)
