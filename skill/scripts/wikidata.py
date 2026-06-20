@@ -9,7 +9,7 @@ boundary (`default_sparql`) is injected so tests never hit live WDQS.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 COMMONS_FILEPATH = "https://commons.wikimedia.org/wiki/Special:FilePath"
 WDQS = "https://query.wikidata.org/sparql"
@@ -94,3 +94,52 @@ def default_sparql(query: str) -> dict:
                      timeout=60.0)
     resp.raise_for_status()
     return resp.json()
+
+
+@dataclass(frozen=True)
+class WikidataWork:
+    qid: str
+    title: str
+    image_file: str
+    collection: str
+    date: str
+    aic_id: str
+    met_id: str
+
+
+def _filepath_filename(image_url: str) -> str:
+    """`.../Special:FilePath/Paul%20Klee.jpg` -> `Paul Klee.jpg` (URL-decoded)."""
+    if not image_url:
+        return ""
+    tail = image_url.rstrip("/").rsplit("/", 1)[-1]
+    return unquote(tail).replace("_", " ")
+
+
+def works_sparql(qid: str) -> str:
+    return f'''
+SELECT ?work ?workLabel ?image ?collectionLabel ?inception ?aic ?met WHERE {{
+  ?work wdt:P170 wd:{qid} .
+  OPTIONAL {{ ?work wdt:P18 ?image . }}
+  OPTIONAL {{ ?work wdt:P195 ?collection . }}
+  OPTIONAL {{ ?work wdt:P571 ?inception . }}
+  OPTIONAL {{ ?work wdt:P4610 ?aic . }}
+  OPTIONAL {{ ?work wdt:P3634 ?met . }}
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+}}
+'''.strip()
+
+
+def parse_works(payload: dict) -> list[WikidataWork]:
+    out: list[WikidataWork] = []
+    for row in (payload.get("results") or {}).get("bindings", []):
+        aic = _binding(row, "aic")
+        out.append(WikidataWork(
+            qid=_qid_tail(_binding(row, "work")),
+            title=_binding(row, "workLabel"),
+            image_file=_filepath_filename(_binding(row, "image")),
+            collection=_binding(row, "collectionLabel"),
+            date=_binding(row, "inception")[:4],
+            aic_id=aic if aic.isdigit() else "",
+            met_id=_binding(row, "met") if _binding(row, "met").isdigit() else "",
+        ))
+    return out

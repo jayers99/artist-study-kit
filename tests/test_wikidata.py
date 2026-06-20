@@ -1,7 +1,9 @@
 from scripts.wikidata import (
     ArtistEntity,
+    WikidataWork,
     commons_filepath,
     parse_qid_candidates,
+    parse_works,
     resolve_qid,
 )
 
@@ -64,3 +66,34 @@ def test_resolve_qid_surfaces_on_tie():
 def test_resolve_qid_returns_none_when_no_candidates():
     qid, cands = resolve_qid("Nobody", query=lambda q: QID_NONE)
     assert qid is None and cands == []
+
+
+WORKS = {"results": {"bindings": [
+    {"work": {"value": "http://www.wikidata.org/entity/Q3050231"},
+     "workLabel": {"value": "Fish Magic"},
+     "image": {"value": "http://commons.wikimedia.org/wiki/Special:FilePath/Paul%20Klee%2C%20Fish%20Magic.jpg"},
+     "collectionLabel": {"value": "Philadelphia Museum of Art"},
+     "inception": {"value": "1925-01-01T00:00:00Z"},
+     "aic": {"value": "no"}},
+    {"work": {"value": "http://www.wikidata.org/entity/Q123"},
+     "workLabel": {"value": "Senecio"},
+     "image": {"value": "http://commons.wikimedia.org/wiki/Special:FilePath/Senecio.jpg"},
+     "collectionLabel": {"value": "Kunstmuseum Basel"},
+     "inception": {"value": "1922-01-01T00:00:00Z"},
+     "aic": {"value": "16569"}},
+    {"work": {"value": "http://www.wikidata.org/entity/Q999"},
+     "workLabel": {"value": "Lost Work"}},  # no image → image_file ""
+]}}
+
+
+def test_parse_works_extracts_filename_year_and_collection():
+    works = parse_works(WORKS)
+    assert works[0] == WikidataWork(
+        qid="Q3050231", title="Fish Magic", image_file="Paul Klee, Fish Magic.jpg",
+        collection="Philadelphia Museum of Art", date="1925", aic_id="", met_id="")
+
+
+def test_parse_works_keeps_aic_id_and_imageless_work():
+    works = parse_works(WORKS)
+    assert works[1].aic_id == "16569"
+    assert works[2].image_file == "" and works[2].title == "Lost Work"
