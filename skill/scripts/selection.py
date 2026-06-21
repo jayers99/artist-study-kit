@@ -89,6 +89,20 @@ def load_selection(path: Path, artist: str) -> Selection:
     return sel
 
 
+def parse_study_set(data: dict, *, max_study: int = 4) -> list[str]:
+    """The ordered narrow-cut work_ids from study-set.json, truncated to max_study."""
+    ids = [str(w) for w in data.get("study_set", [])]
+    return ids[:max_study]
+
+
+def load_study_set(path: Path, artist: str, *, max_study: int = 4) -> list[str]:
+    """Load study-set.json; raise ValueError on artist mismatch."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if str(data.get("artist", "")) != artist:
+        raise ValueError(f"study-set.json artist {data.get('artist')!r} != requested {artist!r}")
+    return parse_study_set(data, max_study=max_study)
+
+
 def liked(sel: Selection, threshold: int = LIKED_THRESHOLD) -> list[Rating]:
     return [r for r in sel.ratings if r.rating >= threshold]
 

@@ -135,3 +135,28 @@ def test_ingest_selection_ignores_stars_entirely():
     ])
     selected, _ = ingest_selection(sel)
     assert selected == ["lo"]
+
+
+def test_parse_study_set_returns_ids_truncated_to_max():
+    from scripts.selection import parse_study_set
+    data = {"artist": "x", "study_set": ["a", "b", "c", "d", "e"]}
+    assert parse_study_set(data) == ["a", "b", "c", "d"]            # default max 4
+    assert parse_study_set(data, max_study=2) == ["a", "b"]
+
+
+def test_load_study_set_reads_file_and_checks_artist(tmp_path):
+    import json as _json
+    from scripts.selection import load_study_set
+    p = tmp_path / "study-set.json"
+    p.write_text(_json.dumps({"artist": "x", "study_set": ["a", "b"]}), encoding="utf-8")
+    assert load_study_set(p, "x") == ["a", "b"]
+
+
+def test_load_study_set_artist_mismatch_raises(tmp_path):
+    import json as _json
+    import pytest
+    from scripts.selection import load_study_set
+    p = tmp_path / "study-set.json"
+    p.write_text(_json.dumps({"artist": "other", "study_set": ["a"]}), encoding="utf-8")
+    with pytest.raises(ValueError):
+        load_study_set(p, "x")
