@@ -55,21 +55,26 @@ and purely visual here, and the sense-making happens in the Socratic
   *human* does the converging, never the AI. It now sits on built multi-session state (below)
   — the funnel records its wide cut as a session's `selected` and its narrow cut as
   `study_set`.
-- **Stateful gallery stars (Thrust 3, revised request).**
-  [[19-stateful-runs-custom-images-staged-analysis]] §(d) now **keeps** the 1–5★ control
-  (reversing the earlier "drop stars for binary select") and makes the star **persistent on
-  the candidate, not the session**: set once, it survives every session and every
-  discovery/import run, so a growing board stays manageable. 1★ = "seen it, not interested"
-  (kept but filterable-out); **filter by stars** (e.g. unstarred → rate → hide later) and
-  **sort** by year (default) / stars / file size. The star moves onto `BoardCandidate`
-  (`candidates[]`), reversing the Thrust-1 "rating is per-session" decision **for the star
-  only**. **Stars and selection-for-advancement are orthogonal axes that never read each
-  other** — a 1★ work can still be selected into a study, a 5★ work can be left unselected;
-  rating never selects, selecting never rates. This **breaks the built coupling** in
-  `selection.ingest_selection` (which currently derives `selected` from `liked()`, rating
-  ≥ 4): Thrust 3 must drive selection from the funnel's explicit picks, not a star threshold.
-  Not yet built; deferred alongside it: duplicate handling when re-query/ingest may
-  re-surface an already-starred work (see `TODO.md`).
+- **Stateful gallery stars — BUILT (Thrust 3, Spec A).**
+  [[19-stateful-runs-custom-images-staged-analysis]] §(d), specced/planned as
+  `docs/superpowers/{specs,plans}/2026-06-20-persistent-board-stars*` and merged
+  2026-06-20 (8-task subagent-driven TDD, 261 tests). The 1–5★ control is **kept**
+  (reversing the earlier "drop stars for binary select") and the star is now **persistent on
+  the candidate, not the session**: a `stars` field on `BoardCandidate` (`candidates[]`),
+  set once, surviving every session and every discovery/import run (`ingest_stars` persists a
+  gallery `stars.json`). 1★ = "seen it, not interested" (kept but filterable-out); the board
+  now **filters by stars** (all / unstarred / ≥N) and **sorts** by year (default, undated
+  last) / stars / file size — the latter enabled by a new collect-time **local thumbnail
+  cache** (`cache_thumbnails` → `thumbnail_path`), so the board renders offline and never
+  re-pulls. **Stars and selection-for-advancement are orthogonal axes that never read each
+  other** — a 1★ work can be selected, a 5★ work left unselected; rating never selects,
+  selecting never rates. This **broke and removed the old coupling** in
+  `selection.ingest_selection` (which derived `selected` from `liked()`, rating ≥ 4):
+  selection now comes from an explicit per-card `selected` flag, carried end-to-end through
+  `apply_selection` / `resolve.resolve_selection` / the [[stage-curation-interview]] queue
+  (`build_queue(selected_rows(sel), …)`). `liked()` survives only for legacy migration.
+  **Still open:** the progressive-zoom funnel + skip-discovery (Thrust 3 **Spec B**, not yet
+  built) and the deferred duplicate-handling-on-re-query spec (see `TODO.md`).
 - **Multi-session curation — backbone BUILT (Thrust 1).** Curation is no longer one-shot:
   package state (`docs/superpowers/specs/2026-06-20-stateful-package-state-design.md`, merged
   2026-06-20) records each pass as a `session` (`selected`, `study_set`, a `grouping`
