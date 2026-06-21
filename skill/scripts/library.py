@@ -28,6 +28,38 @@ def _abs(paths: StudyPaths, p) -> Path:
     return p if p.is_absolute() else paths.root / p
 
 
+def make_incoming(path, *, source: str, source_url: str = "", rights: str = "",
+                  title: str = "", date: str = "", qid: str = "", inst_ids=(),
+                  medium: str = "", hash_for=perceptual_hashes,
+                  dims_for=image_dims) -> "IncomingImage | None":
+    h = hash_for(path)
+    d = dims_for(path)
+    if h is None or d is None:
+        return None
+    w, ht, b = d
+    return IncomingImage(
+        tmp_path=str(path), hashes=h, width=w, height=ht, bytes=b,
+        title=title, date=date, qid=qid, inst_ids=tuple(inst_ids),
+        source=source, source_url=source_url, rights=rights, medium=medium)
+
+
+def build_library(incoming, manifest: Manifest, paths: StudyPaths, run_id: str, *,
+                  threshold: float = DUP_THRESHOLD, move=shutil.move,
+                  delete=os.remove) -> LibrarySummary:
+    added = kept = replaced = 0
+    for inc in incoming:
+        action = resolve(inc, manifest, run_id, threshold=threshold)
+        execute_action(action, paths, move=move, delete=delete)
+        manifest.upsert(action.entry)
+        if action.kind == "add":
+            added += 1
+        elif action.keep_path == inc.tmp_path:   # incoming won
+            replaced += 1
+        else:                                     # existing kept
+            kept += 1
+    return LibrarySummary(added=added, merged_kept=kept, merged_replaced=replaced)
+
+
 def execute_action(action: DedupAction, paths: StudyPaths, *,
                    move=shutil.move, delete=os.remove) -> ManifestEntry:
     entry = action.entry
