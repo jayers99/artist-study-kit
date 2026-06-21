@@ -46,6 +46,7 @@ Skill built and live-validated; build-phase research + feedback ingested back in
 
 ## Open / next
 - [ ] **Duplicate handling on re-query/ingest.** As the gallery grows across discovery runs + custom-image imports, define what happens when a newly-found image is (or may be) a duplicate of one already on the board — so a starred work isn't re-added unstarred. Deferred out of Thrust 3; needs its own spec. (Context: `raw/19` Thrust 3 stateful-stars revision.)
+  - [x] Research the perceptual-similarity layer → `raw/22.1-image-duplicate-detection.md` (NotebookLM, 64 sources). **0–1 score, threshold ≈ 0.85; report picks CLIP/CNN via `imagededup`, but for our not-rotated, identifier-less-fallback case lean toward pure-Python `imagehash` pHash+wHash as primary.** Wired into `wiki/stage-image-discovery.md`. Spec decision still open.
 
 ## Backlog — candidate image sources (M2 image-collection breadth)
 Running list of sources to evaluate as supplements/fallbacks for the weak image-collection layer (Monet-run UAT **M2/M3**, see `wiki/stage-image-discovery.md`). Each: assess coverage, rights clarity, access (API vs scrape), and dedup key.

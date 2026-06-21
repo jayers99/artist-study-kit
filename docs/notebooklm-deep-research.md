@@ -40,3 +40,4 @@ numbers the file, and writes Obsidian frontmatter.
 - `12` works inventory method → `2cf4ccd2-0a0f-406a-91fd-a1c3ec4fe2f1`
 - `13` human curation ux → `c7723fe4-2a83-47de-9a2f-dd29e5c2a038`
 - `16` image source hierarchy → `8260e980-d7cc-42f3-9c4f-4c24e054221f`
+- `22` image duplicate detection → `fa84e503-9277-4d78-8054-37d8ca5c60b8`

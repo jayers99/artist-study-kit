@@ -49,7 +49,7 @@ Chronological wiki history: [[log|wiki log]].
 ## Raw corpus (immutable sources)
 
 **Domain / tooling:** [[01.1-web-scraping-tooling]] · [[02.1-source-quality-grading]] ·
-[[03.1-museum-image-apis]] · [[04.1-style-analysis-frameworks]]
+[[03.1-museum-image-apis]] · [[04.1-style-analysis-frameworks]] · [[22.1-image-duplicate-detection]]
 **Pedagogy / learning-science:** [[05.1-master-study-pedagogy]] ·
 [[06.1-productive-friction-learning]] · [[07.1-study-aids-scaffolding]] ·
 [[08.1-spaced-repetition-retention]]
@@ -76,6 +76,7 @@ Chronological wiki history: [[log|wiki log]].
 | 12.1 works inventory | works-inventory |
 | 13.1 human curation | curation |
 | 16.1 image source hierarchy | image-discovery |
+| 22.1 image duplicate detection | image-discovery (re-query dedup spec) |
 | 18 UAT feedback (F6) | curation-interview, curation, image-discovery (+ desirable-difficulty) |
 | 19 stateful runs / custom images / funnel | image-discovery, curation, visual-analysis, curation-interview |
 | 20 study-dimensions cheat sheet | visual-analysis, curation-interview (+ formal-analysis-taxonomy) |
