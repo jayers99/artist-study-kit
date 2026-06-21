@@ -185,3 +185,29 @@ def test_thumbnail_gallery_falls_back_to_remote_url_without_cache():
     assert row["image_rel"] == "https://x/remote.jpg"     # remote fallback
     assert row["year"] is None
     assert row["bytes"] == 0
+
+
+def test_thumbnail_template_has_seed_select_filter_sort_and_two_exports():
+    cand = BoardCandidate(work_id="w", title="T", date="1920", museum="met",
+                          thumbnail_url="https://x/t.jpg", source_url="https://x/1",
+                          rights="public_domain", stars=3)
+    html = build_thumbnail_gallery([cand], "X")
+    # stars seeded from payload (persistent axis), not hardcoded zero
+    assert "seedStars" in html
+    # selection is a separate control from stars
+    assert "data-select" in html
+    # filter + sort controls
+    assert 'id="star-filter"' in html
+    assert 'id="sort"' in html
+    # two distinct export files
+    assert "stars.json" in html
+    assert "selection.json" in html
+
+
+def test_thumbnail_template_export_keys_selected_and_stars():
+    cand = BoardCandidate(work_id="w", title="T", date="1920", museum="met",
+                          thumbnail_url="https://x/t.jpg", source_url="https://x/1",
+                          rights="public_domain", stars=3)
+    html = build_thumbnail_gallery([cand], "X")
+    # the selection.json builder emits an explicit `selected` field per row
+    assert "selected:" in html
