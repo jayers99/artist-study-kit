@@ -12,3 +12,4 @@ Artists I want to run a master study on (skill input → `studies/<artist>/`). S
 | Status | Artist | Notes |
 | --- | --- | --- |
 | [ ] | **Fra Angelico** | Early-Renaissance Florentine; devotional fresco/altarpiece painter — a strong fit for the [[stage-visual-analysis\|subject-matter / human-experience study dimension]] (religious narrative + iconography), should that branch get built. |
+| [ ] | **Sandro Botticelli** | Early-Renaissance Florentine; line-driven mythological + devotional work (*Birth of Venus*, *Primavera*) — also a strong subject-matter / iconography candidate. |
