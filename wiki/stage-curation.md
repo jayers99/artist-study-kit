@@ -46,15 +46,24 @@ and purely visual here, and the sense-making happens in the Socratic
   manner of" reproductions (the 1972 Montgomery Ward *Drummer Boy* leaked onto the Klee
   board) so the human isn't asked to rate a non-original; the attribution guard lives in
   [[stage-image-discovery]].
-- **Narrowing funnel (request).** [[19-stateful-runs-custom-images-staged-analysis]]
-  (Thrust 3) proposes a progressive-zoom flow — small-thumbnail grid → large two-up page →
-  commit → interview — where the cut narrows to ≤3–4 as images get larger and dwell time
-  grows. Not yet built; would make rating multi-pass and naturally cap the interview. The
-  flow is a **divergent→convergent** cycle ([[concept-divergent-convergent-thinking]]): the
-  wide board is the divergent search, the staged narrowing is convergent selection — and the
-  *human* does the converging, never the AI. It now sits on built multi-session state (below)
-  — the funnel records its wide cut as a session's `selected` and its narrow cut as
-  `study_set`.
+- **Narrowing funnel — BUILT (Thrust 3, Spec B).**
+  [[19-stateful-runs-custom-images-staged-analysis]] §(a)/(b), specced/planned as
+  `docs/superpowers/{specs,plans}/2026-06-20-narrowing-funnel-skip-discovery*` and merged
+  2026-06-20 (7-task subagent-driven TDD, 275 tests). A progressive-zoom flow on **one
+  self-contained funnel page**: stage 1 is the Spec-A board (small thumbs, wide scan);
+  **Next** freezes the wide cut and re-renders the *same grid* zoomed to ~2-wide showing
+  only the selected works at **full size** (`display_url` swaps the IIIF size segment to
+  843px, hotlinked display-only); narrow there to **≤4** (`MAX_STUDY`, hard-gated) and
+  **Commit** writes three files — `stars.json`, `selection.json` (the frozen wide cut), and
+  `study-set.json` (the ≤4 narrow cut). The flow is a **divergent→convergent** cycle
+  ([[concept-divergent-convergent-thinking]]): the wide board is the divergent search, the
+  staged narrowing is convergent selection — and the *human* does the converging, never the
+  AI. Critically, **everything expensive runs on the study_set only** — high-res
+  `resolve_selection(only=set(study_set))`, visual analysis, and the Socratic interview
+  (`build_queue(rows)` filtered to study_set) — while the wide cut is a session *record*.
+  A **skip-discovery study mode** (`state.has_candidates()`) lets one collected board feed
+  many study sessions without re-collecting. The funnel records its wide cut as a session's
+  `selected` and its narrow cut as `study_set`.
 - **Stateful gallery stars — BUILT (Thrust 3, Spec A).**
   [[19-stateful-runs-custom-images-staged-analysis]] §(d), specced/planned as
   `docs/superpowers/{specs,plans}/2026-06-20-persistent-board-stars*` and merged
