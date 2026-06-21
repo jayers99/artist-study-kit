@@ -79,3 +79,16 @@ def test_skill_md_documents_funnel_and_skip_discovery():
     assert "only=" in text
     # the interview/resolve runs on the study_set, not the full wide selection
     assert "study_set" in text
+
+
+def test_skill_md_documents_library_collection_mode():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    # the new mode's modules are referenced
+    for token in ("scripts.library", "seed_import", "download_library",
+                  "build_library", "sync_candidates"):
+        assert token in text, f"{token!r} missing from SKILL.md"
+    # it is presented as a mode that coexists with the thumbnail-only board
+    assert "library collection" in text.lower()
+    # the library path + manifest are named
+    assert "images/library" in text
+    assert "manifest" in text.lower()

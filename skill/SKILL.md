@@ -62,6 +62,35 @@ Stage ids, in order: `background`, `source_grading`, `style_definition`,
 
    **Phase A — board build (discovery, thumbnails only):** Call `scripts.wikidata.search_wikidata(artist)`, which returns `(board_candidates, works, ambiguous_candidates)`. Wikidata is the **primary** source: it resolves the artist's QID, fetches linked works from Wikimedia Commons, and returns thumbnail candidates with PD/CC0 provenance baked in. If `ambiguous_candidates` is non-empty the QID is unclear — present the candidates to the user (name + birth/death dates), ask them to pick the correct artist, and record that disambiguation prompt under `prompts/` with `scripts.prompts.save_prompt`. Supplement the Wikidata board with AIC results via `scripts.museum_search.search_aic(artist)`, then combine the two boards: `scripts.wikidata.merge_boards(wikidata_board, aic_board, suppress_aic_ids={w.aic_id for w in works if w.aic_id})` (deduplicates works already known from Wikidata). After merging a discovery run's candidates, cache their thumbnails locally so the board never re-pulls and works offline: `scripts.image_download.cache_thumbnails(state.candidates, sp.candidates_dir)` — it sets each candidate's `thumbnail_path` (mapping `origin:"user"` images to their existing `local_path`), then save state. Build the board with `scripts.gallery.build_thumbnail_gallery(state.candidates, '<ARTIST>', package_root=sp.root)` so the file-size sort can stat local thumbnails. Persist the board into state: `added, merged = state.merge_candidates(board, run_id)` then `state.record_run("wikidata+aic", added, merged, total=len(state.candidates), degraded=<True if Wikidata was unavailable>)` and `state.save(sp.state_json)` (re-running discovery later merges into the existing board; mark `degraded=True` on a Wikidata outage so a later run can upgrade). Save the gallery prompt under `prompts/` and mark the stage complete. STOP for Human Pause 1.
 
+   **Library collection mode (optional, coexists with the thumbnail-only board above).**
+   When the human wants to *build a deduplicated local image library* — typically starting
+   from a folder of images they already collected — use this mode instead of the thumbnail
+   board. It downloads full-res, keeps one best copy per work, merges metadata, and feeds the
+   result into the same funnel.
+
+   1. **Seed once (if the human gives a collection path):**
+      `man = scripts.image_manifest.Manifest.load(sp.manifest_json)` then
+      `scripts.library.seed_import("<path>", sp, man, run_id)` — copies their images into
+      `images/user/` (their originals are never touched), deduplicates, and folds the winners
+      into `images/library/`, leaving `images/user/` empty. Then `man.save(sp.manifest_json)`,
+      `state.record_run("seed-import", s.added, s.merged_kept + s.merged_replaced, total=len(man.entries))`,
+      and `scripts.library.sync_candidates(man, state, run_id)`.
+   2. **Collect:** build the candidate list with the existing discovery
+      (`search_wikidata` + `search_aic` + `merge_boards`), then download full-res into
+      `images/incoming/`:
+      `dls = scripts.image_download.download_library(cands, sp.incoming_dir, resolve_url=scripts.resolve.default_resolve_url)`.
+      Build incoming images and dedup them into the library:
+      `inc = [scripts.library.make_incoming(d.path, source="discovered", source_url=c.source_url, rights=c.rights, title=c.title, date=c.date, qid=c.qid, inst_ids=c.inst_ids) for c, d in pairs if d.path]`
+      (drop `None`s), then
+      `s = scripts.library.build_library([x for x in inc if x], man, sp, run_id)`,
+      `man.save(sp.manifest_json)`,
+      `state.record_run("library:wikidata+aic", s.added, s.merged_kept + s.merged_replaced, total=len(man.entries))`,
+      and `scripts.library.sync_candidates(man, state, run_id)`, then `state.save(sp.state_json)`.
+   3. **Curate:** unchanged. Library cards already carry `thumbnail_path` (the library file), so
+      `cache_thumbnails` is a no-op for them; build the funnel gallery over `state.candidates`
+      exactly as in the thumbnail-only mode. Rights are recorded per image but do not gate the
+      download in this mode (the human owns how they use a private study library).
+
    **Phase B — post-curation resolution (high-res, selected works only):** After the human exports `selection.json`, run `scripts.resolve.resolve_selection(load_selection(...), images/selected/)` to fetch high-res for each selected work. The resolver chain is: Wikimedia Commons PD/CC0 full-res → AIC IIIF 1686px (on `is_public_domain`) → else keep `source_url` as a reference link (do not redistribute in-copyright images). The legacy local-candidate path (IIIF discovery) still uses `scripts.selection.apply_selection`; the thumbnail-board path uses `resolve_selection`. Always browse thumbnails freely; **download high-res ONLY for works with a verified PD/CC0 flag**.
 
    **Skip-discovery (study mode).** A study session can skip collecting (`skip-discovery`): if the human asks to "study" / "skip-discovery" and `state.has_candidates()` is true, **skip `image_discovery`** and go straight to building the funnel board over `state.candidates` (a prior collect or a Thrust-2 import). If `has_candidates()` is false, there is nothing to study — run discovery first. This decouples study from collect: one collected board feeds many study sessions.
