@@ -410,3 +410,28 @@ def test_old_state_dict_loads_with_new_field_defaults():
     bc = BoardCandidate.from_dict(legacy)
     assert bc.stars == 0
     assert bc.thumbnail_path == ""
+
+
+def test_ingest_stars_applies_known_ignores_unknown_and_out_of_range():
+    st = PackageState(artist="x")
+    st.candidates = [
+        BoardCandidate(work_id="a", title="", date="", museum="", thumbnail_url="",
+                       source_url="", rights=""),
+        BoardCandidate(work_id="b", title="", date="", museum="", thumbnail_url="",
+                       source_url="", rights=""),
+    ]
+    updated = st.ingest_stars({"a": 5, "b": 9, "ghost": 3})
+    assert updated == 1                      # only "a" applied
+    assert st.candidate("a").stars == 5
+    assert st.candidate("b").stars == 0      # 9 out of range → ignored
+    assert st.candidate("ghost") is None
+
+
+def test_ingest_stars_clears_to_zero_and_persists():
+    st = PackageState(artist="x")
+    st.candidates = [BoardCandidate(work_id="a", title="", date="", museum="",
+                                    thumbnail_url="", source_url="", rights="", stars=4)]
+    assert st.ingest_stars({"a": 0}) == 1
+    assert st.candidate("a").stars == 0
+    # survives a state.json round-trip
+    assert PackageState.from_dict(st.to_dict()).candidate("a").stars == 0

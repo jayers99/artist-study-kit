@@ -207,6 +207,25 @@ class PackageState:
         self.candidates.append(bc)
         return "added"
 
+    def ingest_stars(self, stars_map: dict[str, int]) -> int:
+        """Apply {work_id: stars} onto candidates. Returns count updated.
+        Ignores unknown work_ids and values outside 0..5 (selection is untouched)."""
+        by_id = {c.work_id: c for c in self.candidates}
+        updated = 0
+        for work_id, raw in stars_map.items():
+            cand = by_id.get(work_id)
+            if cand is None:
+                continue
+            try:
+                n = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if not (0 <= n <= 5):
+                continue
+            cand.stars = n
+            updated += 1
+        return updated
+
     def record_run(self, source: str, added: int, merged: int, total: int,
                    *, degraded: bool = False, now: str | None = None) -> DiscoveryRun:
         run = DiscoveryRun(id=f"run-{_next_index(self.runs)}", at=now or _now(),
