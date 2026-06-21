@@ -126,3 +126,17 @@ def test_resolve_selection_resolves_selected_and_writes_manifest(tmp_path):
     assert manifest[0]["work_id"] == "fish-magic"
     assert manifest[0]["image"] == "fish-magic.jpg"
     assert manifest[0]["rights"] == "public_domain"
+
+
+def test_resolve_selection_only_filters_to_study_set(tmp_path):
+    sel = Selection(artist="paul-klee", ratings=[
+        _entry(work_id="fish-magic", selected=True, inst_ids=(("commons_file", "Fish.jpg"),)),
+        _entry(work_id="senecio", selected=True, inst_ids=(("commons_file", "Sen.jpg"),)),
+    ])
+
+    def fake_download(cand, sel_dir):
+        return SimpleNamespace(status="downloaded", image_path=sel_dir / f"{cand.work_id}.jpg")
+
+    out = resolve_selection(sel, tmp_path, resolvers=[lambda e: _cand(e.work_id)],
+                            download=fake_download, only={"fish-magic"})
+    assert [r.work_id for r in out] == ["fish-magic"]   # senecio excluded by `only`

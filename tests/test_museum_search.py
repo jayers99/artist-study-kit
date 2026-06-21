@@ -124,3 +124,28 @@ def test_aic_candidate_carries_medium():
 def test_aic_fields_request_medium():
     from scripts.museum_search import AIC_FIELDS
     assert "medium_display" in AIC_FIELDS
+
+
+def test_display_url_swaps_iiif_size_segment():
+    from scripts.museum_search import display_url, ThumbnailCandidate
+    c = ThumbnailCandidate(
+        work_id="senecio", title="Senecio", museum="aic",
+        thumbnail_url="https://www.artic.edu/iiif/2/c969-aaa/full/400,/0/default.jpg",
+        source_url="https://www.artic.edu/artworks/10018", date="1922", rights="in_copyright")
+    assert display_url(c) == "https://www.artic.edu/iiif/2/c969-aaa/full/843,/0/default.jpg"
+
+
+def test_display_url_non_iiif_falls_back_to_thumbnail():
+    from scripts.museum_search import display_url, ThumbnailCandidate
+    c = ThumbnailCandidate(
+        work_id="w", title="T", museum="x", thumbnail_url="https://x/plain/thumb.jpg",
+        source_url="https://x/1", date="", rights="unknown")
+    assert display_url(c) == "https://x/plain/thumb.jpg"
+
+
+def test_display_url_user_origin_uses_local_path():
+    from scripts.museum_search import display_url
+    from scripts.state import BoardCandidate
+    c = BoardCandidate(work_id="mine", title="", date="", museum="", thumbnail_url="",
+                       source_url="", rights="", origin="user", local_path="images/user/mine.jpg")
+    assert display_url(c) == "images/user/mine.jpg"

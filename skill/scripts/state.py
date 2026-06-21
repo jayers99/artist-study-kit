@@ -249,6 +249,10 @@ class PackageState:
     def studied_work_ids(self) -> set[str]:
         return {wid for s in self.sessions for wid in s.study_set}
 
+    def has_candidates(self) -> bool:
+        """True when the board already holds candidates (skip-discovery can study it)."""
+        return bool(self.candidates)
+
     def candidate(self, work_id: str) -> "BoardCandidate | None":
         for c in self.candidates:
             if c.work_id == work_id:

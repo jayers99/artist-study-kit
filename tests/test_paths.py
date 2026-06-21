@@ -99,3 +99,9 @@ def test_scaffold_creates_user_images_dir(tmp_path):
     from scripts.paths import scaffold
     sp = scaffold(tmp_path, "Paul Klee")
     assert sp.user_images_dir.is_dir()
+
+
+def test_study_set_json_path():
+    from scripts.paths import study_paths
+    sp = study_paths("studies", "Paul Klee")
+    assert sp.study_set_json == sp.root / "study-set.json"

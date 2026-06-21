@@ -66,6 +66,16 @@ def test_skill_md_documents_persistent_stars():
     # selection is documented as decoupled from stars
     low = text.lower()
     assert "orthogonal" in low or "decoupl" in low
-    # curation/interview/resolve wiring is on selected_rows, not liked
-    assert "build_queue(selected_rows(sel)" in text
+    # curation/interview/resolve wiring is on the study set via build_queue(rows, work_meta)
+    assert "build_queue(rows, work_meta)" in text
     assert "build_queue(liked(sel)" not in text
+
+
+def test_skill_md_documents_funnel_and_skip_discovery():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    for token in ("study-set.json", "load_study_set", "has_candidates", "skip-discovery"):
+        assert token in text, f"SKILL.md does not wire {token}"
+    # downstream is bounded to the study set
+    assert "only=" in text
+    # the interview/resolve runs on the study_set, not the full wide selection
+    assert "study_set" in text

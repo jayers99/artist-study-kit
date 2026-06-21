@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.dates import parse_year
+from scripts.museum_search import display_url
 
 
 @dataclass(frozen=True)
@@ -113,6 +114,7 @@ def build_thumbnail_gallery(cands, artist: str, *, package_root: Path | str | No
             "selected": False,
             "year": parse_year(getattr(c, "date", "") or ""),
             "bytes": size,
+            "full_url": display_url(c),
         })
     data_json = json.dumps({"artist": artist, "candidates": payload}, indent=2)
     return _THUMB_TEMPLATE.replace("__ARTIST__", _escape(artist)).replace("__DATA__", data_json)
@@ -258,9 +260,11 @@ _THUMB_TEMPLATE = """<!DOCTYPE html>
   #controls select { font-size: 12px; }
   #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
           gap: 10px; padding: 1rem; }
+  #grid.zoom { grid-template-columns: repeat(auto-fill, minmax(620px, 1fr)); gap: 18px; }
   .card { background: #1c1c1c; border: 2px solid transparent; border-radius: 4px; overflow: hidden; }
   .card.selected { border-color: #4a90ff; }
   .card img { width: 100%; height: 200px; object-fit: contain; background: #000; display: block; }
+  #grid.zoom .card img { height: 70vh; }
   .meta { padding: 6px 8px; font-size: 12px; }
   .meta .title { font-weight: 600; }
   .meta .sub { color: #999; font-size: 11px; margin: 2px 0; }
@@ -273,6 +277,7 @@ _THUMB_TEMPLATE = """<!DOCTYPE html>
   .selbox { font-size: 12px; cursor: pointer; color: #9bf; user-select: none; }
   a.src { color: #7aa7ff; font-size: 11px; }
   button { font-size: 0.95rem; padding: 0.4rem 0.9rem; cursor: pointer; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -300,16 +305,18 @@ _THUMB_TEMPLATE = """<!DOCTYPE html>
       </select>
     </label>
   </span>
-  <button id="export">Export stars.json + selection.json</button>
+  <button id="export">Export stars + selection</button>
+  <button id="next">Next &rarr; zoom</button>
+  <button id="back" style="display:none">&larr; Back</button>
+  <button id="commit" style="display:none" disabled>Commit study set</button>
   <span id="status"></span>
 </header>
 <div id="grid"></div>
 <script id="data" type="application/json">__DATA__</script>
 <script>
 const DATA = JSON.parse(document.getElementById("data").textContent);
-// Two orthogonal axes, keyed by iiif_token:
-//   stars[tok]    persistent rating (seeded from the candidate)
-//   selected[tok] per-session pick (always starts empty)
+const MAX_STUDY = 4;
+// Persistent star axis (seeded) and per-session selection axis (starts empty) — orthogonal.
 const stars = {};
 const selected = {};
 function seedStars() {
@@ -317,9 +324,17 @@ function seedStars() {
 }
 seedStars();
 
+let stage = 1;          // 1 = board (wide scan), 2 = zoom (close look)
+let wideCut = [];       // tokens frozen on Next — the session record, not mutated in stage 2
+
 const starFilter = document.getElementById("star-filter");
 const onlyPd = document.getElementById("only-pd");
 const sortBy = document.getElementById("sort");
+const grid = document.getElementById("grid");
+const nextBtn = document.getElementById("next");
+const backBtn = document.getElementById("back");
+const commitBtn = document.getElementById("commit");
+const exportBtn = document.getElementById("export");
 
 function passStarFilter(c) {
   const v = starFilter.value;
@@ -329,7 +344,7 @@ function passStarFilter(c) {
   return s >= parseInt(v, 10);
 }
 
-function visible() {
+function boardRows() {
   let rows = DATA.candidates.filter(c => {
     if (!passStarFilter(c)) return false;
     if (onlyPd.checked && c.rights !== "public_domain") return false;
@@ -339,7 +354,6 @@ function visible() {
   rows = rows.slice().sort((a, b) => {
     if (mode === "stars") return (stars[b.iiif_token]||0) - (stars[a.iiif_token]||0);
     if (mode === "bytes") return (b.bytes||0) - (a.bytes||0);
-    // year ascending, unknown (null) last
     const ay = a.year == null ? Infinity : a.year;
     const by = b.year == null ? Infinity : b.year;
     return ay - by;
@@ -347,58 +361,92 @@ function visible() {
   return rows;
 }
 
-function render() {
-  const grid = document.getElementById("grid");
+function cardHtml(c, zoom) {
+  const tok = c.iiif_token;
+  const s = stars[tok] || 0;
+  const pd = c.rights === "public_domain";
+  const src = zoom ? c.full_url : c.image_rel;
+  const fallback = zoom ? ' onerror="this.onerror=null;this.src=\\'' + c.image_rel + '\\'"' : '';
+  let starHtml = "";
+  for (let n = 1; n <= 5; n++)
+    starHtml += '<span class="star' + (n <= s ? " on" : "") +
+             '" data-star="' + n + '" data-tok="' + tok + '">\\u2605</span>';
+  return '<img loading="lazy" src="' + src + '"' + fallback + ' alt="">' +
+    '<div class="meta">' +
+      '<div class="title">' + c.title + '</div>' +
+      '<div class="sub">' + c.museum + ' \\u00b7 ' + (c.date || "n.d.") + ' ' +
+        '<span class="badge ' + (pd ? "pd" : "copy") + '">' + (pd ? "PD" : "\\u00a9") + '</span>' +
+        (c.origin === "user" ? '<span class="badge user">USER</span>' : '') + '</div>' +
+      '<div class="stars">' + starHtml + '</div>' +
+      '<label class="selbox"><input type="checkbox" data-select="' + tok + '"' +
+        (selected[tok] ? " checked" : "") + '> select</label>' +
+      '<a class="src" href="' + c.source_url + '" target="_blank">source \\u2197</a>' +
+    '</div>';
+}
+
+function renderBoard() {
+  grid.className = "";
   grid.innerHTML = "";
-  const shown = visible();
+  const shown = boardRows();
   const selCount = Object.values(selected).filter(Boolean).length;
   document.getElementById("count").textContent =
     DATA.candidates.length + " works \\u00b7 " + selCount + " selected \\u00b7 " + shown.length + " shown";
   shown.forEach(c => {
-    const tok = c.iiif_token;
-    const s = stars[tok] || 0;
     const card = document.createElement("div");
-    card.className = "card" + (selected[tok] ? " selected" : "");
-    const pd = c.rights === "public_domain";
-    let starHtml = "";
-    for (let n = 1; n <= 5; n++)
-      starHtml += '<span class="star' + (n <= s ? " on" : "") +
-               '" data-star="' + n + '" data-tok="' + tok + '">\\u2605</span>';
-    card.innerHTML =
-      '<img loading="lazy" src="' + c.image_rel + '" alt="">' +
-      '<div class="meta">' +
-        '<div class="title">' + c.title + '</div>' +
-        '<div class="sub">' + c.museum + ' \\u00b7 ' + (c.date || "n.d.") + ' ' +
-          '<span class="badge ' + (pd ? "pd" : "copy") + '">' + (pd ? "PD" : "\\u00a9") + '</span>' +
-          (c.origin === "user" ? '<span class="badge user">USER</span>' : '') + '</div>' +
-        '<div class="stars">' + starHtml + '</div>' +
-        '<label class="selbox"><input type="checkbox" data-select="' + tok + '"' +
-          (selected[tok] ? " checked" : "") + '> select</label>' +
-        '<a class="src" href="' + c.source_url + '" target="_blank">source \\u2197</a>' +
-      '</div>';
+    card.className = "card" + (selected[c.iiif_token] ? " selected" : "");
+    card.innerHTML = cardHtml(c, false);
     grid.appendChild(card);
   });
   bind();
 }
 
+function renderZoom() {
+  grid.className = "zoom";
+  grid.innerHTML = "";
+  const rows = DATA.candidates.filter(c => wideCut.includes(c.iiif_token));
+  const narrow = rows.filter(c => selected[c.iiif_token]).length;
+  document.getElementById("count").textContent =
+    "zoom \\u00b7 " + wideCut.length + " in wide cut \\u00b7 " + narrow + " study set (max " + MAX_STUDY + ")";
+  rows.forEach(c => {
+    const card = document.createElement("div");
+    card.className = "card" + (selected[c.iiif_token] ? " selected" : "");
+    card.innerHTML = cardHtml(c, true);
+    grid.appendChild(card);
+  });
+  commitBtn.disabled = !(narrow >= 1 && narrow <= MAX_STUDY);
+  bind();
+}
+
+function render() { stage === 2 ? renderZoom() : renderBoard(); }
+
 function bind() {
   document.querySelectorAll(".star").forEach(el => {
-    el.onclick = () => {                     // edits the persistent star axis only
-      stars[el.dataset.tok] = parseInt(el.dataset.star, 10);
-      render();
-    };
+    el.onclick = () => { stars[el.dataset.tok] = parseInt(el.dataset.star, 10); render(); };
   });
   document.querySelectorAll("[data-select]").forEach(el => {
-    el.onchange = () => {                     // edits the per-session selection axis only
-      selected[el.dataset.select] = el.checked;
-      render();
-    };
+    el.onchange = () => { selected[el.dataset.select] = el.checked; render(); };
   });
 }
 
 starFilter.onchange = render;
 onlyPd.onchange = render;
 sortBy.onchange = render;
+
+nextBtn.onclick = () => {
+  wideCut = DATA.candidates.filter(c => selected[c.iiif_token]).map(c => c.iiif_token);
+  if (!wideCut.length) { document.getElementById("status").textContent = " select at least one work first"; return; }
+  stage = 2;
+  nextBtn.style.display = "none"; exportBtn.style.display = "none";
+  backBtn.style.display = ""; commitBtn.style.display = "";
+  render();
+};
+
+backBtn.onclick = () => {
+  stage = 1; wideCut = [];
+  backBtn.style.display = "none"; commitBtn.style.display = "none";
+  nextBtn.style.display = ""; exportBtn.style.display = "";
+  render();
+};
 
 function download(name, obj) {
   const blob = new Blob([JSON.stringify(obj, null, 2)], {type: "application/json"});
@@ -408,18 +456,41 @@ function download(name, obj) {
   a.click();
 }
 
-document.getElementById("export").onclick = () => {
-  const starRows = DATA.candidates.map(c => ({work_id: c.work_id, stars: stars[c.iiif_token] || 0}));
-  download("stars.json", {artist: DATA.artist, stars: starRows});
+function exportStars() {
+  const rows = DATA.candidates.map(c => ({work_id: c.work_id, stars: stars[c.iiif_token] || 0}));
+  download("stars.json", {artist: DATA.artist, stars: rows});
+}
+
+function exportSelection(selectedTokens) {
+  const set = new Set(selectedTokens);
   const ratings = DATA.candidates.map(c => ({
     work_id: c.work_id, iiif_token: c.iiif_token, image_rel: c.image_rel,
     title: c.title, date: c.date, medium: c.medium,
     source_url: c.source_url, museum: c.museum, rights: c.rights,
     qid: c.qid, inst_ids: c.inst_ids,
-    selected: !!selected[c.iiif_token], stars: stars[c.iiif_token] || 0,
+    selected: set.has(c.iiif_token), stars: stars[c.iiif_token] || 0,
   }));
   download("selection.json", {artist: DATA.artist, ratings});
+}
+
+exportBtn.onclick = () => {
+  const live = DATA.candidates.filter(c => selected[c.iiif_token]).map(c => c.iiif_token);
+  exportStars();
+  exportSelection(live);
   document.getElementById("status").textContent = " saved stars.json + selection.json";
+};
+
+commitBtn.onclick = () => {
+  // wide cut = frozen snapshot (session record); narrow = still-selected within it (<= MAX_STUDY).
+  const narrowTokens = wideCut.filter(t => selected[t]);
+  if (!(narrowTokens.length >= 1 && narrowTokens.length <= MAX_STUDY)) return;
+  const tokenToWid = {};
+  DATA.candidates.forEach(c => { tokenToWid[c.iiif_token] = c.work_id; });
+  exportStars();
+  exportSelection(wideCut);
+  download("study-set.json", {artist: DATA.artist, study_set: narrowTokens.map(t => tokenToWid[t])});
+  document.getElementById("status").textContent =
+    " saved stars.json + selection.json + study-set.json (" + narrowTokens.length + " to study)";
 };
 
 render();

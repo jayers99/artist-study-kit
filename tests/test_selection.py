@@ -135,3 +135,42 @@ def test_ingest_selection_ignores_stars_entirely():
     ])
     selected, _ = ingest_selection(sel)
     assert selected == ["lo"]
+
+
+def test_parse_study_set_returns_ids_truncated_to_max():
+    from scripts.selection import parse_study_set
+    data = {"artist": "x", "study_set": ["a", "b", "c", "d", "e"]}
+    assert parse_study_set(data) == ["a", "b", "c", "d"]            # default max 4
+    assert parse_study_set(data, max_study=2) == ["a", "b"]
+
+
+def test_load_study_set_reads_file_and_checks_artist(tmp_path):
+    import json as _json
+    from scripts.selection import load_study_set
+    p = tmp_path / "study-set.json"
+    p.write_text(_json.dumps({"artist": "x", "study_set": ["a", "b"]}), encoding="utf-8")
+    assert load_study_set(p, "x") == ["a", "b"]
+
+
+def test_load_study_set_artist_mismatch_raises(tmp_path):
+    import json as _json
+    import pytest
+    from scripts.selection import load_study_set
+    p = tmp_path / "study-set.json"
+    p.write_text(_json.dumps({"artist": "other", "study_set": ["a"]}), encoding="utf-8")
+    with pytest.raises(ValueError):
+        load_study_set(p, "x")
+
+
+def test_apply_selection_only_filters_to_study_set(tmp_path):
+    cdir = tmp_path / "candidates"
+    for wid in ("a", "b"):
+        (cdir / wid).mkdir(parents=True)
+        (cdir / wid / "t.jpg").write_bytes(b"img")
+    sdir = tmp_path / "selected"
+    sel = parse_selection({"artist": "x", "ratings": [
+        {"work_id": "a", "iiif_token": "t", "image_rel": "images/candidates/a/t.jpg", "selected": True},
+        {"work_id": "b", "iiif_token": "t", "image_rel": "images/candidates/b/t.jpg", "selected": True},
+    ]})
+    out = apply_selection(sel, cdir, sdir, only={"a"})
+    assert len(out) == 1 and out[0].name.startswith("a-")
