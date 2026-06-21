@@ -183,3 +183,38 @@ def test_sync_preserves_existing_board_stars(tmp_path):
     assert len(st.candidates) == 1                  # updated in place
     assert st.candidates[0].stars == 5              # NOT reset to 0
     assert m.entries[0].stars == 5                  # manifest brought in step
+
+
+from scripts.library import seed_import
+
+_IMG_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".bmp", ".gif", ".psd"}
+
+
+def test_seed_import_folds_into_library_and_empties_user(tmp_path):
+    from scripts.paths import scaffold
+    sp = scaffold(tmp_path, "A")
+    ext = tmp_path / "external"; ext.mkdir()
+    _img(ext / "one.png", seed=10)
+    _img(ext / "two.png", seed=20)
+    (ext / "notes.txt").write_text("ignore me")
+    ext_before = {p.name: p.read_bytes() for p in ext.iterdir()}
+    m = Manifest()
+    summary = seed_import(ext, sp, m, run_id="seed")
+    assert summary.added == 2
+    assert len(list(sp.library_dir.glob("*.png"))) == 2
+    assert list(sp.user_images_dir.iterdir()) == []      # user/ emptied
+    # external NEVER modified
+    assert {p.name: p.read_bytes() for p in ext.iterdir()} == ext_before
+
+
+def test_seed_import_idempotent(tmp_path):
+    from scripts.paths import scaffold
+    sp = scaffold(tmp_path, "A")
+    ext = tmp_path / "external"; ext.mkdir()
+    _img(ext / "one.png", seed=10)
+    m = Manifest()
+    seed_import(ext, sp, m, run_id="s1")
+    s2 = seed_import(ext, sp, m, run_id="s2")
+    assert s2.added == 0 and s2.merged_kept == 1           # re-seed dedups
+    assert len(m.entries) == 1
+    assert list(sp.user_images_dir.iterdir()) == []

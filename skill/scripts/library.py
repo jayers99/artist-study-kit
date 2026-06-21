@@ -82,6 +82,28 @@ def _first_source_url(entry: ManifestEntry) -> str:
     return ""
 
 
+_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".bmp", ".gif", ".psd"}
+
+
+def seed_import(external_dir, paths: StudyPaths, manifest: Manifest, run_id: str, *,
+                copy=shutil.copy2, move=shutil.move, delete=os.remove,
+                hash_for=perceptual_hashes, dims_for=image_dims) -> LibrarySummary:
+    ext_dir = Path(external_dir)
+    user_dir = paths.user_images_dir
+    user_dir.mkdir(parents=True, exist_ok=True)
+    incoming = []
+    for src in sorted(ext_dir.iterdir()):
+        if not src.is_file() or src.suffix.lower() not in _IMAGE_EXTS:
+            continue
+        dest = user_dir / src.name
+        copy(str(src), str(dest))               # external is only ever READ
+        inc = make_incoming(dest, source="user-seed", rights="unknown",
+                            title=src.stem, hash_for=hash_for, dims_for=dims_for)
+        if inc is not None:
+            incoming.append(inc)
+    return build_library(incoming, manifest, paths, run_id, move=move, delete=delete)
+
+
 def sync_candidates(manifest: Manifest, state: PackageState, run_id: str) -> int:
     by_id = {c.work_id: c for c in state.candidates}
     n = 0
