@@ -224,3 +224,33 @@ def test_thumbnail_gallery_payload_carries_full_url():
     data = _json.loads(html.split('type="application/json">', 1)[1].split("</script>", 1)[0])
     assert data["candidates"][0]["full_url"] == \
         "https://www.artic.edu/iiif/2/c969/full/843,/0/default.jpg"
+
+
+def test_funnel_template_has_two_stage_controls_and_study_set_export():
+    from scripts.state import BoardCandidate
+    cand = BoardCandidate(work_id="w", title="T", date="1920", museum="met",
+                          thumbnail_url="https://x/t.jpg", source_url="https://x/1",
+                          rights="public_domain", stars=3)
+    html = build_thumbnail_gallery([cand], "X")
+    # stage controls
+    assert 'id="next"' in html
+    assert 'id="commit"' in html
+    # the cap constant + the wide-cut snapshot variable
+    assert "MAX_STUDY" in html
+    assert "wideCut" in html
+    # zoom render path + the third export file
+    assert "renderZoom" in html
+    assert "study-set.json" in html
+    # the zoom image uses the full-size url
+    assert "full_url" in html
+
+
+def test_funnel_template_keeps_spec_a_markers():
+    from scripts.state import BoardCandidate
+    cand = BoardCandidate(work_id="w", title="T", date="1920", museum="met",
+                          thumbnail_url="https://x/t.jpg", source_url="https://x/1",
+                          rights="public_domain", stars=3)
+    html = build_thumbnail_gallery([cand], "X")
+    for marker in ("seedStars", "data-select", 'id="star-filter"', 'id="sort"',
+                   "stars.json", "selection.json", "data-star"):
+        assert marker in html, marker
