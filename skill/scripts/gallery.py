@@ -17,6 +17,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from scripts.dates import parse_year
+
 LIKED_THRESHOLD = 4
 
 
@@ -79,18 +81,27 @@ def write_gallery(candidates_dir: Path | str, artist: str, out_path: Path | str)
     return out_path
 
 
-def build_thumbnail_gallery(cands, artist: str) -> str:
-    """Render a browse *board* of remote museum thumbnails with rating + export.
+def build_thumbnail_gallery(cands, artist: str, *, package_root: Path | str | None = None) -> str:
+    """Render a browse *board* of museum thumbnails (local-cached preferred) with rating,
+    selection, filter, and sort. Stars are seeded from each candidate (persistent axis);
+    `selected` always starts false (per-session). Export writes stars.json + selection.json.
 
-    Unlike the download gallery (local PD files), this shows many hotlinked thumbnails for
-    curation regardless of copyright; rights are resolved only for the selected works.
-    Export shape: work_id / iiif_token / image_rel / title / date / medium / provenance + rating.
+    package_root, when given, is used to stat local thumbnails for the file-size sort.
     """
-    payload = [
-        {
+    root = Path(package_root) if package_root else None
+    payload = []
+    for i, c in enumerate(cands):
+        thumb_path = getattr(c, "thumbnail_path", "")
+        image_rel = thumb_path or c.thumbnail_url
+        size = 0
+        if thumb_path and root is not None:
+            fp = root / thumb_path
+            if fp.is_file():
+                size = fp.stat().st_size
+        payload.append({
             "work_id": c.work_id,
             "iiif_token": f"{c.museum}-{i}",
-            "image_rel": c.thumbnail_url,  # remote thumbnail (hotlinked)
+            "image_rel": image_rel,
             "source_url": c.source_url,
             "title": c.title,
             "museum": c.museum,
@@ -100,9 +111,11 @@ def build_thumbnail_gallery(cands, artist: str) -> str:
             "qid": c.qid,
             "inst_ids": [list(pair) for pair in c.inst_ids],
             "origin": getattr(c, "origin", "discovered"),
-        }
-        for i, c in enumerate(cands)
-    ]
+            "stars": getattr(c, "stars", 0),
+            "selected": False,
+            "year": parse_year(getattr(c, "date", "") or ""),
+            "bytes": size,
+        })
     data_json = json.dumps({"artist": artist, "candidates": payload}, indent=2)
     return _THUMB_TEMPLATE.replace("__ARTIST__", _escape(artist)).replace("__DATA__", data_json)
 
