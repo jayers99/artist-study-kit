@@ -435,3 +435,11 @@ def test_ingest_stars_clears_to_zero_and_persists():
     assert st.candidate("a").stars == 0
     # survives a state.json round-trip
     assert PackageState.from_dict(st.to_dict()).candidate("a").stars == 0
+
+
+def test_has_candidates_reflects_board():
+    st = PackageState(artist="x")
+    assert st.has_candidates() is False
+    st.candidates = [BoardCandidate(work_id="a", title="", date="", museum="",
+                                    thumbnail_url="", source_url="", rights="")]
+    assert st.has_candidates() is True
