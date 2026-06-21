@@ -25,7 +25,16 @@ class LibrarySummary:
 
 def _abs(paths: StudyPaths, p) -> Path:
     p = Path(p)
-    return p if p.is_absolute() else paths.root / p
+    if p.is_absolute():
+        return p
+    root = Path(paths.root)
+    # Idempotent: when paths.root is relative, captured tmp_paths/keep_paths are
+    # already root-prefixed (e.g. "studies/a/images/incoming/x"). Re-joining them
+    # against root would double the prefix; only prefix genuinely root-relative
+    # paths (canonical entry paths like "images/library/y").
+    if p == root or root in p.parents:
+        return p
+    return root / p
 
 
 def make_incoming(path, *, source: str, source_url: str = "", rights: str = "",

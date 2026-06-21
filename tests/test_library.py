@@ -220,6 +220,52 @@ def test_seed_import_idempotent(tmp_path):
     assert list(sp.user_images_dir.iterdir()) == []
 
 
+def test_abs_idempotent_under_relative_package_root():
+    """_abs must not double-prefix a path already under a *relative* root.
+
+    When paths.root is relative (the SKILL.md `scaffold('studies', ...)` form),
+    make_incoming/seed_import capture tmp_paths that already include the root
+    prefix (e.g. 'studies/a/images/incoming/x'). _abs(root-relative entry paths)
+    must still prefix; _abs(already-root-prefixed paths) must be a no-op.
+    """
+    from scripts.paths import study_paths
+    sp = study_paths("studies", "A")                 # relative root: studies/a
+    assert not Path(sp.root).is_absolute()
+    already = "studies/a/images/incoming/x.png"      # captured tmp_path form
+    assert str(_abs(sp, already)) == "studies/a/images/incoming/x.png"   # NOT doubled
+    assert str(_abs(sp, "images/library/y.png")) == "studies/a/images/library/y.png"  # still prefixed
+
+
+def test_build_library_works_with_relative_package_root(tmp_path, monkeypatch):
+    """Regression: a full build_library through a RELATIVE root must place the
+    file (the live Cézanne run hit FileNotFoundError from a doubled root here)."""
+    from scripts.paths import scaffold
+    monkeypatch.chdir(tmp_path)
+    sp = scaffold("studies", "Rel Artist")           # relative root: studies/rel-artist
+    assert not Path(sp.root).is_absolute()
+    img = _img(sp.incoming_dir / "x.png", seed=5, size=(220, 140))
+    m = Manifest()
+    summary = build_library([make_incoming(img, source="aic", title="X")], m, sp, run_id="r")
+    assert summary.added == 1
+    assert len(list(sp.library_dir.glob("*.png"))) == 1   # actually placed, no doubling
+    assert not list(sp.incoming_dir.glob("*.png"))        # incoming consumed
+
+
+def test_seed_import_works_with_relative_package_root(tmp_path, monkeypatch):
+    """Regression: seed_import through a RELATIVE root folds into library and empties user/."""
+    from scripts.paths import scaffold
+    monkeypatch.chdir(tmp_path)
+    sp = scaffold("studies", "Rel Artist")
+    ext = tmp_path / "external"; ext.mkdir()
+    _img(ext / "one.png", seed=11)
+    m = Manifest()
+    summary = seed_import(ext, sp, m, run_id="seed")
+    assert summary.added == 1
+    assert len(list(sp.library_dir.glob("*.png"))) == 1
+    assert list(sp.user_images_dir.iterdir()) == []
+    assert len([p for p in ext.iterdir() if p.is_file()]) == 1   # external untouched
+
+
 def test_sync_candidates_discovered_library_card_has_valid_display_url():
     from scripts.museum_search import display_url
     m = Manifest(entries=[_e("vase", title="Vase",
