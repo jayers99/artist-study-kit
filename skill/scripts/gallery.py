@@ -7,8 +7,8 @@ Export button that downloads selection.json in the scripts.selection schema.
 MVP: no overlay markup / compare view (spec section 9).
 
 Also provides build_thumbnail_gallery for the remote-thumbnail curation board used in
-the image_discovery stage: hotlinked museum thumbnails with star-rating and liked/PD
-filters; export carries work_id / title / date / medium / provenance + rating.
+the image_discovery stage: local-cached thumbnails with star-rating and separate select
+toggle; star filter, sort (year/stars/file-size); export writes stars.json + selection.json.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-LIKED_THRESHOLD = 4
+from scripts.dates import parse_year
 
 
 @dataclass(frozen=True)
@@ -79,18 +79,27 @@ def write_gallery(candidates_dir: Path | str, artist: str, out_path: Path | str)
     return out_path
 
 
-def build_thumbnail_gallery(cands, artist: str) -> str:
-    """Render a browse *board* of remote museum thumbnails with rating + export.
+def build_thumbnail_gallery(cands, artist: str, *, package_root: Path | str | None = None) -> str:
+    """Render a browse *board* of museum thumbnails (local-cached preferred) with rating,
+    selection, filter, and sort. Stars are seeded from each candidate (persistent axis);
+    `selected` always starts false (per-session). Export writes stars.json + selection.json.
 
-    Unlike the download gallery (local PD files), this shows many hotlinked thumbnails for
-    curation regardless of copyright; rights are resolved only for the selected works.
-    Export shape: work_id / iiif_token / image_rel / title / date / medium / provenance + rating.
+    package_root, when given, is used to stat local thumbnails for the file-size sort.
     """
-    payload = [
-        {
+    root = Path(package_root) if package_root else None
+    payload = []
+    for i, c in enumerate(cands):
+        thumb_path = getattr(c, "thumbnail_path", "")
+        image_rel = thumb_path or c.thumbnail_url
+        size = 0
+        if thumb_path and root is not None:
+            fp = root / thumb_path
+            if fp.is_file():
+                size = fp.stat().st_size
+        payload.append({
             "work_id": c.work_id,
             "iiif_token": f"{c.museum}-{i}",
-            "image_rel": c.thumbnail_url,  # remote thumbnail (hotlinked)
+            "image_rel": image_rel,
             "source_url": c.source_url,
             "title": c.title,
             "museum": c.museum,
@@ -100,9 +109,11 @@ def build_thumbnail_gallery(cands, artist: str) -> str:
             "qid": c.qid,
             "inst_ids": [list(pair) for pair in c.inst_ids],
             "origin": getattr(c, "origin", "discovered"),
-        }
-        for i, c in enumerate(cands)
-    ]
+            "stars": getattr(c, "stars", 0),
+            "selected": False,
+            "year": parse_year(getattr(c, "date", "") or ""),
+            "bytes": size,
+        })
     data_json = json.dumps({"artist": artist, "candidates": payload}, indent=2)
     return _THUMB_TEMPLATE.replace("__ARTIST__", _escape(artist)).replace("__DATA__", data_json)
 
@@ -243,11 +254,12 @@ _THUMB_TEMPLATE = """<!DOCTYPE html>
   header { padding: 0.75rem 1rem; background: #1c1c1c; position: sticky; top: 0; z-index: 5;
            display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
   header strong { font-size: 1.05rem; }
-  #filters label { font-size: 12px; color: #bbb; margin-right: 0.75rem; cursor: pointer; }
+  #controls label { font-size: 12px; color: #bbb; margin-right: 0.5rem; }
+  #controls select { font-size: 12px; }
   #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
           gap: 10px; padding: 1rem; }
   .card { background: #1c1c1c; border: 2px solid transparent; border-radius: 4px; overflow: hidden; }
-  .card.liked { border-color: gold; }
+  .card.selected { border-color: #4a90ff; }
   .card img { width: 100%; height: 200px; object-fit: contain; background: #000; display: block; }
   .meta { padding: 6px 8px; font-size: 12px; }
   .meta .title { font-weight: 600; }
@@ -258,6 +270,7 @@ _THUMB_TEMPLATE = """<!DOCTYPE html>
   .badge.user { background: #5b3; color: #042; }
   .stars .star { font-size: 1.25rem; cursor: pointer; color: #555; }
   .stars .star.on { color: gold; }
+  .selbox { font-size: 12px; cursor: pointer; color: #9bf; user-select: none; }
   a.src { color: #7aa7ff; font-size: 11px; }
   button { font-size: 0.95rem; padding: 0.4rem 0.9rem; cursor: pointer; }
 </style>
@@ -266,47 +279,91 @@ _THUMB_TEMPLATE = """<!DOCTYPE html>
 <header>
   <strong>Curation board — __ARTIST__</strong>
   <span id="count"></span>
-  <span id="filters">
-    <label><input type="checkbox" id="only-liked"> liked only</label>
+  <span id="controls">
+    <label>stars
+      <select id="star-filter">
+        <option value="all">all</option>
+        <option value="unstarred">unstarred</option>
+        <option value="1">&ge;1</option>
+        <option value="2">&ge;2</option>
+        <option value="3">&ge;3</option>
+        <option value="4">&ge;4</option>
+        <option value="5">5</option>
+      </select>
+    </label>
     <label><input type="checkbox" id="only-pd"> public-domain only</label>
+    <label>sort
+      <select id="sort">
+        <option value="year">year &uarr;</option>
+        <option value="stars">stars &darr;</option>
+        <option value="bytes">file size</option>
+      </select>
+    </label>
   </span>
-  <button id="export">Export selection.json</button>
+  <button id="export">Export stars.json + selection.json</button>
   <span id="status"></span>
 </header>
 <div id="grid"></div>
 <script id="data" type="application/json">__DATA__</script>
 <script>
 const DATA = JSON.parse(document.getElementById("data").textContent);
-const LIKED = 4;
-const state = {};  // token -> {rating}
-const onlyLiked = document.getElementById("only-liked");
+// Two orthogonal axes, keyed by iiif_token:
+//   stars[tok]    persistent rating (seeded from the candidate)
+//   selected[tok] per-session pick (always starts empty)
+const stars = {};
+const selected = {};
+function seedStars() {
+  DATA.candidates.forEach(c => { stars[c.iiif_token] = c.stars || 0; });
+}
+seedStars();
+
+const starFilter = document.getElementById("star-filter");
 const onlyPd = document.getElementById("only-pd");
+const sortBy = document.getElementById("sort");
+
+function passStarFilter(c) {
+  const v = starFilter.value;
+  const s = stars[c.iiif_token] || 0;
+  if (v === "all") return true;
+  if (v === "unstarred") return s === 0;
+  return s >= parseInt(v, 10);
+}
 
 function visible() {
-  return DATA.candidates.filter(c => {
-    const s = state[c.iiif_token] || {rating: 0};
-    if (onlyLiked.checked && s.rating < LIKED) return false;
+  let rows = DATA.candidates.filter(c => {
+    if (!passStarFilter(c)) return false;
     if (onlyPd.checked && c.rights !== "public_domain") return false;
     return true;
   });
+  const mode = sortBy.value;
+  rows = rows.slice().sort((a, b) => {
+    if (mode === "stars") return (stars[b.iiif_token]||0) - (stars[a.iiif_token]||0);
+    if (mode === "bytes") return (b.bytes||0) - (a.bytes||0);
+    // year ascending, unknown (null) last
+    const ay = a.year == null ? Infinity : a.year;
+    const by = b.year == null ? Infinity : b.year;
+    return ay - by;
+  });
+  return rows;
 }
 
 function render() {
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
   const shown = visible();
-  const liked = DATA.candidates.filter(c => (state[c.iiif_token]||{}).rating >= LIKED).length;
+  const selCount = Object.values(selected).filter(Boolean).length;
   document.getElementById("count").textContent =
-    DATA.candidates.length + " works \\u00b7 " + liked + " liked \\u00b7 " + shown.length + " shown";
+    DATA.candidates.length + " works \\u00b7 " + selCount + " selected \\u00b7 " + shown.length + " shown";
   shown.forEach(c => {
-    const s = state[c.iiif_token] || {rating: 0};
+    const tok = c.iiif_token;
+    const s = stars[tok] || 0;
     const card = document.createElement("div");
-    card.className = "card" + (s.rating >= LIKED ? " liked" : "");
+    card.className = "card" + (selected[tok] ? " selected" : "");
     const pd = c.rights === "public_domain";
-    let stars = "";
+    let starHtml = "";
     for (let n = 1; n <= 5; n++)
-      stars += '<span class="star' + (n <= s.rating ? " on" : "") +
-               '" data-star="' + n + '" data-tok="' + c.iiif_token + '">\\u2605</span>';
+      starHtml += '<span class="star' + (n <= s ? " on" : "") +
+               '" data-star="' + n + '" data-tok="' + tok + '">\\u2605</span>';
     card.innerHTML =
       '<img loading="lazy" src="' + c.image_rel + '" alt="">' +
       '<div class="meta">' +
@@ -314,7 +371,9 @@ function render() {
         '<div class="sub">' + c.museum + ' \\u00b7 ' + (c.date || "n.d.") + ' ' +
           '<span class="badge ' + (pd ? "pd" : "copy") + '">' + (pd ? "PD" : "\\u00a9") + '</span>' +
           (c.origin === "user" ? '<span class="badge user">USER</span>' : '') + '</div>' +
-        '<div class="stars">' + stars + '</div>' +
+        '<div class="stars">' + starHtml + '</div>' +
+        '<label class="selbox"><input type="checkbox" data-select="' + tok + '"' +
+          (selected[tok] ? " checked" : "") + '> select</label>' +
         '<a class="src" href="' + c.source_url + '" target="_blank">source \\u2197</a>' +
       '</div>';
     grid.appendChild(card);
@@ -324,35 +383,43 @@ function render() {
 
 function bind() {
   document.querySelectorAll(".star").forEach(el => {
-    el.onclick = () => {
-      const tok = el.dataset.tok;
-      const st = state[tok] || (state[tok] = {rating: 0});
-      st.rating = parseInt(el.dataset.star, 10);
+    el.onclick = () => {                     // edits the persistent star axis only
+      stars[el.dataset.tok] = parseInt(el.dataset.star, 10);
+      render();
+    };
+  });
+  document.querySelectorAll("[data-select]").forEach(el => {
+    el.onchange = () => {                     // edits the per-session selection axis only
+      selected[el.dataset.select] = el.checked;
       render();
     };
   });
 }
 
-onlyLiked.onchange = render;
+starFilter.onchange = render;
 onlyPd.onchange = render;
+sortBy.onchange = render;
 
-document.getElementById("export").onclick = () => {
-  const ratings = DATA.candidates.map(c => {
-    const s = state[c.iiif_token] || {rating: 0};
-    return {
-      work_id: c.work_id, iiif_token: c.iiif_token, image_rel: c.image_rel,
-      title: c.title, date: c.date, medium: c.medium,
-      source_url: c.source_url, museum: c.museum, rights: c.rights,
-      qid: c.qid, inst_ids: c.inst_ids, rating: s.rating || 0,
-    };
-  });
-  const blob = new Blob([JSON.stringify({artist: DATA.artist, ratings}, null, 2)],
-                        {type: "application/json"});
+function download(name, obj) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], {type: "application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "selection.json";
+  a.download = name;
   a.click();
-  document.getElementById("status").textContent = " saved selection.json";
+}
+
+document.getElementById("export").onclick = () => {
+  const starRows = DATA.candidates.map(c => ({work_id: c.work_id, stars: stars[c.iiif_token] || 0}));
+  download("stars.json", {artist: DATA.artist, stars: starRows});
+  const ratings = DATA.candidates.map(c => ({
+    work_id: c.work_id, iiif_token: c.iiif_token, image_rel: c.image_rel,
+    title: c.title, date: c.date, medium: c.medium,
+    source_url: c.source_url, museum: c.museum, rights: c.rights,
+    qid: c.qid, inst_ids: c.inst_ids,
+    selected: !!selected[c.iiif_token], stars: stars[c.iiif_token] || 0,
+  }));
+  download("selection.json", {artist: DATA.artist, ratings});
+  document.getElementById("status").textContent = " saved stars.json + selection.json";
 };
 
 render();

@@ -66,17 +66,20 @@ def test_load_selection_rejects_artist_mismatch(tmp_path):
         load_selection(p, "claude-monet")
 
 
-def test_apply_selection_copies_liked_images(tmp_path):
+def test_apply_selection_copies_selected_images(tmp_path):
     cdir = tmp_path / "candidates"
     (cdir / "wheat-field").mkdir(parents=True)
-    (cdir / "wheat-field" / "12345.jpg").write_bytes(b"\xff\xd8\xffJPEG")
+    (cdir / "wheat-field" / "12345.jpg").write_bytes(b"img")
     sdir = tmp_path / "selected"
-    sel = parse_selection(_data(rating=5))
+    sel = parse_selection({
+        "artist": "x",
+        "ratings": [{"work_id": "wheat-field", "iiif_token": "12345",
+                     "image_rel": "images/candidates/wheat-field/12345.jpg",
+                     "selected": True}],
+    })
     out = apply_selection(sel, cdir, sdir)
-    assert out and out[0].is_file()
-    assert out[0].read_bytes().startswith(b"\xff\xd8\xff")
-    # idempotent: second run does not raise and returns the same path set
-    assert apply_selection(sel, cdir, sdir) == out
+    assert len(out) == 1 and out[0].is_file()
+    assert apply_selection(sel, cdir, sdir) == out   # idempotent
 
 
 def test_parse_selection_reads_board_provenance_fields():
@@ -102,23 +105,33 @@ def test_parse_selection_defaults_missing_provenance():
     assert r.qid == "" and r.inst_ids == ()
 
 
-def test_ingest_selection_returns_liked_ids_and_defaults_study_set():
+def test_parse_selection_reads_selected_and_stars():
+    r = parse_selection({"artist": "x", "ratings": [
+        {"work_id": "w", "iiif_token": "t", "image_rel": "r", "selected": True, "stars": 3},
+    ]}).ratings[0]
+    assert r.selected is True
+    assert r.stars == 3
+
+
+def test_ingest_selection_returns_selected_ids_and_defaults_study_set():
     from scripts.selection import ingest_selection
     sel = Selection(artist="x", ratings=[
-        Rating(work_id="a", iiif_token="", image_rel="u", rating=5),
-        Rating(work_id="b", iiif_token="", image_rel="u", rating=2),
-        Rating(work_id="c", iiif_token="", image_rel="u", rating=4),
+        Rating(work_id="a", iiif_token="", image_rel="u", selected=True),
+        Rating(work_id="b", iiif_token="", image_rel="u", selected=False),
+        Rating(work_id="c", iiif_token="", image_rel="u", selected=True),
     ])
     selected, study_set = ingest_selection(sel)
     assert selected == ["a", "c"]
     assert study_set == ["a", "c"]
 
 
-def test_ingest_selection_liked_only_false_keeps_all():
+def test_ingest_selection_ignores_stars_entirely():
+    # orthogonality: a 5-star work that is NOT selected stays out; a 1-star
+    # SELECTED work goes in. Stars never drive selection.
     from scripts.selection import ingest_selection
     sel = Selection(artist="x", ratings=[
-        Rating(work_id="a", iiif_token="", image_rel="u", rating=5),
-        Rating(work_id="b", iiif_token="", image_rel="u", rating=0),
+        Rating(work_id="hi", iiif_token="", image_rel="u", stars=5, selected=False),
+        Rating(work_id="lo", iiif_token="", image_rel="u", stars=1, selected=True),
     ])
-    selected, study_set = ingest_selection(sel, liked_only=False)
-    assert selected == ["a", "b"]
+    selected, _ = ingest_selection(sel)
+    assert selected == ["lo"]

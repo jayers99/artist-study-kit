@@ -7,7 +7,7 @@ from scripts.selection import Rating, Selection
 
 
 def _entry(**kw):
-    base = dict(work_id="fish-magic", iiif_token="t", image_rel="r", rating=5,
+    base = dict(work_id="fish-magic", iiif_token="t", image_rel="r", selected=True,
                 source_url="https://www.wikidata.org/wiki/Q1", inst_ids=())
     base.update(kw)
     return Rating(**base)
@@ -110,10 +110,10 @@ def test_resolve_selected_pd_download_failure_stays_public_domain(tmp_path):
     assert res.image_url == "u"   # _cand() sets image_url="u"; preserved for retry
 
 
-def test_resolve_selection_resolves_liked_and_writes_manifest(tmp_path):
+def test_resolve_selection_resolves_selected_and_writes_manifest(tmp_path):
     sel = Selection(artist="paul-klee", ratings=[
-        _entry(work_id="fish-magic", rating=5, inst_ids=(("commons_file", "Fish.jpg"),)),
-        _entry(work_id="meh", rating=2),  # below threshold → skipped
+        _entry(work_id="fish-magic", selected=True, inst_ids=(("commons_file", "Fish.jpg"),)),
+        _entry(work_id="meh", selected=False),  # not selected → skipped
     ])
 
     def fake_download(cand, sel_dir):
@@ -121,7 +121,7 @@ def test_resolve_selection_resolves_liked_and_writes_manifest(tmp_path):
 
     out = resolve_selection(sel, tmp_path,
                             resolvers=[lambda e: _cand(e.work_id)], download=fake_download)
-    assert [r.work_id for r in out] == ["fish-magic"]   # only liked
+    assert [r.work_id for r in out] == ["fish-magic"]   # only selected
     manifest = json.loads((tmp_path / "resolved.json").read_text(encoding="utf-8"))
     assert manifest[0]["work_id"] == "fish-magic"
     assert manifest[0]["image"] == "fish-magic.jpg"

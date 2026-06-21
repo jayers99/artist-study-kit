@@ -150,3 +150,64 @@ def test_thumbnail_gallery_marks_user_origin():
     html = build_thumbnail_gallery([user], "Paul Klee")
     assert '"origin": "user"' in html
     assert "USER" in html  # badge label rendered in the grid template
+
+
+def test_thumbnail_gallery_payload_carries_stars_year_selected_and_local_src(tmp_path):
+    import json as _json
+    pkg = tmp_path
+    thumb = pkg / "images" / "candidates" / "senecio" / "thumb.jpg"
+    thumb.parent.mkdir(parents=True)
+    thumb.write_bytes(b"012345678")  # 9 bytes
+    cand = BoardCandidate(
+        work_id="senecio", title="Senecio", date="c. 1922", museum="aic",
+        thumbnail_url="https://x/remote.jpg", source_url="https://x/1", rights="in_copyright",
+        stars=4, thumbnail_path="images/candidates/senecio/thumb.jpg",
+    )
+    html = build_thumbnail_gallery([cand], "Paul Klee", package_root=pkg)
+    data = _json.loads(html.split('type="application/json">', 1)[1].split("</script>", 1)[0])
+    row = data["candidates"][0]
+    assert row["stars"] == 4
+    assert row["year"] == 1922
+    assert row["selected"] is False                       # never seeded
+    assert row["image_rel"] == "images/candidates/senecio/thumb.jpg"   # local preferred
+    assert row["bytes"] == 9
+
+
+def test_thumbnail_gallery_falls_back_to_remote_url_without_cache():
+    import json as _json
+    cand = BoardCandidate(
+        work_id="w", title="T", date="", museum="met",
+        thumbnail_url="https://x/remote.jpg", source_url="https://x/1", rights="public_domain",
+    )
+    html = build_thumbnail_gallery([cand], "X")
+    data = _json.loads(html.split('type="application/json">', 1)[1].split("</script>", 1)[0])
+    row = data["candidates"][0]
+    assert row["image_rel"] == "https://x/remote.jpg"     # remote fallback
+    assert row["year"] is None
+    assert row["bytes"] == 0
+
+
+def test_thumbnail_template_has_seed_select_filter_sort_and_two_exports():
+    cand = BoardCandidate(work_id="w", title="T", date="1920", museum="met",
+                          thumbnail_url="https://x/t.jpg", source_url="https://x/1",
+                          rights="public_domain", stars=3)
+    html = build_thumbnail_gallery([cand], "X")
+    # stars seeded from payload (persistent axis), not hardcoded zero
+    assert "seedStars" in html
+    # selection is a separate control from stars
+    assert "data-select" in html
+    # filter + sort controls
+    assert 'id="star-filter"' in html
+    assert 'id="sort"' in html
+    # two distinct export files
+    assert "stars.json" in html
+    assert "selection.json" in html
+
+
+def test_thumbnail_template_export_keys_selected_and_stars():
+    cand = BoardCandidate(work_id="w", title="T", date="1920", museum="met",
+                          thumbnail_url="https://x/t.jpg", source_url="https://x/1",
+                          rights="public_domain", stars=3)
+    html = build_thumbnail_gallery([cand], "X")
+    # the selection.json builder emits an explicit `selected` field per row
+    assert "selected:" in html

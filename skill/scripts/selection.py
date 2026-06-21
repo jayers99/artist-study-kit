@@ -1,8 +1,8 @@
-"""Human Pause 1 output: parse/validate selection.json and materialize the liked set.
+"""Human Pause 1 output: parse/validate selection.json and materialize the selected set.
 
 selection.json is produced by gallery.html (star ratings) and ingested by Run B.
 The schema: {"artist", "ratings": [{work_id, iiif_token, image_rel, rating,
-title, date, medium}]}. Works rated >= LIKED_THRESHOLD are copied into images/selected/.
+title, date, medium}]}. Explicitly selected works are copied into images/selected/ (rating is orthogonal).
 Rationale (thesis/anchor/handoff) is no longer stored here — it is produced by the
 curation_interview stage as study-briefs.json.
 """
@@ -22,7 +22,7 @@ class Rating:
     work_id: str
     iiif_token: str
     image_rel: str
-    rating: int
+    rating: int = 0
     title: str = ""
     date: str = ""
     medium: str = ""
@@ -31,6 +31,8 @@ class Rating:
     museum: str = ""
     rights: str = ""
     inst_ids: tuple[tuple[str, str], ...] = ()
+    selected: bool = False
+    stars: int = 0
 
 
 @dataclass(frozen=True)
@@ -55,6 +57,8 @@ def parse_selection(data: dict) -> Selection:
             museum=str(r.get("museum", "")),
             rights=str(r.get("rights", "")),
             inst_ids=tuple((str(p[0]), str(p[1])) for p in r.get("inst_ids", []) if len(p) == 2),
+            selected=bool(r.get("selected", False)),
+            stars=int(r.get("stars", 0)),
         )
         for r in data.get("ratings", [])
     ]
@@ -89,13 +93,20 @@ def liked(sel: Selection, threshold: int = LIKED_THRESHOLD) -> list[Rating]:
     return [r for r in sel.ratings if r.rating >= threshold]
 
 
-def ingest_selection(sel: "Selection", *, liked_only: bool = True) -> tuple[list[str], list[str]]:
+def selected_rows(sel: "Selection") -> list[Rating]:
+    """The explicitly selected works (the per-session pick).
+
+    Orthogonal to stars: this reads only the `selected` flag, never a rating."""
+    return [r for r in sel.ratings if r.selected]
+
+
+def ingest_selection(sel: "Selection") -> tuple[list[str], list[str]]:
     """Resolve an exported selection into (selected_ids, study_set_ids) for a session.
 
-    selected_ids are the wide cut (liked works by default); study_set defaults equal
-    to it — the Thrust-3 funnel narrows study_set to <=4 later.
-    """
-    rows = liked(sel) if liked_only else sel.ratings
+    selected_ids are the works the human explicitly selected on the board; study_set
+    defaults equal to it — the Thrust-3 funnel (Spec B) narrows study_set to <=4 later.
+    Stars play no part here (stars persist on the candidate, orthogonally)."""
+    rows = selected_rows(sel)
     selected_ids = [r.work_id for r in rows]
     return selected_ids, list(selected_ids)
 
@@ -104,14 +115,13 @@ def apply_selection(
     sel: Selection,
     candidates_dir: Path | str,
     selected_dir: Path | str,
-    threshold: int = LIKED_THRESHOLD,
 ) -> list[Path]:
-    """Copy liked images from candidates_dir into selected_dir; idempotent."""
+    """Copy explicitly-selected images from candidates_dir into selected_dir; idempotent."""
     candidates_dir = Path(candidates_dir)
     selected_dir = Path(selected_dir)
     selected_dir.mkdir(parents=True, exist_ok=True)
     out: list[Path] = []
-    for r in liked(sel, threshold):
+    for r in selected_rows(sel):
         src = candidates_dir / r.work_id / Path(r.image_rel).name
         if not src.is_file():
             continue

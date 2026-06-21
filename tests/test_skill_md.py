@@ -57,3 +57,15 @@ def test_skill_md_documents_user_import():
     assert "ingest_import_review" in text
     assert "import-review" in text
     assert "user-import" in text
+
+
+def test_skill_md_documents_persistent_stars():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    for token in ("cache_thumbnails", "ingest_stars", "stars.json"):
+        assert token in text, f"SKILL.md does not wire {token}"
+    # selection is documented as decoupled from stars
+    low = text.lower()
+    assert "orthogonal" in low or "decoupl" in low
+    # curation/interview/resolve wiring is on selected_rows, not liked
+    assert "build_queue(selected_rows(sel)" in text
+    assert "build_queue(liked(sel)" not in text
