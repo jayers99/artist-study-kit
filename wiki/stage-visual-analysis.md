@@ -45,6 +45,18 @@ and start the "unseeing" handed over from [[stage-curation]].
 - LLM visual analysis can hallucinate technique from a low-res image; gate depth on the
   reference quality recorded in [[stage-image-discovery]]. (Same metadata-misframe risk the
   [[stage-curation-interview]] flags: don't assert content the image doesn't show.)
+- **Subject-matter / human-experience study dimension (essay artifact) — EARLY IDEA, backlog.**
+  The analysis pipeline is purely **pictorial** (decode the visual language). User feature request
+  (2026-06-21): add a *second* study dimension for **realism-based / religious / mythological /
+  history / allegorical** work — study *what human experience it depicts and why*, not only how it's
+  painted. Artifact is an **essay** (subject-matter / iconographic / narrative research) + imagery,
+  rather than (or in addition to) a drawing study — *Master Studies = essay + imagery*. The raw material
+  exists as dims **9 (Subject Matter) / 14 (Symbol·Meaning·Iconography) / 17 (Intention·Function·Audience)**
+  in [[20-dimensions-of-study-cheat-sheet]] but was never promoted to a first-class track + output. Open:
+  new stage vs alternate analysis mode vs [[stage-study-retention]] enrichment; overlap with
+  [[stage-background-research]]; essay contract; does it still preserve [[concept-desirable-difficulty]].
+  **Pick up with a divergent→convergent pass ([[concept-divergent-convergent-thinking]]) before spec'ing**
+  — see `TODO.md` "Backlog — subject-matter / human-experience study dimension."
 - **Bounded depth — BUILT (Thrust 3, Spec B).** [[19-stateful-runs-custom-images-staged-analysis]]
   argued deep analysis is expensive and should be capped at ~3–4 works per session via the
   narrowing funnel, with a per-session "what to learn / what to think about / what further
