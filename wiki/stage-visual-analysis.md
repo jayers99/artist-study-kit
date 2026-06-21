@@ -45,11 +45,13 @@ and start the "unseeing" handed over from [[stage-curation]].
 - LLM visual analysis can hallucinate technique from a low-res image; gate depth on the
   reference quality recorded in [[stage-image-discovery]]. (Same metadata-misframe risk the
   [[stage-curation-interview]] flags: don't assert content the image doesn't show.)
-- **Bounded depth (request).** [[19-stateful-runs-custom-images-staged-analysis]] (Thrust 3)
-  argues deep analysis is expensive and should be capped at ~3–4 works per session via the
+- **Bounded depth — BUILT (Thrust 3, Spec B).** [[19-stateful-runs-custom-images-staged-analysis]]
+  argued deep analysis is expensive and should be capped at ~3–4 works per session via the
   narrowing funnel, with a per-session "what to learn / what to think about / what further
-  research is needed" output. Pairs with multi-session state so each session studies a
-  different few.
+  research is needed" output. The funnel shipped (see [[stage-curation]]): visual analysis now
+  runs only on the ≤4 `study_set` (high-res `resolve_selection(only=set(study_set))` bounds the
+  download to those works), and it pairs with multi-session state so each session studies a
+  different few from the same wide board (`has_candidates()` skip-discovery).
 
 ## Skill design implications
 

@@ -63,7 +63,12 @@ and purely visual here, and the sense-making happens in the Socratic
   (`build_queue(rows)` filtered to study_set) — while the wide cut is a session *record*.
   A **skip-discovery study mode** (`state.has_candidates()`) lets one collected board feed
   many study sessions without re-collecting. The funnel records its wide cut as a session's
-  `selected` and its narrow cut as `study_set`.
+  `selected` and its narrow cut as `study_set`. **Validated end-to-end on live data**
+  (Monet, 2026-06-20, 0 skill bugs): live AIC discovery → local thumbnail cache → real
+  funnel `gallery.html` → `display_url` 843px confirmed live (HTTP 200) → simulated commit →
+  real ingest/resolve/record, all Spec-B invariants held on disk, plus a live Wikimedia
+  Commons high-res re-resolve for the ≤4 study set. Harnesses live at `e2e/funnel_pipeline.py`
+  + `e2e/commons_resolve.py` (see `e2e/README.md`).
 - **Stateful gallery stars — BUILT (Thrust 3, Spec A).**
   [[19-stateful-runs-custom-images-staged-analysis]] §(d), specced/planned as
   `docs/superpowers/{specs,plans}/2026-06-20-persistent-board-stars*` and merged
@@ -82,16 +87,18 @@ and purely visual here, and the sense-making happens in the Socratic
   selection now comes from an explicit per-card `selected` flag, carried end-to-end through
   `apply_selection` / `resolve.resolve_selection` / the [[stage-curation-interview]] queue
   (`build_queue(selected_rows(sel), …)`). `liked()` survives only for legacy migration.
-  **Still open:** the progressive-zoom funnel + skip-discovery (Thrust 3 **Spec B**, not yet
-  built) and the deferred duplicate-handling-on-re-query spec (see `TODO.md`).
+  Spec B (the progressive-zoom funnel + skip-discovery) followed and is now **BUILT** (see
+  the funnel bullet above); only the deferred duplicate-handling-on-re-query spec remains
+  open (see `TODO.md`).
 - **Multi-session curation — backbone BUILT (Thrust 1).** Curation is no longer one-shot:
   package state (`docs/superpowers/specs/2026-06-20-stateful-package-state-design.md`, merged
   2026-06-20) records each pass as a `session` (`selected`, `study_set`, a `grouping`
   dimension — subject/media/technique/other — and per-session output pointers). A work
   studied in a prior session shows a **studied ✓ badge** (derived from
   `PackageState.studied_work_ids()`) but is **never** filtered out — freedom of choice is
-  deliberate: the same work can be re-studied along a different dimension. *Open:* the
-  funnel UX and the binary-select gallery (Thrust 3) that consume this state.
+  deliberate: the same work can be re-studied along a different dimension. Thrust 3's funnel
+  + persistent-star/select gallery now consume this state (**BUILT** — see the two bullets
+  above).
 
 ## Skill design implications
 
