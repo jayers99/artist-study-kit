@@ -218,3 +218,17 @@ def test_seed_import_idempotent(tmp_path):
     assert s2.added == 0 and s2.merged_kept == 1           # re-seed dedups
     assert len(m.entries) == 1
     assert list(sp.user_images_dir.iterdir()) == []
+
+
+def test_sync_candidates_discovered_library_card_has_valid_display_url():
+    from scripts.museum_search import display_url
+    m = Manifest(entries=[_e("vase", title="Vase",
+                             origins=[{"source": "aic"}])])
+    st = PackageState(artist="A")
+    sync_candidates(m, st, run_id="r1")
+    # discovered-origin library card after sync
+    card = st.candidates[0]
+    assert card.origin == "discovered"
+    assert card.local_path == "images/library/vase.jpg"
+    # display_url should return the local_path, not empty string
+    assert display_url(card) == "images/library/vase.jpg"

@@ -149,3 +149,12 @@ def test_display_url_user_origin_uses_local_path():
     c = BoardCandidate(work_id="mine", title="", date="", museum="", thumbnail_url="",
                        source_url="", rights="", origin="user", local_path="images/user/mine.jpg")
     assert display_url(c) == "images/user/mine.jpg"
+
+
+def test_display_url_discovered_origin_with_local_path_uses_local_path():
+    from scripts.museum_search import display_url
+    from scripts.state import BoardCandidate
+    # discovered-origin library card with local high-res file and empty thumbnail_url
+    c = BoardCandidate(work_id="library_work", title="", date="", museum="", thumbnail_url="",
+                       source_url="", rights="", origin="discovered", local_path="images/library/library_work.jpg")
+    assert display_url(c) == "images/library/library_work.jpg"

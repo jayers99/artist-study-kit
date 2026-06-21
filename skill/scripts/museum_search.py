@@ -53,10 +53,9 @@ def display_url(candidate) -> str:
 
     IIIF sources -> swap the thumbnail size segment for ~843px; user images -> their
     local file; everything else -> the thumbnail URL unchanged. No network."""
-    if getattr(candidate, "origin", "discovered") == "user":
-        local = getattr(candidate, "local_path", "")
-        if local:
-            return local
+    local = getattr(candidate, "local_path", "")
+    if local:
+        return local
     url = getattr(candidate, "thumbnail_url", "") or ""
     if _IIIF_SIZE.search(url):
         return _IIIF_SIZE.sub(rf"\g<1>{_DISPLAY_SIZE}\g<2>", url)
