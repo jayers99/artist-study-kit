@@ -18,6 +18,7 @@ From the repo root (the venv lives outside iCloud):
 ```bash
 UV_PROJECT_ENVIRONMENT="$HOME/.venvs/artist-study-kit" uv run python e2e/funnel_pipeline.py "Claude Monet"
 UV_PROJECT_ENVIRONMENT="$HOME/.venvs/artist-study-kit" uv run python e2e/commons_resolve.py "Claude Monet"
+UV_PROJECT_ENVIRONMENT="$HOME/.venvs/artist-study-kit" uv run python e2e/library_collection.py
 ```
 
 - `funnel_pipeline.py <artist>` — full funnel: live AIC discovery → local thumbnail cache
@@ -29,6 +30,10 @@ UV_PROJECT_ENVIRONMENT="$HOME/.venvs/artist-study-kit" uv run python e2e/commons
   resolver** + real `download_candidate`, downloading real high-res PD files for the
   study set into `images/selected/`. Run `funnel_pipeline.py` first (it produces the
   `selection.json` / `study-set.json` this reads).
+- `library_collection.py` — Spec B end-to-end: seeds the Cezanne collection
+  (`studies/cezanne/images/user/`), runs live AIC/Wikidata discovery, downloads up to 20
+  candidates, builds and deduplicates the library, syncs to the curation board. Wikidata
+  timeout degrades to AIC-only gracefully. Artifacts land in a temp dir (never `studies/`).
 
 Pick a **public-domain** artist (Monet, Hokusai, van Gogh). A still-in-copyright artist
 (e.g. Klee, d. 1940) legitimately has no PD high-res to resolve — that's expected, not a

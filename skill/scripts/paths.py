@@ -57,6 +57,18 @@ class StudyPaths:
         return self.images_dir / "selected"
 
     @property
+    def library_dir(self) -> Path:
+        return self.images_dir / "library"
+
+    @property
+    def incoming_dir(self) -> Path:
+        return self.images_dir / "incoming"
+
+    @property
+    def manifest_json(self) -> Path:
+        return self.images_dir / "manifest.json"
+
+    @property
     def gallery_html(self) -> Path:
         return self.root / "gallery.html"
 
@@ -129,6 +141,8 @@ _SCAFFOLD_DIRS = (
     "images",
     "images/candidates",
     "images/selected",
+    "images/library",
+    "images/incoming",
     "images/user",
     "drills",
     "prompts",
