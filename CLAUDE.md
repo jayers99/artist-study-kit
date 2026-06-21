@@ -7,24 +7,38 @@ historical artist's name and produces a structured studio-prep study package: ba
 web-source grading, important-works inventory, high-res image discovery, human curation,
 deep visual analysis, and study notes. Full vision: `raw/00-artist-study-kit-seed.md`.
 
-**Stage: Phase 2 (wiki synthesis) complete → skill design.** Both `raw/` (11 research
-topics) and the `wiki/` synthesis layer are populated. Next = draft the skill spec from the
-wiki, then build. Latest session handoff: `raw/14-phase-2-wiki-session.md`.
+**Stage: Phase 3 (skill build/refine) — skill is built and live-validated.** The research
+corpus (`raw/`) and `wiki/` synthesis layer are populated, and the skill itself lives in
+`skill/` (`SKILL.md` + `scripts/`; pytest; validated end-to-end on real artists). All of
+`raw/19` is shipped (stateful runs, custom-image injection, narrowing funnel); the deferred
+duplicate-handling-on-re-query spec is the main open item. **Freshest state = `tail wiki/log.md`
++ `TODO.md`**; deeper narrative in the `raw/` session handoffs (latest `raw/17`).
 
 ## Working method (LLM-Wiki)
 
 This repo follows the **LLM-Wiki pattern**: immutable **raw sources** → an LLM-maintained
-**wiki** → a **schema** (this file). The raw layer (Phase 1) and the `wiki/` synthesis layer
-(Phase 2) are both populated. Method reference (the pattern's source doc — read it before an
-ingest/lint pass): `/Users/jayers/code/public_shuttle/prompts/llm-wiki.md`. Its three core
-operations are **ingest** (a new `raw/` source → update every wiki page it touches + the
-index + append to `wiki/log.md`), **query** (answer from the wiki; file good answers back as
-notes), and **lint** (health-check for contradictions, stale claims, orphans, missing links).
+**wiki** → a **schema** (this file). **`wiki/` is this project's memory** — research synthesis
+*and* build status; treat it as the source of truth for "where things stand." Method reference
+(the pattern's source doc — read it before an ingest/lint pass):
+`/Users/jayers/code/public_shuttle/prompts/llm-wiki.md`. Core operations: **ingest** (a new
+`raw/` source → update every wiki page it touches + the index + append to `wiki/log.md`),
+**query** (answer from the wiki; file good answers back as notes), and **lint** (health-check
+for contradictions, stale claims, orphans, missing links). Build work adds two house ops to
+the log: **build** (a shipped thrust → mark the stage note **BUILT**) and **validate** (a live
+e2e run → record the result).
+
+- **On session start:** read `wiki/00-index.md`, the stage note(s) you're touching, and
+  `tail wiki/log.md` (freshest state) before acting.
+- **On finishing work:** append a `log.md` entry and update any stage note whose status
+  changed — same discipline as ingest. Keep the wiki current or it rots.
 
 - `raw/`     — immutable, numbered corpus: research reports, decision docs, brainstorms.
-- `wiki/`    — LLM-maintained synthesis: interlinked stage + concept notes (see below).
-- `scripts/` — Python tooling (uv) for scraping, image discovery, etc. (added as needed).
+- `wiki/`    — LLM-maintained synthesis + project memory: interlinked stage + concept notes (see below).
+- `skill/`   — **the deliverable**: `SKILL.md` + `scripts/` (Python, uv). The skill's own code lives here, not at repo root.
+- `docs/superpowers/` — skill `specs/` + implementation `plans/` (written by the brainstorming / writing-plans skills).
+- `tests/`   — pytest suite (one `test_<module>.py` per `skill/scripts/` module; offline).
 - `e2e/`      — live end-to-end harnesses (hit the real network; outside pytest's `tests/`). See `e2e/README.md`.
+- `studies/`  — skill output: per-artist study packages (the output contract; see seed §5).
 - `CLAUDE.md` — this file: project conventions and workflow schema.
 
 ## Conventions
@@ -57,13 +71,15 @@ The `wiki/` is the LLM-maintained synthesis of `raw/`, organized around the **sk
 pipeline**. Design rationale: `raw/10-wiki-synthesis-design.md`. Note types:
 
 - **Index** — `00-index.md` (MOC): pipeline order + concept clusters + source→stage map.
-- **Log** — `log.md`: append-only, chronological ingest/query/lint record (newest last).
-  Entry prefix `## [YYYY-MM-DD] <op> | <title>` so `grep "^## \[" wiki/log.md | tail` works.
-  Update it on every ingest. Deeper narrative still lives in the `raw/` session handoffs.
+- **Log** — `log.md`: append-only, chronological record (newest last), `<op>` ∈
+  ingest/query/lint/build/validate. Entry prefix `## [YYYY-MM-DD] <op> | <title>` so
+  `grep "^## \[" wiki/log.md | tail` works. Update it on every ingest **and every shipped
+  build / live validation**. Deeper narrative still lives in the `raw/` session handoffs.
 - **Stage notes** — `stage-<slug>.md`, one per skill-pipeline step. Body =
   `## What the research says` · `## Open questions / tensions` · `## Skill design implications`.
   Frontmatter `sources:` lists the backing `raw/` reports (empty = research gap). UAT findings
-  and feature requests are folded into the relevant stage's "Open questions / tensions".
+  and feature requests are folded into the relevant stage's "Open questions / tensions"; when a
+  feature ships, mark its implication **BUILT** (cite the spec/plan path).
 - **Concept notes** — `concept-<slug>.md`: atomic, cross-cutting ideas referenced by 2+
   stages (promotion rule: only create one when a 3rd stage needs it). Frontmatter `used-by:`.
 
@@ -75,37 +91,8 @@ the only layer carrying inter-note `[[wikilinks]]`; `raw/` is never edited to ad
 - **All** NotebookLM access goes through the **`notebooklm-jayers` skill** (`/ntlm`) — never wire
   the raw `notebooklm-mcp` into this repo. The skill owns the MCP connection (configured globally
   in `~/.claude/settings.json`) and is the single control point we extend as needs arise.
-- Keep each research **prompt under 300 words**.
-- **One notebook per topic.** Validated end-to-end pipeline (run from the repo root, `nlm` on PATH at
-  `~/.local/bin`). The report is a NotebookLM **studio "report" artifact**; the upgraded skill
-  detects it, numbers the file, and writes Obsidian frontmatter:
-  1. Save the prompt as `raw/NN-<slug>-prompt.md`.
-  2. Discover sources (~5 min): `nlm research start "<concise query>" --mode deep --title "artist-study-kit: NN <topic>"`.
-     Note the returned **notebook id** and **task id**. (Keep the query short — overly long queries can yield zero sources.)
-  3. Import once complete: `nlm research import <notebook-id> <task-id> --timeout 300`.
-     Discovery can run past the 5-min estimate with `source_count` stuck at 0, then land all at once;
-     a premature import prints "No sources were found" — re-probe with `nlm research start "probe" -n <nb> --mode fast`
-     (answer `n`), which reports "sources available: N" when ready, then import.
-  4. Generate the report: `nlm report create <notebook-id> --format "Create Your Own" --confirm --prompt "<the research prompt>"`.
-     Returns an **artifact id**.
-  5. Wait: poll `nlm studio status <notebook-id>` until the report artifact is `completed`.
-  6. Extract to the tree path via the skill:
-     `uv run --no-project ~/.claude/skills/notebooklm-jayers/get_deep_research_report.py <notebook-id> --number NN.1 --slug <topic-slug>`
-     → writes `raw/NN.1-<topic-slug>.md` with YAML frontmatter. Use `--slug` to match the prompt's
-     topic slug (without it, the filename auto-derives from the report title).
-- **Topic → notebook map:**
-  - `01` web scraping tooling → `72ddf4cf-41dc-4c65-8b93-c43e01936219`
-  - `02` source quality grading → `fe59cf3e-bbcb-4e2b-9bcb-6ead3f3d2d1a`
-  - `03` museum image apis → `f89f6f2f-84c1-42e8-9e90-e420aa7aeb9a`
-  - `04` style analysis frameworks → `2792f9bf-2ebc-44b5-bb0f-2ca993d8cd57`
-  - `05` master study pedagogy → `0daad4a4-2862-4528-9d80-fcb3bbed10d0`
-  - `06` productive friction learning → `a0c8d5f2-bf87-4d31-8405-529582aacff2`
-  - `07` study aids scaffolding → `459f962b-15a8-428e-aa67-fa74484c1ee9`
-  - `08` spaced repetition retention → `3c7c8d72-84a1-4ebc-8ec8-3d38d99b5806`
-  - `11` artist background research → `d2c20815-2f7f-4165-8314-88a318e0d2e7`
-  - `12` works inventory method → `2cf4ccd2-0a0f-406a-91fd-a1c3ec4fe2f1`
-  - `13` human curation ux → `c7723fe4-2a83-47de-9a2f-dd29e5c2a038`
-  - `16` image source hierarchy → `8260e980-d7cc-42f3-9c4f-4c24e054221f`
+- Keep each research **prompt under 300 words**; **one notebook per topic**.
+- Step-by-step pipeline + topic→notebook-id map: **`docs/notebooklm-deep-research.md`**.
 
 ### Python / scripting
 - **Python** managed with **uv**. Use `uv run` / `uv add`; dependencies live in `pyproject.toml`.
@@ -139,11 +126,14 @@ vault-friendly — but scope effort by layer:
   - Callouts for study notes: `> [!tip]`, `> [!warning]` (traps to avoid), `> [!example]`.
 - Keep kebab-case filenames (Obsidian-safe); avoid `:` `/` `#` `^` `|` `[` `]` in names.
 
-## Building the skill (Phase 3)
+## Building the skill (Phase 3 — active)
 
-When designing or implementing the skill, **start from the synthesis**: read
-`wiki/00-index.md`, then the stage notes. Each stage note's **"Skill design implications"**
-section is the spec input; the `raw/` reports are the evidence behind it.
+The skill is substantially built (`skill/SKILL.md` + ~24 `scripts/` modules, pytest,
+live-validated). When extending or refining it, **start from the synthesis**: read
+`wiki/00-index.md`, then the stage note(s) you're touching. Each stage note's **"Skill design
+implications"** is the spec input (a **BUILT** marker means it already ships); the `raw/`
+reports are the evidence behind it. Build loop: brainstorm → spec → plan → subagent-driven
+TDD → merge → record back to the wiki (`log.md` + stage-note status).
 
 - **Research stays in `raw/`** (numbered NotebookLM reports, decision docs, session
   handoffs). **Skill specs & plans go to the superpowers default location**
@@ -155,20 +145,25 @@ section is the spec input; the `raw/` reports are the evidence behind it.
   `studies/<artist>/` → `report.md`, `sources/` (`sources.json`, `source-grades.md`),
   `works.md`, `images/{candidates,selected}/`, `analysis.md`, `study-notes.md`, `prompts/`.
   Treat that as the contract the skill must produce.
-- **Packaging.** Deliverable is a Claude skill = `SKILL.md` + `scripts/`. Develop in-repo
-  under `skill/` (installable/symlinkable to `~/.claude/skills/` later); confirm the exact
-  layout in the skill spec.
-- **TDD.** Skill scripts follow the global stack — **outside-in TDD with pytest-bdd**, uv.
-  Write the Gherkin / acceptance specs before implementation.
+- **Packaging.** Deliverable is a Claude skill = `SKILL.md` + `scripts/`, developed in-repo
+  under `skill/` (installable/symlinkable to `~/.claude/skills/` later). Tests live at
+  repo-root `tests/` (one `test_<module>.py` per `skill/scripts/` module); `pytest` runs offline.
+- **TDD.** Skill scripts follow the global stack — **outside-in TDD, uv**: write the failing
+  test before the implementation. Tests are plain `pytest` (`tests/test_<module>.py`), not
+  pytest-bdd/Gherkin — the acceptance layer is the per-thrust spec in `docs/superpowers/specs/`.
 
 ## Current focus
-See `TODO.md`. **Phase 2 (wiki synthesis) complete.** Research corpus = 11 topics in `raw/`:
-- Domain/tooling: `01` web scraping · `02` source-quality grading · `03` museum/image APIs · `04` style-analysis frameworks.
-- Pedagogy/learning-science: `05` master-study pedagogy · `06` productive-friction · `07` study aids/scaffolding · `08` spaced-repetition retention.
-- Pipeline-stage gaps (added during wiki design): `11` artist background research · `12` works inventory method · `13` human curation UX.
+**Live state = `tail wiki/log.md` + `TODO.md`** (this section is the orientation map, not the
+status of record). **Phase 3 (skill build/refine) — skill built and live-validated; all of
+`raw/19` shipped.**
 
-`wiki/` is maintained (9 stage + 6 concept + index + log; design `raw/10-wiki-synthesis-design.md`,
-entry point `wiki/00-index.md`, history `wiki/log.md`). Phase 1 handoff: `raw/09-phase-1-research-session.md`.
-Phase 3 (skill build/refine) is underway; build-phase feedback is ingested back into the wiki
-— latest: `raw/18` (UAT → Socratic [[stage-curation-interview]]), `raw/19` (stateful-runs /
-custom-images / narrowing-funnel requests), `raw/20` (study-dimensions). **Next** per `TODO.md`.
+Research corpus in `raw/` (deep-research topics): domain/tooling `01` web scraping · `02`
+source-quality grading · `03` museum/image APIs · `04` style-analysis frameworks · `16` image
+source hierarchy; pedagogy/learning-science `05`–`08`; pipeline-stage method `11`–`13`.
+Build-phase feedback/meta: `18` UAT · `19` stateful-runs / custom-images / narrowing-funnel
+· `20` study-dimensions · `21` divergent/convergent cognition.
+
+`wiki/` is maintained (**9 stage + 7 concept** + index + log; design
+`raw/10-wiki-synthesis-design.md`, entry point `wiki/00-index.md`, history `wiki/log.md`).
+Phase 1 handoff: `raw/09-phase-1-research-session.md`. **Next** per `TODO.md` — the main open
+item is the deferred duplicate-handling-on-re-query spec.
