@@ -98,12 +98,16 @@ def resolve_selected(entry, selected_dir, *, resolvers=RESOLVERS, download=downl
     return Resolved(entry.work_id, "in_copyright", None, None, entry.source_url)
 
 
-def resolve_selection(sel, selected_dir, *, resolvers=RESOLVERS, download=download_candidate) -> list[Resolved]:
-    """Resolve every explicitly-selected work; write selected_dir/resolved.json; return the results."""
+def resolve_selection(sel, selected_dir, *, resolvers=RESOLVERS, download=download_candidate,
+                      only: set | None = None) -> list[Resolved]:
+    """Resolve every explicitly-selected work (optionally bounded to `only` work_ids);
+    write selected_dir/resolved.json; return the results."""
     selected_dir = Path(selected_dir)
     selected_dir.mkdir(parents=True, exist_ok=True)
     out: list[Resolved] = []
     for rating in selected_rows(sel):
+        if only is not None and rating.work_id not in only:
+            continue
         out.append(resolve_selected(rating, selected_dir, resolvers=resolvers, download=download))
     manifest = [
         {

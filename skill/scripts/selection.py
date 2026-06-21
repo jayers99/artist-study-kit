@@ -129,13 +129,18 @@ def apply_selection(
     sel: Selection,
     candidates_dir: Path | str,
     selected_dir: Path | str,
+    *,
+    only: set | None = None,
 ) -> list[Path]:
-    """Copy explicitly-selected images from candidates_dir into selected_dir; idempotent."""
+    """Copy explicitly-selected images into selected_dir (optionally bounded to `only`
+    work_ids); idempotent."""
     candidates_dir = Path(candidates_dir)
     selected_dir = Path(selected_dir)
     selected_dir.mkdir(parents=True, exist_ok=True)
     out: list[Path] = []
     for r in selected_rows(sel):
+        if only is not None and r.work_id not in only:
+            continue
         src = candidates_dir / r.work_id / Path(r.image_rel).name
         if not src.is_file():
             continue

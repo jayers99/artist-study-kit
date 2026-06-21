@@ -160,3 +160,17 @@ def test_load_study_set_artist_mismatch_raises(tmp_path):
     p.write_text(_json.dumps({"artist": "other", "study_set": ["a"]}), encoding="utf-8")
     with pytest.raises(ValueError):
         load_study_set(p, "x")
+
+
+def test_apply_selection_only_filters_to_study_set(tmp_path):
+    cdir = tmp_path / "candidates"
+    for wid in ("a", "b"):
+        (cdir / wid).mkdir(parents=True)
+        (cdir / wid / "t.jpg").write_bytes(b"img")
+    sdir = tmp_path / "selected"
+    sel = parse_selection({"artist": "x", "ratings": [
+        {"work_id": "a", "iiif_token": "t", "image_rel": "images/candidates/a/t.jpg", "selected": True},
+        {"work_id": "b", "iiif_token": "t", "image_rel": "images/candidates/b/t.jpg", "selected": True},
+    ]})
+    out = apply_selection(sel, cdir, sdir, only={"a"})
+    assert len(out) == 1 and out[0].name.startswith("a-")
