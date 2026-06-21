@@ -84,4 +84,4 @@ def test_canonical_name_decollides_and_is_safe():
     assert canonical_name("The Vase", "", "x", ".jpg", taken) == "the-vase-2.jpg"
     # no title -> qid -> stem fallback chain
     assert canonical_name("", "Q9", "x", ".jpg", set()) == "q9.jpg"
-    assert canonical_name("", "", "DSC_001", ".png", set()) == "dsc_001.png"
+    assert canonical_name("", "", "DSC_001", ".png", set()) == "dsc-001.png"

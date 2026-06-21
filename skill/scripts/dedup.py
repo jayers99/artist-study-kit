@@ -8,7 +8,7 @@ the entry. Deterministic: run_id is injected; no clock/RNG here.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.image_similarity import DUP_THRESHOLD, ImageHashes
@@ -50,7 +50,7 @@ def _slug_base(title: str, qid: str, fallback_stem: str) -> str:
     if qid.strip():
         return slugify(qid)
     # fallback: use the stem as-is (lowercased) — it's already a filesystem-safe name
-    return fallback_stem.lower()
+    return slugify(fallback_stem)
 
 
 def canonical_name(title: str, qid: str, fallback_stem: str, ext: str,
