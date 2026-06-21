@@ -39,6 +39,9 @@ e2e run → record the result).
 - `tests/`   — pytest suite (one `test_<module>.py` per `skill/scripts/` module; offline).
 - `e2e/`      — live end-to-end harnesses (hit the real network; outside pytest's `tests/`). See `e2e/README.md`.
 - `studies/`  — skill output: per-artist study packages (the output contract; see seed §5).
+- `data/`     — operational lists, not synthesis. `data/artists-backlog.csv` = the **artist study queue**
+  (artists to run the skill on; columns `Artist,Category,Priority,Status,Notes`). Distinct from `TODO.md`
+  (features/fixes) and from `wiki/` (research/build memory).
 - `CLAUDE.md` — this file: project conventions and workflow schema.
 
 ## Conventions
