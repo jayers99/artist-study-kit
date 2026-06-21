@@ -99,6 +99,19 @@ and purely visual here, and the sense-making happens in the Socratic
   deliberate: the same work can be re-studied along a different dimension. Thrust 3's funnel
   + persistent-star/select gallery now consume this state (**BUILT** — see the two bullets
   above).
+- **Export hand-off friction (M5 UAT, live Monet run — low priority).** Committing in the
+  funnel downloads `stars.json` / `selection.json` / `study-set.json` to the browser's
+  **Downloads** folder; the human must then manually browse to `studies/<artist>/` and move
+  the three files in before the skill can resume. Awkward and repeated at every Human Pause 1.
+  Options (undecided): surface a ready-made move command at the pause, a small local
+  helper/endpoint the page POSTs to, or a watched-folder ingest that pulls the three files
+  from Downloads automatically. User-classified **low priority** but recurring.
+- **Whole-card select, not a checkbox (M6 UAT, live Monet run — UX nitpick).** Selecting a
+  work for advancement currently requires hitting the small `select` checkbox. Requested:
+  clicking **anywhere on the card** (thumbnail, title, metadata) toggles selection — **except
+  the 1–5★ star bar**, which must stay its own hit target (stars ⊥ selection must survive the
+  change). Keep the checkbox visible as the state indicator, but make the whole card the click
+  surface. Lives in the funnel `gallery.html` JS (`build_thumbnail_gallery`).
 
 ## Skill design implications
 

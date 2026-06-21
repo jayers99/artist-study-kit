@@ -39,6 +39,24 @@ Four reports converge here:
 - Friction must stay inside the ZPD; mis-calibrated difficulty becomes frustration.
 - A static study package can't run an adaptive scheduler — does the skill emit a *plan*
   (Leitner-style) or integrate with Anki/FSRS? (Likely emit importable artifacts.)
+- **Feature request (live Monet run, 2026-06-20): a medium-aware "digital friction lab."**
+  The current `study-notes.md` faded aids tell the learner *what* to imitate; this asks for a
+  **progressive ladder of micro-experiments that lets the learner discover the underlying
+  technical rules themselves** — never handing over the solution (deepens
+  [[concept-desirable-difficulty]] + [[concept-divergent-convergent-thinking]]). Each rung =
+  one small task + an empirical "Find out" + a self-check, each isolating **one variable**, so
+  the learner reverse-engineers the science: e.g. *which contrast channels draw the eye*
+  (value vs chroma vs hue vs edge), and *the optical-mixing thresholds for "shimmer"*
+  (value-distance vs hue-distance vs chroma vs mark-size/viewing-distance). Two design moves
+  carry the friction: **hints are folded + escalating** (nudge the next experiment, never the
+  answer) and the **master work is the "answer key to measure against," not to trace.** Open
+  questions for productizing: (a) it's **medium-aware** — it leans on digital instruments
+  (eyedropper/HSB readouts, single-variable adjustment layers, blur-as-squint) as *measuring
+  tools*; does the skill detect/ask the medium and branch (digital vs wet)? (b) where does it
+  sit — a new optional stage, or an enrichment of `study_retention`? (c) the experiment
+  ladders are technique-specific (contrast, broken color) — can they be generated per study
+  brief, or do they need a library of technique→experiment templates? Reference
+  implementation (hand-authored for this run): `studies/claude-monet/learning-path.md`.
 
 ## Skill design implications
 
