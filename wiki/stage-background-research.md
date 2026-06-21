@@ -39,6 +39,14 @@ with [[concept-source-trust-signals]] for grading the web sources behind the bio
   museum essays + monographs when conservation data doesn't exist.
 - "Signal vs trivia" is judgment-heavy — what's the heuristic the skill applies?
 - Tension with anti-slop: the most accessible web bios are often the least reliable.
+- **Artist discovery (upstream of intake) — backlog (feature request 2026-06-21).** This stage
+  starts from "given an artist name"; the discovery feature generates *that name* in the first
+  place. Inputs = formal **principles to bolster** (quality of line, composition, color harmony —
+  the [[concept-formal-analysis-taxonomy]] vocabulary), **seed artists** ("more like Klee"), or
+  freeform design qualities → a **ranked artist shortlist** + an **HTML sample-works contact sheet**
+  (reusing [[stage-image-discovery]]'s gallery machinery) that **feeds [[artists-backlog]]**. A
+  divergent→convergent move ([[concept-divergent-convergent-thinking]]). See `TODO.md` "Backlog —
+  artist discovery."
 
 ## Skill design implications
 
