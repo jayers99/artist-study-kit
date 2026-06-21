@@ -85,3 +85,64 @@ def test_canonical_name_decollides_and_is_safe():
     # no title -> qid -> stem fallback chain
     assert canonical_name("", "Q9", "x", ".jpg", set()) == "q9.jpg"
     assert canonical_name("", "", "DSC_001", ".png", set()) == "dsc-001.png"
+
+
+def test_qid_incoming_overrides_seed_guess_independent_of_pixels():
+    # existing: seed guess, NO qid, LARGER pixels, starred
+    existing = _entry("dt4962", title="DT4962", qid="", date="",
+                      filename="dt4962.jpg", path="images/library/dt4962.jpg",
+                      width=2000, height=1500, bytes=900000, stars=4)
+    m = Manifest(entries=[existing])
+    # incoming: authoritative (qid), SMALLER pixels
+    inc = _inc(tmp_path="/incoming/v.jpg", w=400, h=300, b=1000,
+               title="The Vase of Tulips", qid="Q1", date="1890")
+    act = resolve(inc, m, run_id="r")
+    assert act.kind == "merge"
+    # existing wins on PIXELS (it is larger) ...
+    assert act.keep_path == "images/library/dt4962.jpg"
+    assert act.entry.width == 2000 and act.entry.bytes == 900000
+    # ... but the authoritative metadata UPGRADES the guess
+    assert act.entry.title == "The Vase of Tulips"
+    assert act.entry.qid == "Q1"
+    assert act.entry.date == "1890"
+    # identity is stable across the upgrade
+    assert act.entry.work_id == "dt4962"
+    assert act.entry.filename == "dt4962.jpg"
+    assert act.entry.stars == 4
+
+
+def test_existing_qid_not_clobbered_by_different_qid():
+    existing = _entry("w", title="Real Title", qid="Q1",
+                      filename="real-title.jpg", path="images/library/real-title.jpg",
+                      width=400, height=300, bytes=1000)
+    m = Manifest(entries=[existing])
+    inc = _inc(tmp_path="/incoming/o.jpg", w=2000, h=1500, b=900000,
+               title="Other", qid="Q2")
+    act = resolve(inc, m, run_id="r")
+    # incoming wins pixels, but existing authoritative metadata is kept
+    assert act.entry.title == "Real Title"
+    assert act.entry.qid == "Q1"
+
+
+def test_authoritative_incoming_empty_field_does_not_blank_existing():
+    existing = _entry("w", title="Old", qid="", date="1890",
+                      filename="old.jpg", path="images/library/old.jpg",
+                      width=400, height=300, bytes=1000)
+    m = Manifest(entries=[existing])
+    inc = _inc(tmp_path="/incoming/x.jpg", w=400, h=300, b=1000,
+               title="", qid="Q1", date="")           # authoritative but sparse
+    act = resolve(inc, m, run_id="r")
+    assert act.entry.qid == "Q1"          # qid applied
+    assert act.entry.date == "1890"       # empty incoming date does NOT blank it
+    assert act.entry.title == "Old"       # empty incoming title does NOT blank it
+
+
+def test_neither_has_qid_keeps_existing_wins_unchanged():
+    existing = _entry("w", title="A", qid="",
+                      filename="a.jpg", path="images/library/a.jpg",
+                      width=400, height=300, bytes=1000)
+    m = Manifest(entries=[existing])
+    inc = _inc(tmp_path="/incoming/b.jpg", w=2000, h=1500, b=900000,
+               title="B", qid="")
+    act = resolve(inc, m, run_id="r")
+    assert act.entry.title == "A"          # existing-non-empty-wins, unchanged
