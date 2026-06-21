@@ -17,7 +17,7 @@ from scripts import commons
 from scripts.iiif import ImageCandidate
 from scripts.image_download import download_candidate
 from scripts.museum_search import AIC_IIIF_DEFAULT, default_aic_fetch
-from scripts.selection import liked
+from scripts.selection import selected_rows
 
 
 def _find(inst_ids, key: str) -> str:
@@ -99,11 +99,11 @@ def resolve_selected(entry, selected_dir, *, resolvers=RESOLVERS, download=downl
 
 
 def resolve_selection(sel, selected_dir, *, resolvers=RESOLVERS, download=download_candidate) -> list[Resolved]:
-    """Resolve every liked work; write selected_dir/resolved.json; return the results."""
+    """Resolve every explicitly-selected work; write selected_dir/resolved.json; return the results."""
     selected_dir = Path(selected_dir)
     selected_dir.mkdir(parents=True, exist_ok=True)
     out: list[Resolved] = []
-    for rating in liked(sel):
+    for rating in selected_rows(sel):
         out.append(resolve_selected(rating, selected_dir, resolvers=resolvers, download=download))
     manifest = [
         {
