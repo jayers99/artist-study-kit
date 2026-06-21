@@ -1,4 +1,4 @@
-"""Human Pause 1 output: parse/validate selection.json and materialize the liked set.
+"""Human Pause 1 output: parse/validate selection.json and materialize the selected set.
 
 selection.json is produced by gallery.html (star ratings) and ingested by Run B.
 The schema: {"artist", "ratings": [{work_id, iiif_token, image_rel, rating,

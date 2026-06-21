@@ -7,8 +7,8 @@ Export button that downloads selection.json in the scripts.selection schema.
 MVP: no overlay markup / compare view (spec section 9).
 
 Also provides build_thumbnail_gallery for the remote-thumbnail curation board used in
-the image_discovery stage: hotlinked museum thumbnails with star-rating and liked/PD
-filters; export carries work_id / title / date / medium / provenance + rating.
+the image_discovery stage: local-cached thumbnails with star-rating and separate select
+toggle; star filter, sort (year/stars/file-size); export writes stars.json + selection.json.
 """
 
 from __future__ import annotations
@@ -18,8 +18,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.dates import parse_year
-
-LIKED_THRESHOLD = 4
 
 
 @dataclass(frozen=True)
