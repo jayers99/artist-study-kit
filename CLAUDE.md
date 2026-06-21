@@ -24,6 +24,7 @@ notes), and **lint** (health-check for contradictions, stale claims, orphans, mi
 - `raw/`     — immutable, numbered corpus: research reports, decision docs, brainstorms.
 - `wiki/`    — LLM-maintained synthesis: interlinked stage + concept notes (see below).
 - `scripts/` — Python tooling (uv) for scraping, image discovery, etc. (added as needed).
+- `e2e/`      — live end-to-end harnesses (hit the real network; outside pytest's `tests/`). See `e2e/README.md`.
 - `CLAUDE.md` — this file: project conventions and workflow schema.
 
 ## Conventions
