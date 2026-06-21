@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.dates import parse_year
+from scripts.museum_search import display_url
 
 
 @dataclass(frozen=True)
@@ -113,6 +114,7 @@ def build_thumbnail_gallery(cands, artist: str, *, package_root: Path | str | No
             "selected": False,
             "year": parse_year(getattr(c, "date", "") or ""),
             "bytes": size,
+            "full_url": display_url(c),
         })
     data_json = json.dumps({"artist": artist, "candidates": payload}, indent=2)
     return _THUMB_TEMPLATE.replace("__ARTIST__", _escape(artist)).replace("__DATA__", data_json)

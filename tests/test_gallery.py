@@ -211,3 +211,16 @@ def test_thumbnail_template_export_keys_selected_and_stars():
     html = build_thumbnail_gallery([cand], "X")
     # the selection.json builder emits an explicit `selected` field per row
     assert "selected:" in html
+
+
+def test_thumbnail_gallery_payload_carries_full_url():
+    import json as _json
+    from scripts.museum_search import ThumbnailCandidate
+    cand = ThumbnailCandidate(
+        work_id="senecio", title="Senecio", museum="aic",
+        thumbnail_url="https://www.artic.edu/iiif/2/c969/full/400,/0/default.jpg",
+        source_url="https://x/1", date="1922", rights="in_copyright")
+    html = build_thumbnail_gallery([cand], "X")
+    data = _json.loads(html.split('type="application/json">', 1)[1].split("</script>", 1)[0])
+    assert data["candidates"][0]["full_url"] == \
+        "https://www.artic.edu/iiif/2/c969/full/843,/0/default.jpg"
