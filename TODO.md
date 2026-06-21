@@ -30,7 +30,19 @@
 - [x] Wiki design spec → `raw/10-wiki-synthesis-design.md` (pipeline-oriented hybrid; 8 stage + 6 concept + index).
 - [x] Build the `wiki/` notes per the design — 15 notes (8 stage + 6 concept + `00-index`); link/coverage verified. Entry point: `wiki/00-index.md`.
 
-## Later
-- [ ] Draft the skill design/spec from the synthesized wiki (stage notes' "Skill design implications").
-- [ ] Build scraping + image-discovery scripts in `scripts/`.
-- [ ] **Future: duplicate handling on re-query/ingest.** As the gallery grows across discovery runs + custom-image imports, define what happens when a newly-found image is (or may be) a duplicate of one already on the board — so a starred work isn't re-added unstarred. Deferred out of the first Thrust-3 build; its own spec. (Context: raw/19 Thrust 3 stateful-stars revision.)
+## Phase 3 — skill build/refine (current)
+Skill built and live-validated; build-phase research + feedback ingested back into `wiki/`
+(now 9 stage + 7 concept notes). Specs/plans in `docs/superpowers/`.
+- [x] 16 — Image source hierarchy research → `raw/16.1-image-source-hierarchy.md`. **Tiered T1 Wikidata identity → T2 Met/AIC/Cleveland high-res+rights → T3 Commons/Europeana → T4 discovery-only; QID as dedup key.**
+- [x] Draft the skill design/spec from the wiki → `docs/superpowers/specs/2026-06-19-artist-study-kit-skill-design.md` (+ foundation / research-tooling / curation-study plans).
+- [x] Build the skill: `skill/SKILL.md` + ~24 `skill/scripts/` modules (scraping, image discovery, curation, analysis, retention). Tests in `tests/`.
+- [x] UAT (`raw/18`) → Socratic curation-interview stage → `docs/superpowers/specs/2026-06-20-socratic-curation-interview-design.md`.
+- [x] `raw/19` Thrust 1 — stateful/resumable package state (`state.json`, mergeable discovery, repeatable sessions).
+- [x] `raw/19` Thrust 2 — custom-image injection (`origin:"user"`, Claude-vision → pipeline verify, batch trust gate).
+- [x] `raw/19` Thrust 3 Spec A — persistent board stars (stars ⊥ selection, thumbnail cache, filter/sort).
+- [x] `raw/19` Thrust 3 Spec B — narrowing funnel + skip-discovery (≤4 `study_set`, progressive zoom, `display_url` 843px).
+- [x] Ingest study-dimensions (`raw/20`) + divergent/convergent cognition (`raw/21`) into the wiki.
+- [x] Live e2e validation — funnel pipeline on Monet (0 skill bugs) + first full run on Klee. Harnesses in `e2e/`.
+
+## Open / next
+- [ ] **Duplicate handling on re-query/ingest.** As the gallery grows across discovery runs + custom-image imports, define what happens when a newly-found image is (or may be) a duplicate of one already on the board — so a starred work isn't re-added unstarred. Deferred out of Thrust 3; needs its own spec. (Context: `raw/19` Thrust 3 stateful-stars revision.)
