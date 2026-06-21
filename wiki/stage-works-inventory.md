@@ -38,6 +38,14 @@ anatomy).
   not collapse them.
 - Reference-quality scoring depends on [[stage-image-discovery]], which runs later → first
   pass estimates availability, refine after fetch.
+- **Period / subject-matter scope — backlog (feature request 2026-06-21).** Optional study
+  input to narrow the whole run to a slice of the artist (e.g. *Picasso Blue Period*,
+  *Picasso's mythological works*). For this stage that means **filtering the canon** to the
+  in-scope works — a generalization of the existing *early-vs-late development tag* into an
+  explicit period/subject filter. L1 (MVP) scopes this Claude-authored stage by prompt alone;
+  the discovery-query filter is L2 in [[stage-image-discovery]]. Composes with the
+  subject-matter / human-experience study-dimension idea (a *subject* scope is also a
+  subject-matter study). See `TODO.md` "Backlog — period / subject-matter scope for a study."
 
 ## Skill design implications
 
