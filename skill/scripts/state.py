@@ -58,6 +58,8 @@ class BoardCandidate:
     origin: str = "discovered"
     first_run: str = ""
     local_path: str = ""
+    stars: int = 0
+    thumbnail_path: str = ""
 
     def dedup_key(self) -> tuple:
         if self.qid:
@@ -75,6 +77,8 @@ class BoardCandidate:
             "inst_ids": [list(p) for p in self.inst_ids],
             "origin": self.origin, "first_run": self.first_run,
             "local_path": self.local_path,
+            "stars": self.stars,
+            "thumbnail_path": self.thumbnail_path,
         }
 
     @classmethod
@@ -87,6 +91,8 @@ class BoardCandidate:
             inst_ids=_tuple_inst_ids(d.get("inst_ids", ())),
             origin=d.get("origin", "discovered"), first_run=d.get("first_run", ""),
             local_path=d.get("local_path", ""),
+            stars=int(d.get("stars", 0)),
+            thumbnail_path=d.get("thumbnail_path", ""),
         )
 
     @classmethod
