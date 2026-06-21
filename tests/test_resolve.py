@@ -140,3 +140,27 @@ def test_resolve_selection_only_filters_to_study_set(tmp_path):
     out = resolve_selection(sel, tmp_path, resolvers=[lambda e: _cand(e.work_id)],
                             download=fake_download, only={"fish-magic"})
     assert [r.work_id for r in out] == ["fish-magic"]   # senecio excluded by `only`
+
+
+# ---------------------------------------------------------------------------
+# Task 6: default_resolve_url
+# ---------------------------------------------------------------------------
+
+from scripts.resolve import default_resolve_url
+
+
+class _RCand:
+    def __init__(self, work_id, thumbnail_url=""):
+        self.work_id = work_id; self.thumbnail_url = thumbnail_url; self.inst_ids = ()
+
+
+def test_default_resolve_url_uses_resolver_then_thumbnail():
+    class _Img:  # stand-in for an ImageCandidate
+        image_url = "http://m/full.jpg"
+    hit = lambda entry: _Img()
+    miss = lambda entry: None
+    assert default_resolve_url(_RCand("a"), resolvers=(hit,)) == "http://m/full.jpg"
+    # no resolver hits -> fall back to the board thumbnail
+    assert default_resolve_url(_RCand("a", "http://t/thumb.jpg"), resolvers=(miss,)) == "http://t/thumb.jpg"
+    # nothing at all -> None
+    assert default_resolve_url(_RCand("a", ""), resolvers=(miss,)) is None

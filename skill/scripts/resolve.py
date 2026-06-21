@@ -73,6 +73,16 @@ class Resolved:
 RESOLVERS = (commons_resolver, aic_resolver)
 
 
+def default_resolve_url(candidate, *, resolvers=RESOLVERS):
+    """Best fetchable full-res image URL for a board candidate: try each resolver
+    (Commons full / AIC IIIF), else fall back to the board thumbnail. None if neither."""
+    for resolver in resolvers:
+        cand = resolver(candidate)
+        if cand is not None:
+            return cand.image_url
+    return getattr(candidate, "thumbnail_url", "") or None
+
+
 def resolve_selected(entry, selected_dir, *, resolvers=RESOLVERS, download=download_candidate) -> Resolved:
     """Resolve one selected work to high-res, falling back to source_url when in copyright.
 

@@ -39,6 +39,62 @@ def robots_allows(robots_txt: str, path: str, user_agent: str = "*") -> bool:
     return not any(path.startswith(rule) for rule in rules)
 
 
+_EXT_BY_TYPE = {
+    "image/jpeg": ".jpg", "image/jpg": ".jpg", "image/png": ".png",
+    "image/webp": ".webp", "image/tiff": ".tif", "image/gif": ".gif",
+}
+
+
+@dataclass(frozen=True)
+class LibraryDownload:
+    work_id: str
+    path: Path | None
+    status: str
+    note: str = ""
+
+
+def download_library(candidates, incoming_dir, *, resolve_url, fetch=None,
+                     sleep=time.sleep, min_interval: float = 1.0,
+                     robots_txt: str = "") -> list[LibraryDownload]:
+    """Resolve + download best full-res image per candidate into incoming_dir/<work_id>.<ext>.
+    Idempotent, throttled, robots-aware. Candidates with no image URL -> 'no-image'."""
+    if fetch is None:
+        fetch = default_fetch
+    incoming_dir = Path(incoming_dir)
+    results: list[LibraryDownload] = []
+    fetched = False
+    for cand in candidates:
+        url = resolve_url(cand)
+        if not url:
+            results.append(LibraryDownload(cand.work_id, None, "no-image"))
+            continue
+        existing = next(iter(sorted(incoming_dir.glob(f"{cand.work_id}.*"))), None)
+        if existing is not None:
+            results.append(LibraryDownload(cand.work_id, existing, "skipped"))
+            continue
+        if not robots_allows(robots_txt, urlsplit(url).path):
+            results.append(LibraryDownload(cand.work_id, None, "blocked", url))
+            continue
+        if fetched:
+            sleep(min_interval)
+        try:
+            status_code, content_type, content = fetch(url)
+        except Exception as exc:
+            results.append(LibraryDownload(cand.work_id, None, "error", str(exc)))
+            continue
+        if status_code != 200 or not content_type.startswith("image/") or not content:
+            results.append(LibraryDownload(cand.work_id, None, "error",
+                                           f"status={status_code} type={content_type}"))
+            continue
+        ext = _EXT_BY_TYPE.get(content_type.split(";")[0].strip().lower(), ".jpg")
+        incoming_dir.mkdir(parents=True, exist_ok=True)
+        dest = incoming_dir / f"{cand.work_id}{ext}"
+        dest.write_bytes(content)
+        results.append(LibraryDownload(cand.work_id, dest, "downloaded"))
+        fetched = True
+    return results
+
+
 @dataclass(frozen=True)
 class DownloadResult:
     candidate: ImageCandidate

@@ -180,3 +180,41 @@ def test_cache_thumbnails_batch_sets_paths_and_skips_user_local(tmp_path):
     assert disc.thumbnail_path == "images/candidates/senecio/thumb.jpg"
     assert user.thumbnail_path == "images/user/mine.jpg"          # mapped, not fetched
     assert already.thumbnail_path == "images/candidates/done/thumb.jpg"  # untouched
+
+
+# ---------------------------------------------------------------------------
+# Task 6: download_library + LibraryDownload
+# ---------------------------------------------------------------------------
+
+from scripts.image_download import download_library, LibraryDownload
+
+
+class _Cand:
+    def __init__(self, work_id, thumbnail_url=""):
+        self.work_id = work_id
+        self.thumbnail_url = thumbnail_url
+
+
+def test_download_library_writes_resolved_urls(tmp_path):
+    cands = [_Cand("a"), _Cand("b"), _Cand("c")]
+    urls = {"a": "http://x/a.jpg", "b": None, "c": "http://x/c.png"}
+    def resolve_url(c): return urls[c.work_id]
+    def fetch(url):
+        return (200, "image/jpeg" if url.endswith(".jpg") else "image/png", b"bytes")
+    out = download_library(cands, tmp_path, resolve_url=resolve_url, fetch=fetch,
+                           sleep=lambda *_: None)
+    by = {r.work_id: r for r in out}
+    assert by["a"].status == "downloaded" and by["a"].path == tmp_path / "a.jpg"
+    assert by["b"].status == "no-image" and by["b"].path is None
+    assert by["c"].path == tmp_path / "c.png"
+    assert (tmp_path / "a.jpg").read_bytes() == b"bytes"
+
+
+def test_download_library_idempotent_skip(tmp_path):
+    (tmp_path / "a.jpg").write_bytes(b"old")
+    calls = []
+    def fetch(url): calls.append(url); return (200, "image/jpeg", b"new")
+    out = download_library([_Cand("a")], tmp_path, resolve_url=lambda c: "http://x/a.jpg",
+                           fetch=fetch, sleep=lambda *_: None)
+    assert out[0].status == "skipped" and calls == []
+    assert (tmp_path / "a.jpg").read_bytes() == b"old"
