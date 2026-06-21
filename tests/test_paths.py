@@ -105,3 +105,18 @@ def test_study_set_json_path():
     from scripts.paths import study_paths
     sp = study_paths("studies", "Paul Klee")
     assert sp.study_set_json == sp.root / "study-set.json"
+
+
+def test_library_incoming_manifest_paths(tmp_path):
+    from scripts.paths import study_paths, scaffold
+    sp = study_paths(tmp_path, "Cezanne")
+    assert sp.library_dir == sp.images_dir / "library"
+    assert sp.incoming_dir == sp.images_dir / "incoming"
+    assert sp.manifest_json == sp.images_dir / "manifest.json"
+
+
+def test_scaffold_creates_library_and_incoming(tmp_path):
+    from scripts.paths import scaffold
+    sp = scaffold(tmp_path, "Cezanne")
+    assert sp.library_dir.is_dir()
+    assert sp.incoming_dir.is_dir()
