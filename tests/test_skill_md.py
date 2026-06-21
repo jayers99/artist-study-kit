@@ -66,8 +66,8 @@ def test_skill_md_documents_persistent_stars():
     # selection is documented as decoupled from stars
     low = text.lower()
     assert "orthogonal" in low or "decoupl" in low
-    # curation/interview/resolve wiring is on selected_rows, not liked
-    assert "build_queue(selected_rows(sel)" in text
+    # curation/interview/resolve wiring is on the study set via build_queue(rows, work_meta)
+    assert "build_queue(rows, work_meta)" in text
     assert "build_queue(liked(sel)" not in text
 
 

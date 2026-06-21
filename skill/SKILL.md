@@ -110,7 +110,7 @@ ones — except visual analysis reads their full-resolution local file
    - `from scripts.curation_interview import build_queue, pending_targets, parse_briefs, write_study_briefs_json, write_study_briefs_md, validate_briefs, StudyBrief, StudyStep`.
    - Build the interview queue bounded to the study set: `study_set = load_study_set(sp.study_set_json, '<ARTIST>')`;
      `rows = [r for r in selected_rows(sel) if r.work_id in study_set]`;
-     `queue = build_queue(rows, work_meta)` (the old `build_queue(selected_rows(sel), work_meta)` is now filtered to the study set; the interview is bounded to the ≤4 study set). If a `study-briefs.json` already exists, `parse_briefs(json.load(...))` it and interview only `pending_targets(queue, briefs)` (resume).
+     `queue = build_queue(rows, work_meta)` — the interview runs on the ≤4 study set. If a `study-briefs.json` already exists, `parse_briefs(json.load(...))` it and interview only `pending_targets(queue, briefs)` (resume).
    - **For each pending target, run the interview** (see below), appending a `StudyBrief` as each is confirmed; re-write `study-briefs.json` after each so progress survives interruption.
    - When `pending_targets` is empty, `validate_briefs(queue, briefs)` must return `[]`; if not, print the errors and STOP. Then `write_study_briefs_md(...)`, mark the stage complete, save state.
 
