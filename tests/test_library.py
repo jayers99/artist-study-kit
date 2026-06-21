@@ -146,3 +146,40 @@ def test_build_library_cross_run_merges_against_manifest(tmp_path):
     bigger = _img(sp.incoming_dir / "f2.png", seed=3, size=(600, 600))
     s2 = build_library([make_incoming(bigger, source="commons", title="W")], m, sp, run_id="r2")
     assert s2.merged_replaced == 1 and len(m.entries) == 1 and m.entries[0].width == 600
+
+
+from scripts.state import PackageState, BoardCandidate
+from scripts.library import sync_candidates
+
+
+def _e(work_id, **kw):
+    return ManifestEntry(work_id=work_id, filename=f"{work_id}.jpg",
+                         path=f"images/library/{work_id}.jpg", **kw)
+
+
+def test_sync_creates_one_candidate_per_entry(tmp_path):
+    m = Manifest(entries=[_e("vase", title="Vase", qid="Q1",
+                             origins=[{"source": "user-seed"}]),
+                          _e("apples", title="Apples",
+                             origins=[{"source": "aic"}])])
+    st = PackageState(artist="A")
+    n = sync_candidates(m, st, run_id="r1")
+    assert n == 2
+    by_id = {c.work_id: c for c in st.candidates}
+    assert by_id["vase"].local_path == "images/library/vase.jpg"
+    assert by_id["vase"].thumbnail_path == "images/library/vase.jpg"
+    assert by_id["vase"].origin == "user"        # user-seed origin -> USER badge
+    assert by_id["apples"].origin == "discovered"
+
+
+def test_sync_preserves_existing_board_stars(tmp_path):
+    st = PackageState(artist="A")
+    st.candidates.append(BoardCandidate(
+        work_id="vase", title="Vase", date="", museum="", thumbnail_url="",
+        source_url="", rights="", local_path="images/library/vase.jpg", stars=5))
+    m = Manifest(entries=[_e("vase", title="Vase", stars=0,
+                             origins=[{"source": "aic"}])])
+    sync_candidates(m, st, run_id="r2")
+    assert len(st.candidates) == 1                  # updated in place
+    assert st.candidates[0].stars == 5              # NOT reset to 0
+    assert m.entries[0].stars == 5                  # manifest brought in step

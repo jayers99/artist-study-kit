@@ -73,3 +73,32 @@ def execute_action(action: DedupAction, paths: StudyPaths, *,
         if loser.resolve() != dest.resolve() and loser.exists():
             delete(str(loser))
     return entry
+
+
+def _first_source_url(entry: ManifestEntry) -> str:
+    for o in entry.origins:
+        if o.get("source_url"):
+            return o["source_url"]
+    return ""
+
+
+def sync_candidates(manifest: Manifest, state: PackageState, run_id: str) -> int:
+    by_id = {c.work_id: c for c in state.candidates}
+    n = 0
+    for e in manifest.entries:
+        existing = by_id.get(e.work_id)
+        stars = existing.stars if existing is not None else e.stars
+        e.stars = stars  # keep manifest in step with the board (the star authority)
+        origin = "user" if any(o.get("source") == "user-seed" for o in e.origins) else "discovered"
+        bc = BoardCandidate(
+            work_id=e.work_id, title=e.title, date=e.date, museum="",
+            thumbnail_url="", source_url=_first_source_url(e), rights=e.rights,
+            medium=e.medium, qid=e.qid, inst_ids=tuple(e.inst_ids),
+            origin=origin, first_run=(existing.first_run if existing else run_id),
+            local_path=e.path, stars=stars, thumbnail_path=e.path)
+        if existing is None:
+            state.candidates.append(bc)
+        else:
+            state.candidates[state.candidates.index(existing)] = bc
+        n += 1
+    return n
