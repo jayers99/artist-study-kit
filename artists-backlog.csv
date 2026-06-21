@@ -1,0 +1,60 @@
+Artist,Category,Priority,Status,Notes
+Fra Angelico,Religious/Devotional,,todo,Early-Renaissance Florentine; devotional fresco/altarpiece painter. Strong fit for a subject-matter / iconography study.
+Sandro Botticelli,Religious/Mythological,,todo,"Early-Renaissance Florentine; line-driven mythological + devotional work (Birth of Venus, Primavera)."
+Henri Matisse,Fauvism,,todo,French Fauvism; bold expressive color + decorative pattern + economical line; late cut-outs. Color-harmony exemplar. In-copyright (d.1954).
+Henri de Toulouse-Lautrec,Post-Impressionism,,todo,"French Post-Impressionist; Moulin Rouge posters; expressive line, flat decorative shape. PD (d.1901)."
+Leonardo da Vinci,Renaissance/Figurative,,todo,"Italian High Renaissance; drawing, sfumato, anatomy + composition. PD."
+Raphael,Renaissance/Figurative,,todo,"Italian High Renaissance; grace, composition, drawing. PD."
+Titian,Renaissance/Figurative,,todo,Venetian Renaissance; color + loaded brushwork. PD.
+Rembrandt,Baroque/Figurative,,todo,"Dutch Golden Age; value/light, etching, portrait. PD."
+Peter Paul Rubens,Baroque/Figurative,,todo,"Flemish Baroque; dynamic composition, color, flesh. PD."
+Anthony van Dyck,Baroque/Portrait,,todo,Flemish Baroque; elegant portraiture. PD.
+Diego Velázquez,Baroque/Figurative,,todo,"Spanish Baroque; brushwork, value, realism. PD."
+Caravaggio,Baroque/Figurative,,todo,Italian Baroque; dramatic chiaroscuro / tenebrism; value exemplar. PD.
+Jusepe de Ribera,Baroque/Figurative,,todo,"Spanish Baroque; tenebrist realism, value. PD."
+Albrecht Dürer,Northern Renaissance/Printmaking,,todo,"German Northern Renaissance; master engraver/draftsman; line, precision. PD."
+Hieronymus Bosch,Religious/Fantastical,,todo,Early-Netherlandish; fantastical religious/moral imagery; subject-matter/iconography candidate. PD.
+Pieter Bruegel the Elder,Genre/Landscape,,todo,"Netherlandish; peasant genre + landscape, composition. PD."
+Jean Fouquet,Religious/Devotional,,todo,French Early-Renaissance; illumination + panel. PD.
+Carlo Crivelli,Religious/Devotional,,todo,"Italian Early-Renaissance; linear, ornate devotional panels. PD."
+Filippo Lippi,Religious/Devotional,,todo,"Italian Early-Renaissance; devotional, line/composition. PD."
+Henry Fuseli,Romanticism/Figurative,,todo,"Swiss-British Romantic; dramatic figure, the uncanny (The Nightmare). PD."
+François Boucher,Rococo/Mythological,,todo,"French Rococo; decorative color, mythological/pastoral. PD."
+William-Adolphe Bouguereau,Academic/Figurative,,todo,"French academic; polished figure/anatomy, idealized realism. PD."
+Jean-Léon Gérôme,Academic/Orientalist,,todo,"French academic/Orientalist; precise finish, narrative. PD."
+Gustave Doré,Illustration,,todo,"French illustrator/engraver; dramatic value, literary illustration. PD."
+Jan van Huysum,Still-life,,todo,"Dutch; floral still-life, detail/texture. PD."
+John Everett Millais,Pre-Raphaelite/Figurative,,todo,"British Pre-Raphaelite; detail, color, narrative. PD."
+Édouard Manet,Impressionism,,todo,"French; bridge to Impressionism; value/edge, modern subject. PD."
+Edgar Degas,Impressionism,,todo,"French Impressionist; figure/movement, pastel, cropping/composition. PD."
+Vincent van Gogh,Post-Impressionism,,todo,Dutch Post-Impressionist; color + expressive mark-making. PD.
+Ivan Shishkin,Realism/Landscape,,todo,"Russian; realist landscape, detail. PD."
+Ramon Casas,Modernisme/Figurative,,todo,"Catalan Modernista; portrait/poster, line. PD."
+John Singer Sargent,Figurative/Portrait,,todo,"American; bravura brushwork, portrait + watercolor. PD (d.1925)."
+Gustav Klimt,Symbolist/Decorative,,todo,"Austrian Secession; decorative pattern + gold, line. PD (d.1918)."
+Edvard Munch,Symbolist/Expressionist,,todo,Norwegian Symbolist/Expressionist; color + emotion (The Scream). PD (d.1944).
+Katsushika Hokusai,Ukiyo-e,,todo,"Japanese ukiyo-e; line, wave/landscape, design. PD."
+Utagawa Hiroshige,Ukiyo-e,,todo,"Japanese ukiyo-e; landscape woodblock, flat color/composition. PD."
+Kawase Hasui,Shin-hanga,,todo,Japanese shin-hanga; atmospheric landscape woodblock. Likely in-copyright (d.1957).
+Charles Dana Gibson,Illustration,,todo,American illustrator; pen-and-ink line (Gibson Girl). PD/near-PD (d.1944).
+Franklin Booth,Illustration,,todo,American illustrator; pen-and-ink line (engraving-like). Near-PD (d.1948).
+Albert Dorne,Illustration,,todo,American mid-20th-c. illustrator (Famous Artists School); confident figure/line. In-copyright.
+Edward Hopper,American Realism,,todo,"American realist; light, composition, mood. In-copyright (d.1967)."
+Fernand Léger,Cubism/Geometric-Abstract,,todo,"French; Cubism/tubism, bold flat geometric color. In-copyright (d.1955)."
+Pablo Picasso,Cubism,,todo,Spanish; Cubism + many periods; composition/line (ties to Blue-Period scope idea). In-copyright (d.1973).
+William Russell Flint,Watercolor/Figurative,,todo,British; watercolor figure work. Likely in-copyright (d.1969).
+Lyonel Feininger,Geometric-Abstract,,todo,Bauhaus; faceted prismatic geometry; one of the 'most Klee' picks. In-copyright (d.1956). Klee-similar.
+Sonia Delaunay,Geometric-Abstract,,todo,Orphism; rhythmic color-disc + textile pattern; often more pattern-based than Klee. In-copyright (d.1979). Klee-similar.
+Robert Delaunay,Geometric-Abstract,,todo,Orphism co-founder; color-disc geometry; late work Klee-adjacent. PD (d.1941). Klee-similar.
+Johannes Itten,Geometric-Abstract,,todo,Bauhaus color theory; the color-square grid Klee played against. In-copyright (d.1967). Klee-similar.
+Wassily Kandinsky,Abstract,,todo,Klee's closest friend; Bauhaus geometric-symbolic abstraction (Several Circles). PD (d.1944). Klee-similar.
+Josef Albers,Geometric-Abstract,,todo,"Homage to the Square; nested color squares, pure geometry. In-copyright (d.1976). Klee-similar."
+Anni Albers,Geometric-Abstract/Textile,,todo,Bauhaus; woven geometric pattern; textile grids. In-copyright (d.1994). Klee-similar.
+Piet Mondrian,Geometric-Abstract,,todo,The grid taken to its limit (primary blocks + black lines). PD (d.1944). Klee-similar.
+Auguste Herbin,Geometric-Abstract,,todo,Bright flat geometric shapes + an alphabet-of-forms system; Klee-like playfulness. In-copyright (d.1960). Klee-similar.
+Victor Vasarely,Op-Art,,todo,Father of Op art; geometric illusion grids. In-copyright (d.1997). Klee-similar.
+Bridget Riley,Op-Art,,todo,"Op/pattern fields, rhythm, optical motion. In-copyright (b.1931, living). Klee-similar."
+Frank Stella,Geometric-Abstract,,todo,Concentric/banded hard-edge geometry. In-copyright (d.2024). Klee-similar.
+Friedensreich Hundertwasser,Abstract/Decorative,,todo,"Spirals + bright tiled pattern, anti-straight-line whimsy. In-copyright (d.2000). Klee-similar."
+Adolph Gottlieb,Abstract-Expressionist,,todo,Pictographs; gridded compartments of abstracted symbols; Klee-influenced. In-copyright (d.1974). Klee-similar.
+Gunta Stölzl,Geometric-Abstract/Textile,,todo,Bauhaus weaving; geometric color pattern. In-copyright (d.1983). Klee-similar.
