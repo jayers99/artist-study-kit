@@ -13,6 +13,7 @@ fixture-tested; the network boundary (`fetch(path, params)`) is injected.
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import dataclass
 
@@ -40,6 +41,26 @@ class ThumbnailCandidate:
 def _fold(text: str) -> str:
     """Accent-fold to lowercase ASCII so 'Miró' and 'Miro' compare equal."""
     return unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode("ascii").lower()
+
+
+# IIIF Image API URL: {id}/{region}/{size}/{rotation}/{quality}.{fmt}; swap the size.
+_IIIF_SIZE = re.compile(r"(/full/)[^/]+(/\d+/default\.\w+)$")
+_DISPLAY_SIZE = "843,"
+
+
+def display_url(candidate) -> str:
+    """Best-effort largest *display* image for close looking (hotlinked, display-only).
+
+    IIIF sources -> swap the thumbnail size segment for ~843px; user images -> their
+    local file; everything else -> the thumbnail URL unchanged. No network."""
+    if getattr(candidate, "origin", "discovered") == "user":
+        local = getattr(candidate, "local_path", "")
+        if local:
+            return local
+    url = getattr(candidate, "thumbnail_url", "") or ""
+    if _IIIF_SIZE.search(url):
+        return _IIIF_SIZE.sub(rf"\g<1>{_DISPLAY_SIZE}\g<2>", url)
+    return url
 
 
 def aic_agent_params(artist: str) -> dict:
