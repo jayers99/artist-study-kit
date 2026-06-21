@@ -46,3 +46,7 @@ Skill built and live-validated; build-phase research + feedback ingested back in
 
 ## Open / next
 - [ ] **Duplicate handling on re-query/ingest.** As the gallery grows across discovery runs + custom-image imports, define what happens when a newly-found image is (or may be) a duplicate of one already on the board — so a starred work isn't re-added unstarred. Deferred out of Thrust 3; needs its own spec. (Context: `raw/19` Thrust 3 stateful-stars revision.)
+
+## Backlog — candidate image sources (M2 image-collection breadth)
+Running list of sources to evaluate as supplements/fallbacks for the weak image-collection layer (Monet-run UAT **M2/M3**, see `wiki/stage-image-discovery.md`). Each: assess coverage, rights clarity, access (API vs scrape), and dedup key.
+- [ ] **Artvee** — https://artvee.com (user subscribes). Curated **high-resolution public-domain** artwork (paintings/drawings/posters/illustrations); free downloads + a **paid membership** for max-res/bulk. No public API → fetch via Firecrawl/Scrapy (per `raw/01.1`); large-image access is behind the user's login, so treat as a **user-credentialed resource**, not an anonymous source. Rights are PD-curated but still verify per the skill's posture; dedup by **artist + title** (no QID/inst-id). Candidate **T3 supplement / fallback** when Wikidata/Commons/museum APIs are down or thin — directly relevant to M2 and the M3 `works.md`↔board canon gap.
