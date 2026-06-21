@@ -135,3 +135,64 @@ def download_candidates(
         if result.status == "downloaded":
             fetched = True
     return results
+
+
+def cache_thumbnail(
+    work_id: str,
+    thumbnail_url: str,
+    candidates_dir: Path | str,
+    *,
+    fetch=default_fetch,
+) -> tuple[str, int]:
+    """Download a board thumbnail to <candidates_dir>/<work_id>/thumb.jpg.
+
+    Idempotent (skip if present). Returns (rel_path, byte_size); ("", 0) on
+    empty URL or any fetch failure. Never raises."""
+    work_dir = Path(candidates_dir) / work_id
+    dest = work_dir / "thumb.jpg"
+    rel = f"images/candidates/{work_id}/thumb.jpg"
+    if dest.is_file():
+        return rel, dest.stat().st_size
+    if not thumbnail_url:
+        return "", 0
+    try:
+        status_code, content_type, content = fetch(thumbnail_url)
+    except Exception:
+        return "", 0
+    if status_code != 200 or not content_type.startswith("image/") or not content:
+        return "", 0
+    work_dir.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(content)
+    return rel, len(content)
+
+
+def cache_thumbnails(
+    candidates,
+    candidates_dir: Path | str,
+    *,
+    fetch=default_fetch,
+    sleep=time.sleep,
+    min_interval: float = 1.0,
+) -> int:
+    """Cache thumbnails for candidates missing a thumbnail_path; set it in place.
+
+    origin=="user" candidates already have a local file (local_path) — map it,
+    don't fetch. Throttles between real fetches. Returns count newly cached."""
+    cached = 0
+    fetched = False
+    for cand in candidates:
+        if getattr(cand, "thumbnail_path", ""):
+            continue
+        if getattr(cand, "origin", "") == "user" and getattr(cand, "local_path", ""):
+            cand.thumbnail_path = cand.local_path
+            continue
+        if fetched:
+            sleep(min_interval)
+        rel, _size = cache_thumbnail(
+            cand.work_id, getattr(cand, "thumbnail_url", ""), candidates_dir, fetch=fetch
+        )
+        if rel:
+            cand.thumbnail_path = rel
+            cached += 1
+            fetched = True
+    return cached

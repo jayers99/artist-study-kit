@@ -129,3 +129,54 @@ def test_download_candidate_handles_fetch_exception(tmp_path):
     assert res.status == "error"
     assert res.image_path is None
     assert "connection reset" in res.note
+
+
+def test_cache_thumbnail_writes_and_returns_size(tmp_path):
+    from scripts.image_download import cache_thumbnail
+    body = b"\xff\xd8\xff\xe0thumbnailbytes"
+    rel, size = cache_thumbnail("senecio", "https://x/t.jpg", tmp_path,
+                                fetch=lambda u: (200, "image/jpeg", body))
+    assert rel == "images/candidates/senecio/thumb.jpg"
+    assert size == len(body)
+    assert (tmp_path / "senecio" / "thumb.jpg").read_bytes() == body
+
+
+def test_cache_thumbnail_is_idempotent(tmp_path):
+    from scripts.image_download import cache_thumbnail
+    body = b"\xff\xd8\xff\xe0bytes"
+    cache_thumbnail("w", "https://x/t.jpg", tmp_path, fetch=lambda u: (200, "image/jpeg", body))
+
+    def _boom(url):
+        raise AssertionError("must not re-fetch when cached")
+
+    rel, size = cache_thumbnail("w", "https://x/t.jpg", tmp_path, fetch=_boom)
+    assert rel == "images/candidates/w/thumb.jpg"
+    assert size == len(body)
+
+
+def test_cache_thumbnail_failure_returns_empty(tmp_path):
+    from scripts.image_download import cache_thumbnail
+    assert cache_thumbnail("w", "https://x/t.jpg", tmp_path,
+                           fetch=lambda u: (404, "text/html", b"")) == ("", 0)
+    assert cache_thumbnail("w", "", tmp_path,
+                           fetch=lambda u: (200, "image/jpeg", b"x")) == ("", 0)
+
+
+def test_cache_thumbnails_batch_sets_paths_and_skips_user_local(tmp_path):
+    from scripts.image_download import cache_thumbnails
+    from scripts.state import BoardCandidate
+    disc = BoardCandidate(work_id="senecio", title="", date="", museum="",
+                          thumbnail_url="https://x/t.jpg", source_url="", rights="")
+    user = BoardCandidate(work_id="mine", title="", date="", museum="",
+                          thumbnail_url="", source_url="", rights="", origin="user",
+                          local_path="images/user/mine.jpg")
+    already = BoardCandidate(work_id="done", title="", date="", museum="",
+                             thumbnail_url="https://x/d.jpg", source_url="", rights="",
+                             thumbnail_path="images/candidates/done/thumb.jpg")
+    cached = cache_thumbnails([disc, user, already], tmp_path,
+                              fetch=lambda u: (200, "image/jpeg", b"jpegbytes"),
+                              sleep=lambda s: None)
+    assert cached == 1                                            # only disc fetched
+    assert disc.thumbnail_path == "images/candidates/senecio/thumb.jpg"
+    assert user.thumbnail_path == "images/user/mine.jpg"          # mapped, not fetched
+    assert already.thumbnail_path == "images/candidates/done/thumb.jpg"  # untouched
