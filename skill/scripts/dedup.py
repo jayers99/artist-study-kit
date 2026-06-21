@@ -91,13 +91,25 @@ def resolve(inc: IncomingImage, manifest: Manifest, run_id: str,
 
     inc_wins = (inc.width * inc.height, inc.bytes) > (match.width * match.height, match.bytes)
 
-    # identity / metadata merge — existing authoritative, incoming fills gaps
-    title = match.title or inc.title
-    date = match.date or inc.date
-    qid = match.qid or inc.qid
-    inst_ids = match.inst_ids or inc.inst_ids
-    rights = match.rights or inc.rights
-    medium = match.medium or inc.medium
+    # Metadata merge. A QID-bearing source is authoritative; a no-QID value is a guess.
+    # When the incoming is authoritative and the existing entry is not, the incoming's
+    # non-empty fields override the existing guess; otherwise existing-non-empty-wins
+    # (existing already authoritative, or neither side is). stars/source_url/identity
+    # (work_id/filename) are unaffected, and this is independent of the pixel winner.
+    if inc.qid and not match.qid:
+        title = inc.title or match.title
+        date = inc.date or match.date
+        qid = inc.qid
+        inst_ids = inc.inst_ids or match.inst_ids
+        rights = inc.rights or match.rights
+        medium = inc.medium or match.medium
+    else:
+        title = match.title or inc.title
+        date = match.date or inc.date
+        qid = match.qid or inc.qid
+        inst_ids = match.inst_ids or inc.inst_ids
+        rights = match.rights or inc.rights
+        medium = match.medium or inc.medium
 
     # canonical name: reuse existing (no churn) when it was already title-derived;
     # re-derive when the existing name was a fallback and we now have a real title.
